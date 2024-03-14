@@ -51,7 +51,6 @@ import { LiquidityHubProvider, useMainContext } from "../provider";
 import { useDexState } from "../store/dex";
 import {
   usePercentSelect,
-  useTokens,
   usePriceUsd,
   useShowConfirmationButton,
   useDexLH,
@@ -187,7 +186,6 @@ const TokenSelect = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [filterValue, setFilterValue] = useState("");
-  const tokens = useTokens(filterValue);
 
   const onTokenSelect = (token: Token) => {
     onSelect(token);
@@ -213,7 +211,7 @@ const TokenSelect = ({
         <TokenSearchInput value={filterValue} setValue={setFilterValue} />
         <StyledTokenListContainer>
           <TokenList
-            tokens={tokens}
+          filter={filterValue}
             onTokenSelect={onTokenSelect}
             ListItem={TokenListItem}
           />

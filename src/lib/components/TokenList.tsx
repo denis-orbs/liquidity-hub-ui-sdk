@@ -2,13 +2,13 @@ import { CSSObject } from "styled-components";
 import _ from "lodash";
 import { FixedSizeList as List } from "react-window";
 import AutoSizer from "react-virtualized-auto-sizer";
-import { CSSProperties, FC } from "react";
+import { CSSProperties, FC, useMemo } from "react";
 import styled from "styled-components";
 import { useShallow } from "zustand/react/shallow";
 import { Token, TokenListItemProps } from "../type";
 import { useDexState } from "../store/dex";
-import { eqIgnoreCase } from "../util";
-import { useTokenListBalances, useUsdAmount } from "../dex/hooks";
+import { eqIgnoreCase, filterTokens } from "../util";
+import { useTokenListBalances, useTokens, useUsdAmount } from "../dex/hooks";
 
 
 export const TokenListItem = (props: {
@@ -68,16 +68,26 @@ export const TokenListItem = (props: {
 export function TokenList({
   onTokenSelect,
   itemSize = 60,
-  tokens = [],
   style = {},
   ListItem,
+  filter
 }: {
   onTokenSelect: (token: Token) => void;
   itemSize?: number;
-  tokens?: Token[];
   style?: CSSObject;
   ListItem: (args: TokenListItemProps) => JSX.Element;
+  filter?: string
 }) {
+  const list = useTokens();
+
+  const tokens =  useMemo(() => {
+    if (filter) {
+      return filterTokens(list, filter);
+    }
+    return list;
+  }, [list, filter]);
+
+
   return (
     <AutoSizer style={style}>
       {({ height, width }: any) => (

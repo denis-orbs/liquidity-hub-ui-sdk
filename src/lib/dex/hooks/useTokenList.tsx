@@ -10,9 +10,14 @@ import { Token } from "../../type";
 import { findTokenInList, getChainConfig } from "../../util";
 
 export const useTokensList = () => {
+  const {
+    account,
+    chainId: connectedChainId,
+    initialFromToken,
+    initialToToken,
+    supportedChains,
+  } = useMainContext();
   const invalidChain = useIsInvalidChain();
-  const { account, chainId: connectedChainId, initialFromToken, initialToToken, supportedChains } =
-    useMainContext();
   const { fromToken, toToken, updateStore } = useDexState(
     useShallow((s) => ({
       fromToken: s.fromToken,
@@ -23,8 +28,10 @@ export const useTokensList = () => {
 
   return useQuery<Token[]>({
     queryFn: async () => {
-
-      const chainId = connectedChainId || _.first(supportedChains);
+      const firstSupportedChain = _.first(supportedChains);
+      const chainId = invalidChain
+        ? firstSupportedChain
+        : connectedChainId || firstSupportedChain;
       const chainConfig = getChainConfig(chainId);
       const tokens =
         (await chainConfig?.getTokens?.()) ||
@@ -43,6 +50,5 @@ export const useTokensList = () => {
     },
     queryKey: [QUERY_KEYS.TOKENS_LIST, connectedChainId, account],
     staleTime: Infinity,
-    enabled: !invalidChain,
   });
 };

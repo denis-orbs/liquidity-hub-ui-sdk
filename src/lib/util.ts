@@ -452,3 +452,16 @@ export const findTokenInList = (tokens: Token[], addressOrSymbol: string) => {
   );
   return res;
 };
+
+export const filterTokens = (list?: Token[], filterValue?: string): Token[] => {
+  if (!filterValue) return list || [];
+
+  if (!list) return [];
+
+  return list.filter((it) => {
+    return (
+      it.symbol.toLowerCase().indexOf(filterValue.toLowerCase()) >= 0 ||
+      eqIgnoreCase(it.address, filterValue)
+    );
+  });
+};

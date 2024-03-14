@@ -11,7 +11,6 @@ const polygon: Network = {
   chainName: "Polygon",
   explorerUrl: "https://polygonscan.com",
   apiUrl: "https://polygon.hub.orbs.network",
-  getTokens: api.getPolygonTokens,
 };
 
 const bsc: Network = {
