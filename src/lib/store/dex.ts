@@ -14,7 +14,7 @@ interface DexState {
   onToTokenChange: (value: Token) => void;
   onSwitchTokens: () => void;
   reset: () => void;
-    onReserAfterSwap: () => void;
+onReserAfterSwap: () => void;
 }
 
 const initialState: Partial<DexState> = {

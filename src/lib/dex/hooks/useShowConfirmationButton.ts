@@ -71,6 +71,15 @@ export const useShowConfirmationButton = (
   }, [confirmSwap, fromTokenUsd, toTokenUsd]);
 
   return useMemo(() => {
+    if (quoteLoading) {
+      return {
+        disabled: false,
+        text: "",
+        quoteLoading,
+        isLoading,
+      };
+    }
+    
     if (!account) {
       return {
         disabled: false,
@@ -114,14 +123,7 @@ export const useShowConfirmationButton = (
         isLoading,
       };
     }
-    if (quoteLoading) {
-      return {
-        disabled: false,
-        text: "",
-        quoteLoading,
-        isLoading,
-      };
-    }
+   
 
     if (fromAmountBN.gt(fromTokenBalanceBN)) {
       return {

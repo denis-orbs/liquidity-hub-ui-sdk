@@ -45,10 +45,11 @@ export function Modal({
         transition: "all 0.3s ease-in-out",
         background: theme.colors.mainBackground,
         border: `1px solid ${theme.colors.border}`,
+        maxHeight: "90%",
         ...containerStyles,
       }}
     >
-      <FlexColumn $gap={30} $style={bodyStyles}>
+      <StyledContent $style={bodyStyles}>
         <FlexRow className="lh-modal-header">
           <StyledHeader>
             {title && (
@@ -62,10 +63,14 @@ export function Modal({
           </StyledHeader>
         </FlexRow>
         {children}
-      </FlexColumn>
+      </StyledContent>
     </StyledPopup>
   );
 }
+
+const StyledContent = styled(FlexColumn)`
+  gap: 0px;
+`
 
 const StyledTitle = styled(Text)`
   font-size: 20px;
@@ -96,6 +101,7 @@ const StyledPopup = styled(Popup)`
 
 const StyledHeader = styled(FlexRow)`
   width: 100%;
+  margin-bottom: 30px;
 `;
 
 const CloseButton = styled.div`

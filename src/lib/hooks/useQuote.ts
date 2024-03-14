@@ -19,6 +19,7 @@ import { useApiUrl } from "./useApiUrl";
 import { swapAnalytics } from "../analytics";
 import BN from "bignumber.js";
 import { numericFormatter } from "react-number-format";
+import _ from "lodash";
 const useNormalizeAddresses = (fromToken?: Token, toToken?: Token) => {
   const wTokenAddress = useChainConfig()?.wToken?.address;
 
@@ -40,8 +41,14 @@ export const useQuote = (args: QuoteQueryArgs) => {
   );
   const { fromAmount, dexAmountOut, fromToken, toToken } = args;
   const wTokenAddress = useChainConfig()?.wToken?.address;
-  const { account, chainId, partner, quoteInterval, slippage } =
-    useMainContext();
+  const {
+    account,
+    chainId: connectedChainId,
+    partner,
+    quoteInterval,
+    slippage,
+    supportedChains,
+  } = useMainContext();
   const apiUrl = useApiUrl();
 
   const showConfirmation = useSwapState(useShallow((s) => s.showConfirmation));
@@ -53,11 +60,12 @@ export const useQuote = (args: QuoteQueryArgs) => {
     eqIgnoreCase(wTokenAddress || "", fromToken?.address || "") &&
     isNativeAddress(toToken?.address || "");
 
+  const chainId = connectedChainId || _.first(supportedChains);
+      
   const enabled =
     !isUnwrap &&
     !!partner &&
     !!chainId &&
-    !!account &&
     !!fromToken &&
     !!toToken &&
     !!fromAmount &&
@@ -65,7 +73,7 @@ export const useQuote = (args: QuoteQueryArgs) => {
     liquidityHubEnabled &&
     !!apiUrl &&
     !disabled;
-
+  
   return useQuery({
     queryKey: [
       QUERY_KEYS.QUOTE,
@@ -73,8 +81,8 @@ export const useQuote = (args: QuoteQueryArgs) => {
       toAddress,
       fromAmount,
       slippage,
-      account,
       apiUrl,
+      chainId
     ],
     queryFn: async ({ signal }) => {
       swapAnalytics.onQuoteRequest();
@@ -96,7 +104,7 @@ export const useQuote = (args: QuoteQueryArgs) => {
               : new BN(dexAmountOut).gt(0)
               ? dexAmountOut
               : "0",
-            user: account,
+            user: account || zeroAddress,
             slippage,
             qs: encodeURIComponent(
               window.location.hash || window.location.search
@@ -148,7 +156,7 @@ export const useQuote = (args: QuoteQueryArgs) => {
           ...quote,
           outAmountUI,
           outAmountUIWithSlippage,
-          gasCostOutputToken
+          gasCostOutputToken,
         } as QuoteResponse;
       } catch (error: any) {
         swapAnalytics.onQuoteFailed(error.message, count(), quote);

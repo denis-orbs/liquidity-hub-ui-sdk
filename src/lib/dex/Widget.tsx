@@ -39,7 +39,6 @@ import { useDebounce } from "../hooks/useDebounce";
 import {
   useFormatNumber,
   useLiquidityHub,
-  useOrders,
   useSwapConfirmation,
 } from "../hooks";
 import { Text } from "../components/Text";
@@ -58,6 +57,7 @@ import {
 } from "./hooks";
 import _ from "lodash";
 import { useOnSwapSuccess } from "./hooks/useOnSwapSuccess";
+import { useInitialTokens } from "./hooks/useInitialTokens";
 
 export const theme = {
   colors: {
@@ -160,7 +160,7 @@ const defaultPercentButtons = [
 const PercentButtons = () => {
   const onPercentageChange = usePercentSelect();
   const percentButtons =
-    useWidgetContext().layout?.tokenPanel?.percentButtons ||
+    useWidgetContext().UIconfig?.layout?.tokenPanel?.percentButtons ||
     defaultPercentButtons;
   return (
     <StyledPercentButtons className="lh-percent-container">
@@ -211,7 +211,8 @@ const TokenSelect = ({
         <TokenSearchInput value={filterValue} setValue={setFilterValue} />
         <StyledTokenListContainer>
           <TokenList
-          filter={filterValue}
+          ListLabel={TokenListLabel}
+            filter={filterValue}
             onTokenSelect={onTokenSelect}
             ListItem={TokenListItem}
           />
@@ -307,7 +308,7 @@ const StyledSubmitButton = styled(Button)<{ $disabled?: boolean }>`
 `;
 
 const Container = ({ children }: { children: React.ReactNode }) => {
-  const styles = useWidgetContext().styles;
+  const styles = useWidgetContext().UIconfig?.styles;
 
   return <StyledContainer $style={styles}>{children}</StyledContainer>;
 };
@@ -388,9 +389,9 @@ const TokenPanel = ({
   isSrc,
   onTokenSelect,
 }: TokenPanelProps) => {
-  const context = useWidgetContext();
+  const UIconfig = useWidgetContext();
   const account = useMainContext().account;
-  const tokenPanelLayout = context.layout?.tokenPanel;
+  const tokenPanelLayout = UIconfig?.layout?.tokenPanel;
   const { usd: _usd, isLoading: usdLoading } = useUsdAmount(
     token?.address,
     inputValue
@@ -445,18 +446,14 @@ const TokenPanel = ({
             width: "100%",
           }}
         >
-          {account && (
-            <>
-              <Balance
-                value={`Balance: ${balance || "0"}`}
-                isLoading={balanceLoading || fetchingBalancesAfterTx}
-                css={{
-                  opacity: !token ? 0 : 1,
-                }}
-              />
-              <USD value={`$ ${usd || "0"}`} isLoading={usdLoading} />
-            </>
-          )}
+          {account && <Balance
+            value={`Balance: ${balance || "0"}`}
+            isLoading={balanceLoading || fetchingBalancesAfterTx}
+            css={{
+              opacity: !token ? 0 : 1,
+            }}
+          />}
+          <USD value={`$ ${usd || "0"}`} isLoading={usdLoading} />
         </FlexRow>
       </StyledTokenPanelContent>
     </StyledTokenPanel>
@@ -466,6 +463,7 @@ const TokenPanel = ({
 const USD = styled(LoadingText)`
   height: 13px;
   text-align: right;
+  margin-left: auto;
 `;
 
 const Balance = styled(LoadingText)`
@@ -474,6 +472,8 @@ const Balance = styled(LoadingText)`
 
 export interface Props extends ProviderArgs {
   UIconfig?: WidgetConfig;
+  initialFromToken?: string;
+  initialToToken?: string;
 }
 
 export const Widget = (props: Props) => {
@@ -482,6 +482,7 @@ export const Widget = (props: Props) => {
     <LiquidityHubProvider {...rest}>
       <ThemeProvider theme={theme}>
         <ContextProvider UIconfig={props.UIconfig}>
+          <Watcher {...props} />
           <Container>
             <FromTokenPanel />
             <ChangeTokens />
@@ -491,12 +492,17 @@ export const Widget = (props: Props) => {
             <SwapModal />
             <StyledPoweredByOrbs />
           </Container>
-          <Orders />
         </ContextProvider>
       </ThemeProvider>
     </LiquidityHubProvider>
   );
 };
+
+const Watcher = (props: Props) => {
+  useInitialTokens(props.initialFromToken, props.initialToToken);
+
+  return null
+}
 
 export const TokenListItem = (props: TokenListItemProps) => {
   const balance = useFormatNumber({ value: props.balance });
@@ -543,6 +549,11 @@ export const TokenListItem = (props: TokenListItemProps) => {
   );
 };
 
+
+const TokenListLabel = ({text}: {text: string}) => {
+  return <StyledTokenListLabel>{text}</StyledTokenListLabel>
+}
+
 const StyledUsd = styled(LoadingText)`
   font-size: 12px;
   opacity: 0.8;
@@ -556,6 +567,16 @@ const StyledTokenName = styled(Text)`
 const StyledBalance = styled(LoadingText)`
   font-size: 14px;
 `;
+
+export const StyledTokenListLabel = styled.div`
+padding: 0px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  height: 100%;
+
+
+`
 
 export const StyledListToken = styled.div<{ $disabled?: boolean }>(
   ({ $disabled }) => ({
@@ -575,22 +596,9 @@ export const StyledListToken = styled.div<{ $disabled?: boolean }>(
   })
 );
 
-const StyledTokenListContainer = styled.div`
-  max-height: 90vh;
-  height: 700px;
-  width: 100%;
+const StyledTokenListContainer = styled(FlexColumn)`
   color: white;
-  overflow-y: auto;
+  max-height: 50vh;
+  height: 500px;
+  width: 100%;
 `;
-
-const Orders = () => {
-  const { orders } = useOrders();
-
-  return (
-    <FlexColumn>
-      {orders?.map((order, index) => {
-        return <div key={index}>{order.id}</div>;
-      })}
-    </FlexColumn>
-  );
-};

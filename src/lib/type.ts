@@ -73,9 +73,8 @@ export interface ProviderArgs {
   disableAnalytics?: boolean;
   theme?: "dark" | "light";
   maxFailures?: number;
-  initialFromToken?: string;
-  initialToToken?: string;
   connectWallet?: () => void;
+  getTokens?: (chainId: number) => Promise<Token[] | undefined>;
 }
 
 export interface QuoteArgs {

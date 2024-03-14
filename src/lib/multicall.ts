@@ -65,7 +65,7 @@ export const getBalances = async (
       return {
         address: token.address,
         balance: balances[token.address] || "0",
-      };
+    };
     });
 
     

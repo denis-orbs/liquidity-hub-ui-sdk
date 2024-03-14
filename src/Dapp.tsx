@@ -28,11 +28,13 @@ function Wrapped() {
       partner="playground"
       account={address}
       slippage={'0.5'}
+      initialFromToken='USDC'
       supportedChains={[
         supportedChains.polygon.chainId,
         supportedChains.base.chainId,
+        supportedChains.zkEvm.chainId,
+        supportedChains.bsc.chainId,
       ]}
-      initialFromToken="USDC"
       UIconfig={{
         modalStyles: {
           containerStyles: {

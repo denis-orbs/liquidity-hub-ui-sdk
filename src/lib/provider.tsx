@@ -15,6 +15,7 @@ import { swapAnalytics } from "./analytics";
 import { useSwapState } from "./store/main";
 import { useShallow } from "zustand/react/shallow";
 import BN from "bignumber.js";
+import { useDexState } from "./store/dex";
 const client = new QueryClient({
   defaultOptions: {
     queries: {
@@ -45,9 +46,8 @@ export const LiquidityHubProvider = ({
   theme,
   slippage: _slippage,
   maxFailures,
-  initialFromToken,
-  initialToToken,
-  connectWallet
+  connectWallet,
+  getTokens
 }: Props) => {
   const slippage = useMemo(() => {
     if (!_slippage) return;
@@ -55,6 +55,7 @@ export const LiquidityHubProvider = ({
   }, [_slippage]);
 
   const reset = useSwapState(useShallow((s) => s.reset));
+  const resetDex = useDexState(useShallow((s) => s.reset));
   const _theme = useMemo(() => {
     if (theme === "light") {
       return lightTheme;
@@ -76,7 +77,8 @@ export const LiquidityHubProvider = ({
 
   useEffect(() => {
     reset();
-  }, [reset, chainId]);
+    resetDex()
+  }, [chainId]);
 
   return (
     <QueryClientProvider client={client}>
@@ -92,9 +94,8 @@ export const LiquidityHubProvider = ({
           supportedChains,
           slippage,
           maxFailures,
-          initialFromToken,
-          initialToToken,
-          connectWallet
+          connectWallet,
+          getTokens
         }}
       >
         <ThemeProvider theme={_theme}>{children}</ThemeProvider>

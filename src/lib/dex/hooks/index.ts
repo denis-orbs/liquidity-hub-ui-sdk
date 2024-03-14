@@ -15,6 +15,7 @@ export * from "./useTokenList";
 export * from "./useTokens";
 export * from "./useNetworkFee";
 export * from "./useOnSwapSuccess";
+export * from "./useInitialTokens";
 
 export const useSetMaxBalance = () => {
   const onFromAmountChange = useDexState(

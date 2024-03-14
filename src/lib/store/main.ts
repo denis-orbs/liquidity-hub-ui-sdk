@@ -75,7 +75,7 @@ export const useSwapState = create<SwapState>((set, get) => ({
       }, 200);
     }
   },
-  reset: () => set(initialSwapState),
+  reset: () => set({...initialSwapState}),
 }));
 
 interface LHControlStore {

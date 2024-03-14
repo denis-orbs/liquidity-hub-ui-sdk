@@ -59,7 +59,7 @@ const useDexAmountOutWei = (args: UseLiquidityHubArgs) => {
   const slippage = useMainContext().slippage;
   return useMemo(() => {
     if ((!args.dexAmountOut && !args.dexAmountOutUI) || !args.toToken) {
-      return "0";
+      return undefined;
     }
     const value = args.dexAmountOut
       ? args.dexAmountOut
