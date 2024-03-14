@@ -43,3 +43,6 @@ export const QUOTE_ERRORS = {
 
 export const THENA_TOKENS_LIST_API =
   "https://lhthena.s3.us-east-2.amazonaws.com/token-list-lh.json";
+
+
+  export const FROM_AMOUNT_DEBOUNCE = 300;

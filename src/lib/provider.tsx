@@ -14,7 +14,7 @@ import Web3 from "web3";
 import { swapAnalytics } from "./analytics";
 import { useSwapState } from "./store/main";
 import { useShallow } from "zustand/react/shallow";
-
+import BN from "bignumber.js";
 const client = new QueryClient({
   defaultOptions: {
     queries: {
@@ -43,9 +43,17 @@ export const LiquidityHubProvider = ({
   apiUrl,
   supportedChains,
   theme,
-  slippage,
+  slippage: _slippage,
   maxFailures,
+  initialFromToken,
+  initialToToken,
+  connectWallet
 }: Props) => {
+  const slippage = useMemo(() => {
+    if (!_slippage) return;
+    return BN(_slippage).isNaN() ? undefined : Number(_slippage);
+  }, [_slippage]);
+
   const reset = useSwapState(useShallow((s) => s.reset));
   const _theme = useMemo(() => {
     if (theme === "light") {
@@ -59,8 +67,6 @@ export const LiquidityHubProvider = ({
     [provider]
   );
 
-  
-
   useEffect(() => {
     if (chainId && partner) {
       swapAnalytics.setChainId(chainId);
@@ -68,12 +74,9 @@ export const LiquidityHubProvider = ({
     }
   }, [chainId, partner]);
 
-
   useEffect(() => {
-    // reset store when chainId changes
-    reset()
+    reset();
   }, [reset, chainId]);
-  
 
   return (
     <QueryClientProvider client={client}>
@@ -89,6 +92,9 @@ export const LiquidityHubProvider = ({
           supportedChains,
           slippage,
           maxFailures,
+          initialFromToken,
+          initialToToken,
+          connectWallet
         }}
       >
         <ThemeProvider theme={_theme}>{children}</ThemeProvider>

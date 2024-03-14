@@ -10,18 +10,17 @@ interface DexState {
 
   updateStore: (value: Partial<DexState>) => void;
   onFromAmountChange: (value: string) => void;
-  onToAmountChange: (value: string) => void;
   onFromTokenChange: (value: Token) => void;
   onToTokenChange: (value: Token) => void;
   onSwitchTokens: () => void;
   reset: () => void;
+    onReserAfterSwap: () => void;
 }
 
 const initialState: Partial<DexState> = {
   fromToken: undefined,
   toToken: undefined,
   fromAmount: undefined,
-  toAmount: undefined,
   fetchingBalancesAfterTx: false,
 };
 
@@ -29,7 +28,6 @@ export const useDexState = create<DexState>((set) => ({
   ...initialState,
   updateStore: (value) => set({ ...value }),
   onFromAmountChange: (value) => set({ fromAmount: value }),
-  onToAmountChange: (value) => set({ toAmount: value }),
   onFromTokenChange: (value) => set({ fromToken: value }),
   onToTokenChange: (value) => set({ toToken: value }),
   onSwitchTokens: () =>
@@ -38,4 +36,5 @@ export const useDexState = create<DexState>((set) => ({
       toToken: state.fromToken,
     })),
   reset: () => set({ ...initialState }),
+  onReserAfterSwap: () => set({ fromAmount: undefined }),
 }));

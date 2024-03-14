@@ -82,7 +82,7 @@ export const useQuote = (args: QuoteQueryArgs) => {
       let timeout;
       const count = counter();
       try {
-         timeout = setTimeout(() => {
+        timeout = setTimeout(() => {
           throw new Error(QUOTE_ERRORS.timeout);
         }, 10_000);
         const response = await fetch(`${apiUrl}/quote?chainId=${chainId}`, {
@@ -107,7 +107,18 @@ export const useQuote = (args: QuoteQueryArgs) => {
           signal,
         });
         quote = await response.json();
-
+        let gasCostOutputToken = "0";
+        try {
+          gasCostOutputToken = amountUi(
+            toToken?.decimals,
+            BN(
+              parseInt(
+                quote?.permitData.values.witness.outputs[0].startAmount.hex,
+                16
+              )
+            )
+          );
+        } catch (error) {}
         if (!quote) {
           throw new Error("No result");
         }
@@ -137,6 +148,7 @@ export const useQuote = (args: QuoteQueryArgs) => {
           ...quote,
           outAmountUI,
           outAmountUIWithSlippage,
+          gasCostOutputToken
         } as QuoteResponse;
       } catch (error: any) {
         swapAnalytics.onQuoteFailed(error.message, count(), quote);

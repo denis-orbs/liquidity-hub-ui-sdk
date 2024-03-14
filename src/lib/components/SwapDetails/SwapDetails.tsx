@@ -5,11 +5,12 @@ import { ReactNode, useMemo, useState } from "react";
 import BN from "bignumber.js";
 import { GasIcon } from "../../assets/svg/gas";
 import { ChevronDown } from "react-feather";
-import { useSlippage, useTransactionEstimateGasPrice } from "../..";
+import { useSlippage } from "../..";
 import { FlexRow, FlexColumn } from "../../base-styles";
 import { useFormatNumber } from "../../hooks";
 import { useDexState } from "../../store/dex";
 import { useDexLH } from "../../dex/hooks";
+import { useNetworkFee } from "../../dex/hooks/useNetworkFee";
 
 const StyledRowLabel = styled(Text)`
   font-size: 14px;
@@ -47,11 +48,11 @@ const StyledRow = styled(FlexRow)`
 `;
 
 const MinAmountOut = () => {
-  const fromToken = useDexState((s) => s.fromToken);
+  const token = useDexState((s) => s.toToken);
   const toAmount = useDexLH().quote?.outAmountUI;
   const slippage = useSlippage();
 
-  const symbol = fromToken?.symbol;
+  const symbol = token?.symbol;
   const minAmountOut = useMemo(() => {
     if (!toAmount || !slippage) return "0";
     const _slippage = slippage / 2;
@@ -103,13 +104,12 @@ const StyledTop = styled(FlexRow)`
 `;
 
 const GasPrice = () => {
-  const txGasPrice = useTransactionEstimateGasPrice();
-  const _txGasPrice = useFormatNumber({ value: txGasPrice, decimalScale: 1 });
+  const txGasPrice = useNetworkFee();
 
   return (
     <StyledGasPrice>
       <GasIcon />
-      <Text>${_txGasPrice}</Text>
+      <Text>${txGasPrice.value}</Text>
     </StyledGasPrice>
   );
 };

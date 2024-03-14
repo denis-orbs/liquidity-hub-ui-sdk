@@ -11,7 +11,13 @@ import { useSwitchNetwork, useUnwrap } from "../..";
 import { useIsInvalidChain, useChainConfig } from "../../hooks";
 import { useMainContext } from "../../provider";
 import { useDexState } from "../../store/dex";
-import { amountBN, getChainConfig, eqIgnoreCase, isNativeAddress } from "../../util";
+import {
+  amountBN,
+  getChainConfig,
+  eqIgnoreCase,
+  isNativeAddress,
+} from "../../util";
+import { useDebouncedFromAmount } from "./useDebouncedFromAmount";
 
 export const useUnwrapMF = () => {
   const { refetch } = useTokenListBalances();
@@ -37,19 +43,19 @@ export const useShowConfirmationButton = (
   fromTokenUsd: string | number,
   toTokenUsd: string | number
 ) => {
-  const { fromToken, toToken, fromAmount } = useDexState((s) => ({
+  const { fromToken, toToken } = useDexState((s) => ({
     fromToken: s.fromToken,
     toToken: s.toToken,
-    fromAmount: s.fromAmount,
   }));
-  const { quote, confirmSwap, quoteLoading, quoteError } =
-  useDexLH();
+
+  const { quote, confirmSwap, quoteLoading, quoteError } = useDexLH();
+  const fromAmount = useDebouncedFromAmount();
   const toAmount = quote?.outAmountUI;
   const { mutate: switchNetwork, isPending: switchNetworkLoading } =
     useSwitchNetwork();
-    const wrongChain = useIsInvalidChain()
+  const wrongChain = useIsInvalidChain();
   const fromAmountBN = new BN(fromAmount || "0");
-  const fromTokenBalance = useTokenListBalance(fromToken?.address);
+  const { balance: fromTokenBalance } = useTokenListBalance(fromToken?.address);
   const fromTokenBalanceBN = new BN(fromTokenBalance || "0");
   const wToken = useChainConfig()?.wToken?.address;
   const { mutate: unwrap, isPending: unwrapLoading } = useUnwrapMF();

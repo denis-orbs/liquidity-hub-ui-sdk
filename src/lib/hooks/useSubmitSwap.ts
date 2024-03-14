@@ -3,7 +3,6 @@ import { useSwapState } from "../store/main";
 import { useCallback } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { swapAnalytics } from "../analytics";
-import { useAddOrder } from "./useAddOrder";
 import { useAllowance } from "./useAllowance";
 import { useApprove } from "./useApprove";
 import { useChainConfig } from "./useChainConfig";
@@ -14,6 +13,7 @@ import { useQuotePayload } from "./useQuoteData";
 import { amountUi, isNativeAddress } from "../util";
 import BN from "bignumber.js";
 import { zeroAddress } from "../config/consts";
+import { useOrders } from "./useOrders";
 
 export const useSubmitSwap = () => {
   const slippage = useMainContext().slippage;
@@ -49,8 +49,10 @@ export const useSubmitSwap = () => {
   const wrap = useWrap(fromToken);
   const sign = useSign();
   const requestSwap = useSwapX();
-  const wTokenAddress = useChainConfig()?.wToken?.address;
-  const addOrder = useAddOrder();
+  const chainConfig = useChainConfig();
+  const wTokenAddress = chainConfig?.wToken?.address;
+  const explorerUrl = chainConfig?.explorerUrl;
+  const addOrder = useOrders().addOrder;
 
   const { data: approved } = useAllowance(fromToken, fromAmount);
 
@@ -119,6 +121,7 @@ export const useSubmitSwap = () => {
           fromUsd: fromTokenUsd,
           toUsd: toTokenUsd,
           txHash,
+          explorerLink: `${explorerUrl}/tx/${txHash}`,
         });
         args?.onSuccess?.();
         return txHash;
@@ -155,6 +158,7 @@ export const useSubmitSwap = () => {
       onSwapStart,
       onCloseSwap,
       addOrder,
+      explorerUrl,
     ]
   );
 };

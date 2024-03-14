@@ -1,6 +1,5 @@
 import { AbiItem } from "web3-utils";
 
-
 import { CSSObject } from "styled-components";
 
 export interface TokenPanelProps {
@@ -12,7 +11,6 @@ export interface TokenPanelProps {
   onTokenSelect: (token: Token) => void;
 }
 
-
 export interface ModalStyles {
   bodyStyles?: CSSObject;
   containerStyles?: CSSObject;
@@ -22,6 +20,9 @@ export type TokenListItemProps = {
   token: Token;
   selected?: boolean;
   balance?: string;
+  balanceLoading?: boolean;
+  usd?: string;
+  usdLoading: boolean;
 };
 
 export interface WidgetConfig {
@@ -39,13 +40,11 @@ export interface WidgetLayout {
   };
 }
 
-
 export interface MainContextArgs {
   getTokens?: (chainId?: number) => Promise<Token[]>;
   getUsdPrice?: (address: string, chainId: number) => Promise<number>;
   connectWallet?: () => void;
 }
-
 
 export interface Token {
   name?: string;
@@ -64,7 +63,7 @@ export interface ShowConfirmationProps {
 
 export interface ProviderArgs {
   supportedChains: number[];
-  slippage?: number;
+  slippage?: any;
   provider?: any;
   account?: string;
   chainId?: number;
@@ -132,6 +131,7 @@ export interface QuoteResponse {
   outAmountUI: string;
   outAmountUIWithSlippage?: string;
   disableInterval?: boolean;
+  gasCostOutputToken?: string;
 }
 
 export enum LH_CONTROL {
@@ -175,10 +175,7 @@ export type UseLiquidityHubArgs = {
 
 export type TradeOwner = "dex" | "lh";
 
-
-
-
-export type UseAddOrderArgs = {
+export type AddOrderArgs = {
   fromToken: Token;
   toToken: Token;
   fromAmount: string;
@@ -186,6 +183,7 @@ export type UseAddOrderArgs = {
   fromUsd?: string | number;
   toUsd?: string | number;
   txHash: string;
+  explorerLink: string;
 };
 
 export type Order = {
@@ -196,8 +194,9 @@ export type Order = {
   fromAmount: string;
   toAmount: string;
   fromUsd?: string | number;
-  toUsd? : string | number;
-  txHash: string
+  toUsd?: string | number;
+  txHash: string;
+  explorerLink: string;
 };
 
 export type Orders = { [address: string]: { [chain: string]: Order[] } };
@@ -211,8 +210,6 @@ export interface Network {
   getTokens?: () => Promise<Token[]>;
   apiUrl: string;
 }
-
-
 
 export type Abi = AbiItem[];
 export type Balances = { [key: string]: string };

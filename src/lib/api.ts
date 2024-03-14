@@ -103,8 +103,35 @@ const getTokens = async (chainId: number): Promise<Token[]> => {
 
 
 
+  const getPolygonTokens = async (): Promise<Token[]> => {
+    const payload = await fetch(
+      "https://unpkg.com/quickswap-default-token-list@1.3.16/build/quickswap-default.tokenlist.json"
+    )
+    const res = await payload.json();
+    
+    const tokens = res.tokens.filter((it: any) => it.chainId === 137);
+  
+    const sorted = _.sortBy(tokens, (t: any) => {
+      const index = getBaseAssets(137).indexOf(t.address);
+      return index >= 0 ? index : Number.MAX_SAFE_INTEGER;
+    });
+  
+    return [networks.poly.native, ...sorted].map((token: any) => {
+      return {
+        address: token.address,
+        symbol: token.symbol,
+        decimals: token.decimals,
+        logoUrl:
+          token.logoUrl || token.logoURI?.replace("/logo_24.png", "/logo_48.png"),
+        name: token.name,
+      };
+    });
+  };
+
+
   export const api = {
     getTokens,
     getPolygonZkEvmTokens,
-    priceUsd: fetchPrice
+    priceUsd: fetchPrice,
+    getPolygonTokens
   }

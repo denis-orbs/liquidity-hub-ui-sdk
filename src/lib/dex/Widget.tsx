@@ -28,7 +28,6 @@ import { ArrowDown } from "react-feather";
 import styled, { ThemeProvider } from "styled-components";
 import { Spinner } from "../components/Spinner";
 
-
 import { TokenList } from "../components/TokenList";
 import { Modal } from "../components/Modal";
 import { Button } from "../components/Button";
@@ -37,16 +36,29 @@ import { TokenSearchInput } from "../components/SearchInput";
 import { useSwapButton } from "../hooks/useSwapButton";
 import { useShallow } from "zustand/react/shallow";
 import { useDebounce } from "../hooks/useDebounce";
-import { useFormatNumber, useLiquidityHub, useSwapConfirmation } from "../hooks";
+import {
+  useFormatNumber,
+  useLiquidityHub,
+  useOrders,
+  useSwapConfirmation,
+} from "../hooks";
 import { Text } from "../components/Text";
 import { Logo } from "../components/Logo";
 import { PoweredByOrbs, SwapConfirmation } from "../components";
 import { FlexRow, FlexColumn } from "../base-styles";
 import { useTokenListBalance } from "./hooks/useTokenListBalance";
-import { LiquidityHubProvider } from "../provider";
+import { LiquidityHubProvider, useMainContext } from "../provider";
 import { useDexState } from "../store/dex";
-import { usePercentSelect, useTokens, useRefreshBalancesAfterTx, usePriceUsd, useShowConfirmationButton, useDexLH, useUsdAmount } from "./hooks";
-
+import {
+  usePercentSelect,
+  useTokens,
+  usePriceUsd,
+  useShowConfirmationButton,
+  useDexLH,
+  useUsdAmount,
+} from "./hooks";
+import _ from "lodash";
+import { useOnSwapSuccess } from "./hooks/useOnSwapSuccess";
 
 export const theme = {
   colors: {
@@ -90,7 +102,6 @@ const ContextProvider = (props: ContextProps) => {
       toToken: s.toToken,
     }))
   );
-  
 
   const _fromAmountUI = useDebounce(fromAmountUI, 300);
 
@@ -102,7 +113,12 @@ const ContextProvider = (props: ContextProps) => {
 
   return (
     <Context.Provider
-      value={{ fromAmountUI, setFromAmountUI, liquidityHub, UIconfig: props.UIconfig }}
+      value={{
+        fromAmountUI,
+        setFromAmountUI,
+        liquidityHub,
+        UIconfig: props.UIconfig,
+      }}
     >
       {props.children}
     </Context.Provider>
@@ -122,7 +138,6 @@ const WidgetModal = ({
 }) => {
   const modal = useWidgetContext().UIconfig?.modalStyles;
 
-  
   return (
     <Modal
       title={title}
@@ -214,8 +229,9 @@ const StyledPoweredByOrbs = styled(PoweredByOrbs)`
 
 const SwapModal = () => {
   const { showModal, closeModal, swapStatus } = useSwapConfirmation();
-  const onSuccess = useRefreshBalancesAfterTx();
   const { swap, isPending, text, showButton } = useSwapButton();
+
+  const onSuccess = useOnSwapSuccess();
 
   const onClick = useCallback(() => {
     swap({ onSuccess });
@@ -375,6 +391,7 @@ const TokenPanel = ({
   onTokenSelect,
 }: TokenPanelProps) => {
   const context = useWidgetContext();
+  const account = useMainContext().account;
   const tokenPanelLayout = context.layout?.tokenPanel;
   const { usd: _usd, isLoading: usdLoading } = useUsdAmount(
     token?.address,
@@ -384,7 +401,9 @@ const TokenPanel = ({
   const headerOutside = tokenPanelLayout?.headerOutside;
   const inputLeft = tokenPanelLayout?.inputSide === "left";
   const usdLeft = tokenPanelLayout?.usdSide === "left";
-  const _balance = useTokenListBalance(token?.address);
+  const { balance: _balance, isLoading: balanceLoading } = useTokenListBalance(
+    token?.address
+  );
   const balance = useFormatNumber({
     value: _balance,
   });
@@ -428,14 +447,18 @@ const TokenPanel = ({
             width: "100%",
           }}
         >
-          <Balance
-            value={`Balance: ${balance || "0"}`}
-            isLoading={(token && !_balance) || fetchingBalancesAfterTx}
-            css={{
-              opacity: !token ? 0 : 1,
-            }}
-          />
-          <USD value={`$ ${usd || "0"}`} isLoading={usdLoading} />
+          {account && (
+            <>
+              <Balance
+                value={`Balance: ${balance || "0"}`}
+                isLoading={balanceLoading || fetchingBalancesAfterTx}
+                css={{
+                  opacity: !token ? 0 : 1,
+                }}
+              />
+              <USD value={`$ ${usd || "0"}`} isLoading={usdLoading} />
+            </>
+          )}
         </FlexRow>
       </StyledTokenPanelContent>
     </StyledTokenPanel>
@@ -470,6 +493,7 @@ export const Widget = (props: Props) => {
             <SwapModal />
             <StyledPoweredByOrbs />
           </Container>
+          <Orders />
         </ContextProvider>
       </ThemeProvider>
     </LiquidityHubProvider>
@@ -477,10 +501,8 @@ export const Widget = (props: Props) => {
 };
 
 export const TokenListItem = (props: TokenListItemProps) => {
-  // const { usd: _usd } = useUsdAmount(props.token.address, props.balance);
-
   const balance = useFormatNumber({ value: props.balance });
-  // const usd = useFormatNumber({ value: _usd });
+  const usd = useFormatNumber({ value: props.usd });
 
   return (
     <StyledListToken $disabled={props.selected}>
@@ -516,12 +538,17 @@ export const TokenListItem = (props: TokenListItemProps) => {
           alignItems: "flex-end",
         }}
       >
-        <StyledBalance isLoading={!props.balance} value={balance} />
-        {/* {usd && <StyledUSD value={`$ ${usd}`} />} */}
+        <StyledBalance isLoading={props.balanceLoading} value={balance} />
+        {usd && <StyledUsd value={`$ ${usd}`} />}
       </FlexColumn>
     </StyledListToken>
   );
 };
+
+const StyledUsd = styled(LoadingText)`
+  font-size: 12px;
+  opacity: 0.8;
+`;
 
 const StyledTokenName = styled(Text)`
   font-size: 12px;
@@ -558,15 +585,14 @@ const StyledTokenListContainer = styled.div`
   overflow-y: auto;
 `;
 
-// const Orders = () => {
-//   const orders = useOrders();
-//   console.log({orders});
+const Orders = () => {
+  const { orders } = useOrders();
 
-//   return (
-//     <FlexColumn>
-//       {orders?.map((order, index) => {
-//         return <div key={index}>{order.id}</div>;
-//       })}
-//     </FlexColumn>
-//   );
-// };
+  return (
+    <FlexColumn>
+      {orders?.map((order, index) => {
+        return <div key={index}>{order.id}</div>;
+      })}
+    </FlexColumn>
+  );
+};

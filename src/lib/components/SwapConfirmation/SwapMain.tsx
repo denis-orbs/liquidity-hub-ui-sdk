@@ -3,8 +3,6 @@ import { StepComponent } from "./Step";
 import { SwapDetails } from "./Details";
 import { useSteps } from "../../hooks/useSteps";
 import { FlexColumn } from "../../base-styles";
-import { useSwapState } from "../../store/main";
-import { useShallow } from "zustand/react/shallow";
 
 export const SwapMain = ({ style = {} }: { style?: CSSObject }) => {
   return (
@@ -16,19 +14,18 @@ export const SwapMain = ({ style = {} }: { style?: CSSObject }) => {
 };
 
 const StepsComponent = () => {
-  const { steps } = useSteps();
-  const swapStatus = useSwapState(useShallow((it) => it.swapStatus));
+  const { steps, status } = useSteps();
 
-  if (swapStatus !== "loading") return null;
+  if (status !== "loading") return null;
 
   return (
     <>
       <StyledSteps
         $gap={15}
         style={{ width: "100%" }}
-        className="lh-swap-modal-steps"
+        className="lh-steps"
       >
-        <Divider className="lh-swap-modal-steps-divider" />
+        <Divider className="lh-steps-divider" />
         {steps.map((step) => {
           return <StepComponent key={step.id} step={step} />;
         })}

@@ -21,7 +21,7 @@ export const useTokenListBalances = () => {
       web3?.version,
     ],
     queryFn: async () => {
-      if (!account || !chainId || !list || invalidChain || !web3) return {};
+      if (!account || !chainId || !list || invalidChain || !web3) return {};            
       return getBalances(list!, web3, account);
     },
     refetchInterval: 30_000,

@@ -1,6 +1,9 @@
 import { useTokenListBalances } from "./useTokenListBalances";
 
 export function useTokenListBalance(token?: string) {
-  const balances = useTokenListBalances().data;
-  return balances && token ? balances[token] : undefined;
+  const {data: balances, isLoading} = useTokenListBalances();
+  return {
+    balance: balances && token ? balances[token] : undefined,
+    isLoading
+  }
 }

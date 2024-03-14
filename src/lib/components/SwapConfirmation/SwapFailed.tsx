@@ -6,11 +6,11 @@ import { Text } from "../Text";
 
 export const SwapFailed = () => {
   return (
-    <Container className="lh-swap-modal-failed">
-      <MainLogo className="lh-swap-modal-failed-img">
+    <Container className="lh-failed">
+      <MainLogo className="lh-failed-img">
         <AlertCircle />
       </MainLogo>
-      <Title className="lh-swap-modal-failed-title">Swap failed</Title>
+      <Title className="lh-failed-title">Swap failed</Title>
     </Container>
   );
 };

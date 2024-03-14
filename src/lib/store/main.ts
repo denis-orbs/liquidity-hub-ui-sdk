@@ -84,7 +84,7 @@ interface LHControlStore {
   liquidityHubEnabled: boolean;
   updateLiquidityHubEnabled: () => void;
   orders: Orders;
-  addOrder: (address: string, chain: number, order: Order) => void;
+ setOrders: (orders: Orders) => void;
   password?: string;
   setPassword: (password: string) => void;
 }
@@ -99,20 +99,37 @@ export const useLiquidityHubPersistedStore = create(
       updateLiquidityHubEnabled: () =>
         set({ liquidityHubEnabled: !get().liquidityHubEnabled }),
       orders: {},
-      addOrder: (address, chain, order) => {
-        const orders = get().orders;
-        if (!orders[address]) {
-          orders[address] = {};
-        }
-        if (!orders[address][chain]) {
-          orders[address][chain] = [];
-        }
-        orders[address][chain].push(order);
-        set({ orders });
-      },
+      setOrders: (orders) => set({ orders }),
     }),
     {
       name: "liquidity-hub-control",
     }
   )
 );
+
+
+
+
+interface OrdersStore {
+  orders: Orders;
+  addOrder: (address: string, chain: number, order: Order) => void;
+}
+
+
+export const useOrdersStore = create<OrdersStore>((set) => ({
+  orders: useLiquidityHubPersistedStore.getState().orders,
+  addOrder: (address, chain, order) => {
+    set((s) => {
+      const orders = s.orders;
+      if (!orders[address]) {
+        orders[address] = {};
+      }
+      if (!orders[address][chain]) {
+        orders[address][chain] = [];
+      }
+      orders[address][chain].unshift(order);
+      useLiquidityHubPersistedStore.getState().setOrders(orders);
+      return {orders}
+    });
+  }
+}));

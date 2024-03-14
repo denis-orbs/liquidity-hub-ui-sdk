@@ -9,10 +9,12 @@ export const usePriceUsd = ({
   address,
   refetchInterval = 30_000,
   noRefetch,
+  disabled
 }: {
   address?: string;
   refetchInterval?: number;
   noRefetch?: boolean;
+  disabled?: boolean;
 }) => {
   const chainConfig = useChainConfig();
   const chainId = chainConfig?.chainId;
@@ -38,5 +40,6 @@ export const usePriceUsd = ({
     refetchInterval: noRefetch ? false : refetchInterval,
     staleTime: Infinity,
     retry: 2,
+    enabled: !disabled,
   });
 };

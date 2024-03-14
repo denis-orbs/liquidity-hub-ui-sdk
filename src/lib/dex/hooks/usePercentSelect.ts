@@ -14,7 +14,7 @@ export const usePercentSelect = () => {
     }))
   );
 
-  const fromTokenBalance = useTokenListBalance(fromToken?.address);
+  const {balance: fromTokenBalance} = useTokenListBalance(fromToken?.address);
 
   return useCallback(
     (percent: number) => {

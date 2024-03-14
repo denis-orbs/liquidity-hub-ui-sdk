@@ -15,7 +15,7 @@ export const getBalances = async (
     }
     const native = tokens.find((it) => isNativeAddress(it.address));
     const erc20Tokens = tokens.filter((it) => !isNativeAddress(it.address));
-  
+        
     const contractCallContext: ContractCallContext[] = erc20Tokens.map(
       (token) => {
         return {
@@ -36,13 +36,13 @@ export const getBalances = async (
   
     const multicall = new Multicall({ web3Instance: web3, tryAggregate: true });
   
+
     const [nativeBalance, results] = await Promise.all([
       (await web3.eth.getBalance(account)).toString(),
       multicall.call(contractCallContext),
     ]);
-  
     const balances: { [key: string]: string } = {};
-  
+
     if (native) {
       balances[native.address] = amountUi(native.decimals, new BN(nativeBalance));
     }
@@ -60,13 +60,15 @@ export const getBalances = async (
     } catch (error) {
       console.log(error);
     }
-  
+
     const res = tokens.map((token) => {
       return {
         address: token.address,
         balance: balances[token.address] || "0",
       };
     });
+
+    
   
     return _.mapValues(_.keyBy(res, "address"), "balance");
   };

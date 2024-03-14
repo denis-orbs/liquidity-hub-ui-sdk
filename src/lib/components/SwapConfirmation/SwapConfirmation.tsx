@@ -1,15 +1,15 @@
-import styled from "styled-components";
+import styled, { CSSObject } from "styled-components";
 import { useSwapState } from "../../store/main";
 import { useShallow } from "zustand/react/shallow";
 import { SwapSuccess } from "./SwapSuccess";
 import { SwapFailed } from "./SwapFailed";
 import { SwapMain } from "./SwapMain";
 
-export const SwapConfirmation = ({ className = '' }: { className?: string }) => {
+export const SwapConfirmation = ({ className = '', style = {} }: { className?: string, style?: CSSObject }) => {
   const swapStatus = useSwapState(useShallow((s) => s.swapStatus));
   
   return (
-    <Container className={`${className} lh-swap-modal-summary`}>
+    <Container className={`${className} lh-summary`} $style={style}>
       {swapStatus === "success" ? (
         <SwapSuccess />
       ) : swapStatus === "failed" ? (
@@ -21,9 +21,10 @@ export const SwapConfirmation = ({ className = '' }: { className?: string }) => 
   );
 };
 
-const Container = styled.div`
+const Container = styled.div<{$style: CSSObject}>`
   width: 100%;
   * {
     box-sizing: border-box;
   }
+  ${({ $style }) => $style}
 `;

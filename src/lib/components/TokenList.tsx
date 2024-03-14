@@ -8,7 +8,7 @@ import { useShallow } from "zustand/react/shallow";
 import { Token, TokenListItemProps } from "../type";
 import { useDexState } from "../store/dex";
 import { eqIgnoreCase } from "../util";
-import { useTokenListBalances } from "../dex/hooks";
+import { useTokenListBalances, useUsdAmount } from "../dex/hooks";
 
 
 export const TokenListItem = (props: {
@@ -20,12 +20,18 @@ export const TokenListItem = (props: {
     ListItem: FC<TokenListItemProps>;
   };
 }) => {
-  const {data: balances} = useTokenListBalances()
-  
+  const {data: balances, isLoading: balanceLoading} = useTokenListBalances()
+
   const { index, style, data } = props;
   const { ListItem, tokens } = data;
 
+
+
+
   const token = tokens[index];
+  const balance = balances  ? balances[token.address] : undefined
+  const priceUsd = useUsdAmount(token.address, balance);
+
   const { fromToken, toToken } = useDexState(
     useShallow((store) => {
       return {
@@ -47,9 +53,12 @@ export const TokenListItem = (props: {
         $disabled={disabled}
       >
         <ListItem
-          balance={balances  ? balances[token.address] : undefined}
+          balance={balance}
           token={token}
           selected={disabled}
+          balanceLoading={balanceLoading}
+          usd={priceUsd.usd}
+          usdLoading={priceUsd.isLoading}
         />
       </StyledListToken>
     </div>

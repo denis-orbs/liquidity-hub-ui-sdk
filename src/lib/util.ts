@@ -1,6 +1,6 @@
 import BN, { BigNumber } from "bignumber.js";
 import Web3 from "web3";
-import { Network } from "./type";
+import { Network, Token } from "./type";
 import _ from "lodash";
 import { supportedChains } from "./config/supportedChains";
 import { nativeTokenAddresses, QUOTE_ERRORS, zero } from "./config/consts";
@@ -103,7 +103,6 @@ export async function getTransactionDetails(
 export const deductSlippage = (amount?: string, slippage?: number) => {
   if (!amount) return "";
   if (!slippage) return amount;
-  console.log(slippage, amount);
 
   return new BigNumber(amount)
     .times(100 - slippage)
@@ -444,3 +443,12 @@ export const getBaseAssets = (chainId: number) => {
 
 
 
+
+
+export const findTokenInList = (tokens: Token[], addressOrSymbol: string) => {
+  const res = tokens.find(
+    (t) =>
+      eqIgnoreCase(t.address, addressOrSymbol) || t.symbol === addressOrSymbol
+  );
+  return res;
+};

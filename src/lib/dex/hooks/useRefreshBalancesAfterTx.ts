@@ -60,8 +60,6 @@ const loopBalances = async (
       [toToken.address]: newBalances[toToken.address],
     };
   }
-  console.log("waiting");
   await delay(3_000);
-  console.log("refetching");
   loopBalances(web3, account, fromToken, toToken, currentBalances);
 };

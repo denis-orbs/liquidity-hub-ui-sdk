@@ -27,12 +27,12 @@ function Wrapped() {
       chainId={connectedChainId}
       partner="playground"
       account={address}
+      slippage={'0.5'}
       supportedChains={[
         supportedChains.polygon.chainId,
-        // supportedChainsConfig.base.chainId,
+        supportedChains.base.chainId,
       ]}
-      initialFromToken="MATIC"
-      initialToToken="USDC"
+      initialFromToken="USDC"
       UIconfig={{
         modalStyles: {
           containerStyles: {

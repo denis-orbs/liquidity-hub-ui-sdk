@@ -7,24 +7,24 @@ import ApproveImg from "../assets/approve.svg";
 import { useSwapState } from "../store/main";
 import { Step, STEPS } from "../type";
 import { isNativeAddress } from "../util";
+import { useShallow } from "zustand/react/shallow";
 
-export const useSteps = (): { steps: Step[]; isLoading: boolean } => {
-  const { fromToken, fromAmount } = useSwapState((store) => ({
+export const useSteps = () => {
+  const { fromToken, fromAmount, currentStep, status } = useSwapState(useShallow((store) => ({
     fromToken: store.fromToken,
     fromAmount: store.fromAmount,
-  }));
+    currentStep: store.currentStep,
+    status: store.swapStatus
+  })));
 
   const { isLoading: allowanceQueryLoading, data: isApproved } = useAllowance(
     fromToken,
     fromAmount
   );
-  return useMemo(() => {
+  const steps = useMemo(() => {
     if (allowanceQueryLoading) {
-      return {
-        steps: [],
-        isLoading: true,
-      };
-    } 
+      return [];
+    }
 
     const wrap: Step = {
       title: `Wrap ${fromToken?.symbol}`,
@@ -34,10 +34,9 @@ export const useSteps = (): { steps: Step[]; isLoading: boolean } => {
 
     const approve: Step = {
       title: `Approve ${fromToken?.symbol} spending`,
-      image:ApproveImg,
+      image: ApproveImg,
       id: STEPS.APPROVE,
     };
-
 
     const sendTx: Step = {
       id: STEPS.SEND_TX,
@@ -54,6 +53,13 @@ export const useSteps = (): { steps: Step[]; isLoading: boolean } => {
     if (isNativeAddress(fromToken?.address || "")) {
       steps.unshift(wrap);
     }
-    return { steps, isLoading: false };
+    return steps;
   }, [fromToken, isApproved, allowanceQueryLoading]);
+
+  return {
+    steps,
+    isLoading: allowanceQueryLoading,
+    currentStep,
+    status
+  };
 };

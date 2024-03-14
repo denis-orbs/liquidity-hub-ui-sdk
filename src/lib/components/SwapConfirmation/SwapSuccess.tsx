@@ -10,11 +10,11 @@ import { Text } from "../Text";
 
 export const SwapSuccess = () => {
   return (
-    <StyledSuccess className="lh-swap-modal-success">
-      <StyledSuccessLogo className="lh-swap-modal-success-img">
+    <StyledSuccess className="lh-success">
+      <StyledSuccessLogo className="lh-success-img">
         <Check />
       </StyledSuccessLogo>
-      <SuccessText className="lh-swap-modal-success-text">
+      <SuccessText className="lh-success-text">
         Swap success
       </SuccessText>
       <Bottom />
@@ -28,7 +28,7 @@ const TXLink = () => {
   const explorerUrl = useChainConfig()?.explorerUrl;
 
   return (
-    <StyledLink target="_blank" href={`${explorerUrl}/tx/${txHash}`}>
+    <StyledLink className="lh-success-link" target="_blank" href={`${explorerUrl}/tx/${txHash}`}>
       View on explorer
     </StyledLink>
   );

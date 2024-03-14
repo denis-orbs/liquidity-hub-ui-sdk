@@ -30,18 +30,15 @@ export function StepComponent({ step }: Props) {
 
   const selected = step.id === currentStep;
   return (
-    <StyledStep className="lh-swap-modal-step">
+    <StyledStep className="lh-step">
       <Logo status={status} image={step.image} selected={selected} />
       <FlexColumn $gap={5}>
-        <StyledStepTitle
-          $selected={selected}
-          className="lh-swap-modal-step-title"
-        >
+        <StyledStepTitle $selected={selected} className="lh-step-title">
           {step.title}
         </StyledStepTitle>
         {step.link && (
           <StyledStepLink
-            className="lh-swap-modal-step-link"
+            className="lh-step-link"
             href={step.link.href}
             target="_blank"
             $selected={selected}
@@ -59,10 +56,22 @@ export function StepComponent({ step }: Props) {
   );
 }
 
-const Logo = ({ image, selected, status }: { image?: string; selected: boolean, status: ActionStatus }) => {
+const Logo = ({
+  image,
+  selected,
+  status,
+}: {
+  image?: string;
+  selected: boolean;
+  status: ActionStatus;
+}) => {
   return (
-    <StyledStepLogo $selected={selected} className="lh-swap-modal-step-logo">
-     {status === 'loading' ?  <StyledLoader size={28} />  :  <img src={image} />}
+    <StyledStepLogo $selected={selected} className="lh-step-logo">
+      {status === "loading" ? (
+        <StyledLoader size={28} className="lh-step-loader" />
+      ) : (
+        <img src={image} />
+      )}
     </StyledStepLogo>
   );
 };
@@ -72,7 +81,7 @@ const StyledLoader = styled(Spinner)`
   position: relative;
   top: -2px;
   left: -1px;
-`
+`;
 
 const StyledStep = styled(FlexRow)`
   min-height: 40px;
