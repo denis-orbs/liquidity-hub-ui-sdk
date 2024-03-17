@@ -1,6 +1,6 @@
 {
   "name": "@orbs-network/liquidity-hub-ui-sdk",
-  "version": "0.0.36",
+  "version": "0.0.37",
   "main": "./dist/main.umd.js",
   "module": "./dist/main.es.js",
   "types": "./dist/index.d.ts",
@@ -50,13 +50,13 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
     "typescript": "^5.2.2",
-    "viem": "1",
+    "viem": "1.19.15",
     "vite": "^5.0.8",
     "vite-plugin-dts": "^3.7.2",
     "vite-plugin-node-polyfills": "^0.21.0",
     "vite-plugin-svgr": "^4.2.0",
     "vite-tsconfig-paths": "^4.3.1",
-    "wagmi": "1"
+    "wagmi": "1.4.12"
   },
   "peerDependencies": {
     "@tanstack/react-query": ">=5.14.6",
