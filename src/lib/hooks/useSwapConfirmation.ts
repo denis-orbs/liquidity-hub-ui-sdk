@@ -2,6 +2,7 @@ import { useShallow } from "zustand/react/shallow";
 import { useSwapState } from "../store/main";
 import { useAmountUI } from "./useAmountUI";
 import { useQuotePayload } from "./useQuoteData";
+import { useSwapButton } from "./useSwapButton";
 
 export const useSwapConfirmation = () => {
   const store = useSwapState(
@@ -22,7 +23,7 @@ export const useSwapConfirmation = () => {
     }))
   );
 
-  const { data: quote } = useQuotePayload()
+  const quote = useQuotePayload().data
 
   return {
     fromToken: store.fromToken,
@@ -36,6 +37,7 @@ export const useSwapConfirmation = () => {
     closeModal: store.onCloseSwap,
     fromTokenUsd: store.fromTokenUsd,
     toTokenUsd: store.toTokenUsd,
+    ...useSwapButton()
   };
 };
 

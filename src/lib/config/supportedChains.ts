@@ -3,20 +3,29 @@ import _ from "lodash";
 import { networks } from "../networks";
 import { api } from "../api";
 
-
 const polygon: Network = {
   native: networks.poly.native,
   wToken: networks.poly.wToken,
-  chainId: 137,
+  chainId: networks.poly.id,
   chainName: "Polygon",
   explorerUrl: "https://polygonscan.com",
   apiUrl: "https://polygon.hub.orbs.network",
 };
 
+const fanton: Network = {
+  native: networks.ftm.native,
+  wToken: networks.ftm.wToken,
+  chainId: networks.ftm.id,
+  chainName: "Fantom",
+  explorerUrl: "https://ftmscan.com",
+  apiUrl: "https://polygon.hub.orbs.network",
+  getTokens: api.getFantomTokens,
+};
+
 const bsc: Network = {
   native: networks.bsc.native,
   wToken: networks.bsc.wToken,
-  chainId: 56,
+  chainId: networks.bsc.id,
   chainName: "BSC",
   explorerUrl: "https://bscscan.com",
   apiUrl: "https://bsc.hub.orbs.network",
@@ -38,7 +47,7 @@ const zkEvm: Network = {
 const base: Network = {
   native: networks.base.native,
   wToken: networks.base.wToken,
-  chainId: 8453,
+  chainId: networks.base.id,
   chainName: "Base",
   explorerUrl: "https://basescan.org",
   apiUrl: "https://base.hub.orbs.network",
@@ -48,4 +57,5 @@ export const supportedChains = {
   bsc,
   zkEvm,
   base,
+  fanton
 };

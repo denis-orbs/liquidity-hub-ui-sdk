@@ -117,8 +117,24 @@ const getPolygonZkEvmTokens = async (): Promise<Token[]> => {
   return [native, ...result];
 };
 
+
+const getFantomTokens = async (): Promise<Token[]> => {
+  const res = await fetch("https://raw.githubusercontent.com/viaprotocol/tokenlists/main/tokenlists/ftm.json");
+  const data = await res.json();
+  return data.map((token: any) => {
+    return {
+      address: token.address,
+      symbol: token.symbol,
+      decimals: token.decimals,
+      logoUrl: token.logoURI,
+      name: token.name,
+    }
+  })
+}
+
 export const api = {
   getTokens,
   getPolygonZkEvmTokens,
   priceUsd: fetchPrice,
+  getFantomTokens
 };

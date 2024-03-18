@@ -69,7 +69,12 @@ export const useSwapState = create<SwapState>((set, get) => ({
       showConfirmation: false,
     });
 
-    if (get().swapStatus !== "loading") {
+    if (get().swapError) {
+      setTimeout(() => {
+        set({swapStatus: undefined, swapError: undefined, currentStep: undefined});
+      }, 200);
+    }
+    else if (get().swapStatus !== "loading") {
       setTimeout(() => {
         set(initialSwapState);
       }, 200);

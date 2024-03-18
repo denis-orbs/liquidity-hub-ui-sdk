@@ -50,7 +50,6 @@ export const useQuote = (args: QuoteQueryArgs) => {
     supportedChains,
   } = useMainContext();
   const apiUrl = useApiUrl();
-
   const showConfirmation = useSwapState(useShallow((s) => s.showConfirmation));
   const disabled = useIsDisabled();
 
@@ -61,7 +60,7 @@ export const useQuote = (args: QuoteQueryArgs) => {
     isNativeAddress(toToken?.address || "");
 
   const chainId = connectedChainId || _.first(supportedChains);
-      
+
   const enabled =
     !isUnwrap &&
     !!partner &&
@@ -73,7 +72,7 @@ export const useQuote = (args: QuoteQueryArgs) => {
     liquidityHubEnabled &&
     !!apiUrl &&
     !disabled;
-  
+
   return useQuery({
     queryKey: [
       QUERY_KEYS.QUOTE,
@@ -82,41 +81,39 @@ export const useQuote = (args: QuoteQueryArgs) => {
       fromAmount,
       slippage,
       apiUrl,
-      chainId
+      chainId,
     ],
-    queryFn: async ({ signal }) => {
+    queryFn: async ({signal}) => {
       swapAnalytics.onQuoteRequest();
       let quote;
-      let timeout;
       const count = counter();
+      
       try {
-        timeout = setTimeout(() => {
-          throw new Error(QUOTE_ERRORS.timeout);
-        }, 10_000);
-        const response = await fetch(`${apiUrl}/quote?chainId=${chainId}`, {
-          method: "POST",
-          body: JSON.stringify({
-            inToken: fromAddress,
-            outToken: toAddress,
-            inAmount: fromAmount,
-            outAmount: !dexAmountOut
-              ? "-1"
-              : new BN(dexAmountOut).gt(0)
-              ? dexAmountOut
-              : "0",
-            user: account || zeroAddress,
-            slippage,
-            qs: encodeURIComponent(
-              window.location.hash || window.location.search
-            ),
-            partner: partner.toLowerCase(),
-            sessionId: swapAnalytics.data.sessionId,
-          }),
-          signal,
-        });
-        quote = await response.json();
         let gasCostOutputToken = "0";
         try {
+          const response = await fetch(`${apiUrl}/quote?chainId=${chainId}`, {
+            method: "POST",
+            body: JSON.stringify({
+              inToken: fromAddress,
+              outToken: toAddress,
+              inAmount: fromAmount,
+              outAmount: !dexAmountOut
+                ? "-1"
+                : new BN(dexAmountOut).gt(0)
+                ? dexAmountOut
+                : "0",
+              user: account || zeroAddress,
+              slippage,
+              qs: encodeURIComponent(
+                window.location.hash || window.location.search
+              ),
+              partner: partner.toLowerCase(),
+              sessionId: swapAnalytics.data.sessionId,
+            }),
+            signal,
+          });
+          quote = await response.json();
+          console.log({ quote });
           gasCostOutputToken = amountUi(
             toToken?.decimals,
             BN(
@@ -171,8 +168,6 @@ export const useQuote = (args: QuoteQueryArgs) => {
           throw new Error(error.message);
         }
       } finally {
-        clearTimeout(timeout);
-
         if (quote.sessionId) {
           swapAnalytics.setSessionId(quote.sessionId);
         }

@@ -3,14 +3,32 @@ import { StepComponent } from "./Step";
 import { SwapDetails } from "./Details";
 import { useSteps } from "../../hooks/useSteps";
 import { FlexColumn } from "../../base-styles";
+import { ReactNode } from "react";
+import { useSwapButton } from "../../hooks";
 
-export const SwapMain = ({ style = {} }: { style?: CSSObject }) => {
+export const SwapMain = ({
+  style = {},
+  swapButton,
+}: {
+  style?: CSSObject;
+  swapButton: ReactNode;
+}) => {
   return (
     <Container style={style}>
       <SwapDetails />
       <StepsComponent />
+      <SwapButton>{swapButton}</SwapButton>
     </Container>
   );
+};
+
+const SwapButton = ({ children }: { children: ReactNode }) => {
+  const { showButton } = useSwapButton();
+  if (!showButton) {
+    return null;
+  }
+
+  return <>{children}</>;
 };
 
 const StepsComponent = () => {
@@ -20,11 +38,7 @@ const StepsComponent = () => {
 
   return (
     <>
-      <StyledSteps
-        $gap={15}
-        style={{ width: "100%" }}
-        className="lh-steps"
-      >
+      <StyledSteps $gap={15} style={{ width: "100%" }} className="lh-steps">
         <Divider className="lh-steps-divider" />
         {steps.map((step) => {
           return <StepComponent key={step.id} step={step} />;
@@ -53,5 +67,5 @@ const StyledSteps = styled(FlexColumn)`
   padding-top: 20px;
   position: relative;
   background-color: ${(props) => props.theme.colors.onyx};
-  border-top: 1px solid #433D53;
+  border-top: 1px solid #433d53;
 `;

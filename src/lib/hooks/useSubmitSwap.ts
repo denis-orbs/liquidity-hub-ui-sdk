@@ -57,7 +57,7 @@ export const useSubmitSwap = () => {
   const { data: approved } = useAllowance(fromToken, fromAmount);
 
   return useCallback(
-    async (args?: { fallback?: () => void; onSuccess?: () => void }) => {
+    async (hasFallback?: boolean) => {
       let wrapped = false;
       swapAnalytics.onInitSwap({
         fromTokenUsd,
@@ -123,21 +123,18 @@ export const useSubmitSwap = () => {
           txHash,
           explorerLink: `${explorerUrl}/tx/${txHash}`,
         });
-        args?.onSuccess?.();
         return txHash;
       } catch (error: any) {
-        console.log(error.message);
-
         onSwapError(error.message);
         swapAnalytics.onClobFailure();
 
         if (wrapped) {
           // handle error happened after wrap
         }
-        if (args?.fallback) {
-          args.fallback();
+        if (hasFallback) {
           onCloseSwap();
         }
+        throw error;
       } finally {
         swapAnalytics.clearState();
       }

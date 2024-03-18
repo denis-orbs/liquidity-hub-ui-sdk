@@ -20,7 +20,7 @@ export const useTokenListBalances = () => {
       _.size(list),
       web3?.version,
     ],
-    queryFn: async () => {
+    queryFn: async () => {      
       if (!account || !chainId || !list || invalidChain || !web3) return {};            
       return getBalances(list!, web3, account);
     },

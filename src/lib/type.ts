@@ -56,10 +56,6 @@ export interface Token {
 
 type TokenUsd = string | number | undefined;
 
-export interface ShowConfirmationProps {
-  fromTokenUsd: TokenUsd;
-  toTokenUsd: TokenUsd;
-}
 
 export interface ProviderArgs {
   supportedChains: number[];
@@ -131,6 +127,7 @@ export interface QuoteResponse {
   outAmountUIWithSlippage?: string;
   disableInterval?: boolean;
   gasCostOutputToken?: string;
+  sessionId?: string;
 }
 
 export enum LH_CONTROL {
@@ -145,7 +142,7 @@ export enum STEPS {
   SEND_TX,
 }
 
-export type ActionStatus = "loading" | "success" | "failed" | undefined;
+export type ActionStatus = "pending"  | "loading" | "success" | "failed" | undefined;
 
 export interface Step {
   title: string;
@@ -169,7 +166,9 @@ export type UseLiquidityHubArgs = {
   fromAmountUI?: string;
   dexAmountOut?: string;
   dexAmountOutUI?: string;
-  ignoreSlippage?: boolean;
+  slippage?: number;
+  fromTokenUsd?: TokenUsd;
+  toTokenUsd?: TokenUsd;
 };
 
 export type TradeOwner = "dex" | "lh";

@@ -50,8 +50,8 @@ export const LiquidityHubProvider = ({
   getTokens
 }: Props) => {
   const slippage = useMemo(() => {
-    if (!_slippage) return;
-    return BN(_slippage).isNaN() ? undefined : Number(_slippage);
+    if (!_slippage) return 0 ;
+    return BN(_slippage).isNaN() ? 0 : Number(_slippage);
   }, [_slippage]);
 
   const reset = useSwapState(useShallow((s) => s.reset));

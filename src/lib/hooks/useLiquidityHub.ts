@@ -4,8 +4,8 @@ import { useQuote } from "./useQuote";
 import BN from "bignumber.js";
 import { swapAnalytics } from "../analytics";
 import { useSwapState } from "../store/main";
-import { ShowConfirmationProps, UseLiquidityHubArgs } from "../type";
-import { amountBN, deductSlippage } from "../util";
+import { UseLiquidityHubArgs } from "../type";
+import { amountBN } from "../util";
 import { useTradeOwner } from "./useTradeOwner";
 import { useMainContext } from "../provider";
 import { useShallow } from "zustand/react/shallow";
@@ -64,18 +64,8 @@ const useDexAmountOutWei = (args: UseLiquidityHubArgs) => {
     const value = args.dexAmountOut
       ? args.dexAmountOut
       : amountBN(args.toToken.decimals, args.dexAmountOutUI || "0").toString();
-
-    if (!args.ignoreSlippage) {
-      return deductSlippage(value, slippage);
-    }
-    return value;
-  }, [
-    args.dexAmountOut,
-    args.dexAmountOutUI,
-    args.toToken,
-    args.ignoreSlippage,
-    slippage,
-  ]);
+    return BN(value).decimalPlaces(0).toString();
+  }, [args.dexAmountOut, args.dexAmountOutUI, args.toToken, slippage]);
 };
 
 const useConfirmSwap = (args: UseLiquidityHubArgs) => {
@@ -84,22 +74,25 @@ const useConfirmSwap = (args: UseLiquidityHubArgs) => {
   const updateState = useSwapState(useShallow((s) => s.updateState));
 
   return useCallback(
-    (props?: ShowConfirmationProps) => {
+    () => {
       if (!args.fromToken || !args.toToken || !fromAmount) {
         console.error("Missing args ");
         return;
       }
+
+      console.log({args});
+      
       updateState({
         fromToken: args.fromToken,
         toToken: args.toToken,
         fromAmount,
         showConfirmation: true,
         dexAmountOut,
-        fromTokenUsd: props?.fromTokenUsd,
-        toTokenUsd: props?.toTokenUsd,
+        fromTokenUsd: args?.fromTokenUsd,
+        toTokenUsd: args?.toTokenUsd,
       });
     },
-    [args.fromToken, args.toToken, fromAmount, updateState, dexAmountOut]
+    [args.fromToken, args.toToken, fromAmount, updateState, dexAmountOut, args?.fromTokenUsd, args?.toTokenUsd]
   );
 };
 

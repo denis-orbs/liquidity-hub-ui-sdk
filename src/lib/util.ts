@@ -465,3 +465,13 @@ export const filterTokens = (list?: Token[], filterValue?: string): Token[] => {
     );
   });
 };
+
+
+export function fetchWithTimeout(func: () => Promise<Response>, timeout: number){
+  return Promise.race([
+    func(),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Request timed out')), timeout)
+    )
+  ]);
+}

@@ -35,10 +35,8 @@ import { LoadingText } from "../components/LoadingText";
 import { TokenSearchInput } from "../components/SearchInput";
 import { useSwapButton } from "../hooks/useSwapButton";
 import { useShallow } from "zustand/react/shallow";
-import { useDebounce } from "../hooks/useDebounce";
 import {
   useFormatNumber,
-  useLiquidityHub,
   useSwapConfirmation,
 } from "../hooks";
 import { Text } from "../components/Text";
@@ -50,7 +48,6 @@ import { LiquidityHubProvider, useMainContext } from "../provider";
 import { useDexState } from "../store/dex";
 import {
   usePercentSelect,
-  usePriceUsd,
   useShowConfirmationButton,
   useDexLH,
   useUsdAmount,
@@ -76,9 +73,6 @@ export const theme = {
 };
 
 interface ContenxtType extends WidgetConfig {
-  fromAmountUI: string;
-  setFromAmountUI: (value: string) => void;
-  liquidityHub: ReturnType<typeof useLiquidityHub>;
   UIconfig?: WidgetConfig;
 }
 
@@ -94,28 +88,9 @@ interface ContextProps {
 }
 
 const ContextProvider = (props: ContextProps) => {
-  const [fromAmountUI, setFromAmountUI] = useState("");
-  const { fromToken, toToken } = useDexState(
-    useShallow((s) => ({
-      fromToken: s.fromToken,
-      toToken: s.toToken,
-    }))
-  );
-
-  const _fromAmountUI = useDebounce(fromAmountUI, 300);
-
-  const liquidityHub = useLiquidityHub({
-    fromToken,
-    toToken,
-    fromAmountUI: _fromAmountUI,
-  });
-
   return (
     <Context.Provider
       value={{
-        fromAmountUI,
-        setFromAmountUI,
-        liquidityHub,
         UIconfig: props.UIconfig,
       }}
     >
@@ -211,7 +186,7 @@ const TokenSelect = ({
         <TokenSearchInput value={filterValue} setValue={setFilterValue} />
         <StyledTokenListContainer>
           <TokenList
-          ListLabel={TokenListLabel}
+            ListLabel={TokenListLabel}
             filter={filterValue}
             onTokenSelect={onTokenSelect}
             ListItem={TokenListItem}
@@ -227,13 +202,16 @@ const StyledPoweredByOrbs = styled(PoweredByOrbs)`
 `;
 
 const SwapModal = () => {
-  const { showModal, closeModal, swapStatus } = useSwapConfirmation();
-  const { swap, isPending, text, showButton } = useSwapButton();
+  const { closeModal, swapStatus, showModal } = useSwapConfirmation();
+  const { swap, isPending, text } = useSwapButton();
 
   const onSuccess = useOnSwapSuccess();
 
-  const onClick = useCallback(() => {
-    swap({ onSuccess });
+  const onClick = useCallback(async () => {
+    try {
+      await swap();
+      onSuccess();
+    } catch (error) {}
   }, [swap, onSuccess]);
 
   return (
@@ -242,29 +220,19 @@ const SwapModal = () => {
       open={showModal}
       onClose={closeModal}
     >
-      <SwapConfirmation />
-      {showButton && (
-        <StyledSubmitButton onClick={onClick} isLoading={isPending}>
-          {text}
-        </StyledSubmitButton>
-      )}
+      <SwapConfirmation
+        swapButton={
+          <StyledSubmitButton onClick={onClick} isLoading={isPending}>
+            {text}
+          </StyledSubmitButton>
+        }
+      />
     </WidgetModal>
   );
 };
 
 export const SwapSubmitButton = () => {
-  const { fromToken, toToken } = useDexState(
-    useShallow((s) => ({
-      fromToken: s.fromToken,
-      toToken: s.toToken,
-    }))
-  );
-  const fromTokenUsd = usePriceUsd({ address: fromToken?.address }).data;
-  const toTokenUsd = usePriceUsd({ address: toToken?.address }).data;
-  const { disabled, text, onClick, isLoading } = useShowConfirmationButton(
-    fromTokenUsd || "",
-    toTokenUsd || ""
-  );
+  const { disabled, text, onClick, isLoading } = useShowConfirmationButton();
 
   return (
     <StyledSubmitButton
@@ -446,13 +414,15 @@ const TokenPanel = ({
             width: "100%",
           }}
         >
-          {account && <Balance
-            value={`Balance: ${balance || "0"}`}
-            isLoading={balanceLoading || fetchingBalancesAfterTx}
-            css={{
-              opacity: !token ? 0 : 1,
-            }}
-          />}
+          {account && (
+            <Balance
+              value={`Balance: ${balance || "0"}`}
+              isLoading={balanceLoading || fetchingBalancesAfterTx}
+              css={{
+                opacity: !token ? 0 : 1,
+              }}
+            />
+          )}
           <USD value={`$ ${usd || "0"}`} isLoading={usdLoading} />
         </FlexRow>
       </StyledTokenPanelContent>
@@ -501,8 +471,8 @@ export const Widget = (props: Props) => {
 const Watcher = (props: Props) => {
   useInitialTokens(props.initialFromToken, props.initialToToken);
 
-  return null
-}
+  return null;
+};
 
 export const TokenListItem = (props: TokenListItemProps) => {
   const balance = useFormatNumber({ value: props.balance });
@@ -549,10 +519,9 @@ export const TokenListItem = (props: TokenListItemProps) => {
   );
 };
 
-
-const TokenListLabel = ({text}: {text: string}) => {
-  return <StyledTokenListLabel>{text}</StyledTokenListLabel>
-}
+const TokenListLabel = ({ text }: { text: string }) => {
+  return <StyledTokenListLabel>{text}</StyledTokenListLabel>;
+};
 
 const StyledUsd = styled(LoadingText)`
   font-size: 12px;
@@ -569,14 +538,12 @@ const StyledBalance = styled(LoadingText)`
 `;
 
 export const StyledTokenListLabel = styled.div`
-padding: 0px 20px;
+  padding: 0px 20px;
   display: flex;
   align-items: center;
   justify-content: flex-start;
   height: 100%;
-
-
-`
+`;
 
 export const StyledListToken = styled.div<{ $disabled?: boolean }>(
   ({ $disabled }) => ({

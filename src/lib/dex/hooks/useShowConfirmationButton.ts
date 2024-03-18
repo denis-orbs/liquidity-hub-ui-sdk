@@ -1,5 +1,5 @@
 import BN from "bignumber.js";
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 
 import { useShallow } from "zustand/react/shallow";
 import { useMutation } from "@tanstack/react-query";
@@ -39,10 +39,7 @@ export const useUnwrapMF = () => {
   });
 };
 
-export const useShowConfirmationButton = (
-  fromTokenUsd: string | number,
-  toTokenUsd: string | number
-) => {
+export const useShowConfirmationButton = () => {
   const { fromToken, toToken } = useDexState((s) => ({
     fromToken: s.fromToken,
     toToken: s.toToken,
@@ -63,13 +60,6 @@ export const useShowConfirmationButton = (
 
   const isLoading = quoteLoading || switchNetworkLoading || unwrapLoading;
 
-  const _confirmSwap = useCallback(() => {
-    return confirmSwap({
-      fromTokenUsd,
-      toTokenUsd,
-    });
-  }, [confirmSwap, fromTokenUsd, toTokenUsd]);
-
   return useMemo(() => {
     if (quoteLoading) {
       return {
@@ -79,7 +69,7 @@ export const useShowConfirmationButton = (
         isLoading,
       };
     }
-    
+
     if (!account) {
       return {
         disabled: false,
@@ -142,7 +132,7 @@ export const useShowConfirmationButton = (
     return {
       disabled: false,
       text: "Swap",
-      onClick: _confirmSwap,
+      onClick: confirmSwap,
     };
   }, [
     wrongChain,
@@ -154,7 +144,7 @@ export const useShowConfirmationButton = (
     quoteError,
     switchNetwork,
     switchNetworkLoading,
-    _confirmSwap,
+    confirmSwap,
     quoteLoading,
     isLoading,
     account,

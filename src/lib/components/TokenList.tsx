@@ -146,7 +146,9 @@ export function TokenList({
 
   return (
     <Container $style={style}>
-      {noResults ? (
+      {!_.size(list) ? (
+        <StyledLoading className="lh-list-loding">Tokens loading</StyledLoading>
+      ) : noResults ? (
         <StyledNoResults className="lh-list-no-results">
           No results found
         </StyledNoResults>
@@ -183,6 +185,13 @@ const Container = styled(FlexColumn)<{ $style: CSSObject }>`
   width: 100%;
   flex: 1;
   ${({ $style }) => $style}
+`;
+
+const StyledLoading = styled.p`
+  font-size: 16px;
+  width: 100%;
+  text-align: left;
+  padding-top: 20px;
 `;
 
 const StyledNoResults = styled.p`
