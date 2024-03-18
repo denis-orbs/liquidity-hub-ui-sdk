@@ -3,19 +3,19 @@ import { useSwapState } from "../store/main";
 import { useQuote } from "./useQuote";
 
 export const useQuotePayload = () => {
-  const { fromToken, toToken, fromAmount, dexAmountOut } =
+  const { fromToken, toToken, fromAmount, dexMinAmountOut } =
     useSwapState(
       useShallow((s) => ({
         fromToken: s.fromToken,
         toToken: s.toToken,
         fromAmount: s.fromAmount,
-        dexAmountOut: s.dexAmountOut,
+        dexMinAmountOut: s.dexMinAmountOut,
       }))
     );
   return useQuote({
     fromToken,
     toToken,
     fromAmount,
-    dexAmountOut,
+    dexMinAmountOut,
   });
 };

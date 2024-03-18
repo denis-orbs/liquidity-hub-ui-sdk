@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useSwapState } from "../store/main";
 import { useAmountUI } from "./useAmountUI";
@@ -15,15 +16,22 @@ export const useSwapConfirmation = () => {
       showConfirmation: s.showConfirmation,
       updateState: s.updateState,
       fromAmount: s.fromAmount,
-      dexAmountOut: s.dexAmountOut,
+      dexExpectedAmountOut: s.dexExpectedAmountOut,
       disableLh: s.disableLh,
       onCloseSwap: s.onCloseSwap,
       fromTokenUsd: s.fromTokenUsd,
-      toTokenUsd: s.toTokenUsd
+      toTokenUsd: s.toTokenUsd,
     }))
   );
 
-  const quote = useQuotePayload().data
+  const quote = useQuotePayload().data;
+
+  const toAmount = useMemo(() => {
+    if (store.dexExpectedAmountOut) {
+      return store.dexExpectedAmountOut;
+    }
+    return quote?.outAmount;
+  }, [quote, store.dexExpectedAmountOut]);
 
   return {
     fromToken: store.fromToken,
@@ -32,12 +40,11 @@ export const useSwapConfirmation = () => {
     txHash: store.txHash,
     swapStatus: store.swapStatus,
     swapError: store.swapError,
-    toAmount: useAmountUI(store.toToken?.decimals, quote?.outAmount),
+    toAmount: useAmountUI(store.toToken?.decimals, toAmount),
     showModal: !!store.showConfirmation,
     closeModal: store.onCloseSwap,
     fromTokenUsd: store.fromTokenUsd,
     toTokenUsd: store.toTokenUsd,
-    ...useSwapButton()
+    ...useSwapButton(),
   };
 };
-

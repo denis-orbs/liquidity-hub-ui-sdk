@@ -234,6 +234,8 @@ const SwapModal = () => {
 export const SwapSubmitButton = () => {
   const { disabled, text, onClick, isLoading } = useShowConfirmationButton();
 
+  
+
   return (
     <StyledSubmitButton
       className={`lh-swap-button`}

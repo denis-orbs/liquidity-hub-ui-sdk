@@ -1,5 +1,4 @@
-import { useMainContext } from "../provider";
-import { useSwapState } from "../store/main";
+import { useGlobalStore, useSwapState } from "../store/main";
 import { useCallback } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { swapAnalytics } from "../analytics";
@@ -16,7 +15,6 @@ import { zeroAddress } from "../config/consts";
 import { useOrders } from "./useOrders";
 
 export const useSubmitSwap = () => {
-  const slippage = useMainContext().slippage;
   const {
     onSwapSuccess,
     onSwapError,
@@ -25,7 +23,6 @@ export const useSubmitSwap = () => {
     fromAmount,
     fromToken,
     toToken,
-    dexAmountOut,
     fromTokenUsd,
     toTokenUsd,
   } = useSwapState(
@@ -37,14 +34,12 @@ export const useSubmitSwap = () => {
       fromAmount: store.fromAmount,
       fromToken: store.fromToken,
       toToken: store.toToken,
-      dexAmountOut: store.dexAmountOut,
       fromTokenUsd: store.fromTokenUsd,
       toTokenUsd: store.toTokenUsd,
     }))
   );
 
   const { data: quote } = useQuotePayload();
-
   const approve = useApprove();
   const wrap = useWrap(fromToken);
   const sign = useSign();
@@ -53,25 +48,13 @@ export const useSubmitSwap = () => {
   const wTokenAddress = chainConfig?.wToken?.address;
   const explorerUrl = chainConfig?.explorerUrl;
   const addOrder = useOrders().addOrder;
+  const setSessionId = useGlobalStore().setSessionId
 
   const { data: approved } = useAllowance(fromToken, fromAmount);
 
   return useCallback(
     async (hasFallback?: boolean) => {
       let wrapped = false;
-      swapAnalytics.onInitSwap({
-        fromTokenUsd,
-        fromToken,
-        toToken,
-        dexAmountOut,
-        dstTokenUsdValue: toTokenUsd,
-        srcAmount: fromAmount,
-        slippage,
-        tradeType: "BEST_TRADE",
-        tradeOutAmount: quote?.outAmount,
-        quoteAmountOut: quote?.outAmount,
-      });
-
       try {
         if (!wTokenAddress) {
           throw new Error("Missing weth address");
@@ -123,6 +106,7 @@ export const useSubmitSwap = () => {
           txHash,
           explorerLink: `${explorerUrl}/tx/${txHash}`,
         });
+        setSessionId(undefined);
         return txHash;
       } catch (error: any) {
         onSwapError(error.message);
@@ -136,7 +120,9 @@ export const useSubmitSwap = () => {
         }
         throw error;
       } finally {
+        
         swapAnalytics.clearState();
+
       }
     },
     [
@@ -156,6 +142,8 @@ export const useSubmitSwap = () => {
       onCloseSwap,
       addOrder,
       explorerUrl,
+      fromTokenUsd,
+      toTokenUsd,
     ]
   );
 };

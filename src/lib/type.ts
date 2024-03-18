@@ -156,7 +156,7 @@ export type QuoteQueryArgs = {
   fromToken?: Token;
   toToken?: Token;
   fromAmount?: string;
-  dexAmountOut?: string;
+  dexMinAmountOut?: string;
 };
 
 export type UseLiquidityHubArgs = {
@@ -164,8 +164,10 @@ export type UseLiquidityHubArgs = {
   toToken?: Token;
   fromAmount?: string;
   fromAmountUI?: string;
-  dexAmountOut?: string;
-  dexAmountOutUI?: string;
+  dexMinAmountOut?: string;
+  dexMinAmountOutUI?: string;
+  dexExpectedAmountOut?: string;
+  dexExpectedAmountOutUI?: string;
   slippage?: number;
   fromTokenUsd?: TokenUsd;
   toTokenUsd?: TokenUsd;

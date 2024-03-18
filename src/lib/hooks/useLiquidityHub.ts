@@ -2,47 +2,14 @@ import { useCallback, useMemo } from "react";
 import { useAllowance } from "./useAllowance";
 import { useQuote } from "./useQuote";
 import BN from "bignumber.js";
-import { swapAnalytics } from "../analytics";
 import { useSwapState } from "../store/main";
 import { UseLiquidityHubArgs } from "../type";
 import { amountBN } from "../util";
 import { useTradeOwner } from "./useTradeOwner";
-import { useMainContext } from "../provider";
 import { useShallow } from "zustand/react/shallow";
 import _ from "lodash";
-
-const useSendAnalyticsEvents = (
-  args: UseLiquidityHubArgs,
-  quoteAmountOut?: string
-) => {
-  const fromAmount = useFromAmountWei(args);
-  const dexAmountOut = useDexAmountOutWei(args);
-  const slippage = useMainContext().slippage;
-  return useCallback(
-    (fromTokenUsd: string | number, toTokenUsd: string | number) => {
-      swapAnalytics.onInitSwap({
-        fromTokenUsd,
-        fromToken: args.fromToken,
-        toToken: args.toToken,
-        dexAmountOut,
-        dstTokenUsdValue: toTokenUsd,
-        srcAmount: fromAmount,
-        slippage,
-        tradeType: "BEST_TRADE",
-        tradeOutAmount: dexAmountOut,
-        quoteAmountOut: quoteAmountOut || "",
-      });
-    },
-    [
-      args.fromToken,
-      args.toToken,
-      dexAmountOut,
-      fromAmount,
-      slippage,
-      quoteAmountOut,
-    ]
-  );
-};
+import { EMPTY_QUOTE_RESPONSE } from "../config/consts";
+import useAnalytics from "./useAnalytics";
 
 const useFromAmountWei = (args: UseLiquidityHubArgs) => {
   return useMemo(() => {
@@ -55,45 +22,73 @@ const useFromAmountWei = (args: UseLiquidityHubArgs) => {
   }, [args.fromAmount, args.fromAmountUI, args.fromToken]);
 };
 
-const useDexAmountOutWei = (args: UseLiquidityHubArgs) => {
-  const slippage = useMainContext().slippage;
+const useDexMinAmountOutWei = (args: UseLiquidityHubArgs) => {
   return useMemo(() => {
-    if ((!args.dexAmountOut && !args.dexAmountOutUI) || !args.toToken) {
+    if ((!args.dexMinAmountOut && !args.dexMinAmountOutUI) || !args.toToken) {
       return undefined;
     }
-    const value = args.dexAmountOut
-      ? args.dexAmountOut
-      : amountBN(args.toToken.decimals, args.dexAmountOutUI || "0").toString();
+    const value = args.dexMinAmountOut
+      ? args.dexMinAmountOut
+      : amountBN(
+          args.toToken.decimals,
+          args.dexMinAmountOutUI || "0"
+        ).toString();
     return BN(value).decimalPlaces(0).toString();
-  }, [args.dexAmountOut, args.dexAmountOutUI, args.toToken, slippage]);
+  }, [args.dexMinAmountOutUI, args.dexMinAmountOutUI, args.toToken]);
 };
 
-const useConfirmSwap = (args: UseLiquidityHubArgs) => {
+const useDexExpectedAmountOutWei = (args: UseLiquidityHubArgs) => {
+  return useMemo(() => {
+    if (
+      (!args.dexExpectedAmountOut && !args.dexExpectedAmountOutUI) ||
+      !args.toToken
+    ) {
+      return undefined;
+    }
+    const value = args.dexExpectedAmountOut
+      ? args.dexExpectedAmountOut
+      : amountBN(
+          args.toToken.decimals,
+          args.dexExpectedAmountOutUI || "0"
+        ).toString();
+    return BN(value).decimalPlaces(0).toString();
+  }, [args.dexExpectedAmountOutUI, args.dexExpectedAmountOutUI, args.toToken]);
+};
+
+const useConfirmSwap = (
+  args: UseLiquidityHubArgs,
+  dexMinAmountOut?: string,
+  dexExpectedAmountOut?: string
+) => {
   const fromAmount = useFromAmountWei(args);
-  const dexAmountOut = useDexAmountOutWei(args);
   const updateState = useSwapState(useShallow((s) => s.updateState));
 
-  return useCallback(
-    () => {
-      if (!args.fromToken || !args.toToken || !fromAmount) {
-        console.error("Missing args ");
-        return;
-      }
+  return useCallback(() => {
+    if (!args.fromToken || !args.toToken || !fromAmount) {
+      console.error("Missing args ");
+      return;
+    }
 
-      console.log({args});
-      
-      updateState({
-        fromToken: args.fromToken,
-        toToken: args.toToken,
-        fromAmount,
-        showConfirmation: true,
-        dexAmountOut,
-        fromTokenUsd: args?.fromTokenUsd,
-        toTokenUsd: args?.toTokenUsd,
-      });
-    },
-    [args.fromToken, args.toToken, fromAmount, updateState, dexAmountOut, args?.fromTokenUsd, args?.toTokenUsd]
-  );
+    updateState({
+      fromToken: args.fromToken,
+      toToken: args.toToken,
+      fromAmount,
+      showConfirmation: true,
+      dexMinAmountOut,
+      fromTokenUsd: args?.fromTokenUsd,
+      toTokenUsd: args?.toTokenUsd,
+      dexExpectedAmountOut,
+    });
+  }, [
+    args.fromToken,
+    args.toToken,
+    fromAmount,
+    updateState,
+    dexMinAmountOut,
+    args?.fromTokenUsd,
+    args?.toTokenUsd,
+    dexExpectedAmountOut,
+  ]);
 };
 
 export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
@@ -108,24 +103,50 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
 
   const fromAmount = useFromAmountWei(args);
 
-  const dexAmountOut = useDexAmountOutWei(args);
+  const dexMinAmountOut = useDexMinAmountOutWei(args);
+  const dexExpectedAmountOut = useDexExpectedAmountOutWei(args);
 
   const quoteQuery = useQuote({
     fromToken,
     toToken,
     fromAmount,
-    dexAmountOut,
+    dexMinAmountOut,
   });
 
   // prefetching allowance
   useAllowance(fromToken, fromAmount);
 
-  const tradeOwner = useTradeOwner(quoteQuery.data?.outAmount, dexAmountOut);
-  const analyticsInit = useSendAnalyticsEvents(
+  const tradeOwner = useTradeOwner(quoteQuery.data?.outAmount, dexMinAmountOut);
+  const analyticsInit = useAnalytics();
+
+  const analyticsInitTrade = useCallback(() => {
+    analyticsInit.initTrade({
+      fromToken,
+      toToken,
+      fromAmount,
+      dexMinAmountOut,
+      dexExpectedAmountOut,
+      quoteAmountOut: quoteQuery.data?.outAmount,
+      toTokenUsd: args.toTokenUsd,
+      fromTokenUsd: args.fromTokenUsd,
+    });
+  }, [
+    fromToken,
+    toToken,
+    fromAmount,
+    quoteQuery.data?.outAmount,
+    dexMinAmountOut,
+    dexExpectedAmountOut,
+    analyticsInit,
+    args.toTokenUsd,
+    args.fromTokenUsd,
+  ]);
+
+  const showSwapConfirmation = useConfirmSwap(
     args,
-    quoteQuery.data?.outAmount
+    dexMinAmountOut,
+    dexExpectedAmountOut
   );
-  const showSwapConfirmation = useConfirmSwap(args);
 
   const noQuoteAmountOut = useMemo(() => {
     if (quoteQuery.isLoading) return false;
@@ -135,16 +156,13 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
   }, [quoteQuery.data?.outAmount, quoteQuery.isLoading]);
 
   return {
-    quote: quoteQuery.data,
-    noQuoteAmountOut,
+    quote: noQuoteAmountOut ? EMPTY_QUOTE_RESPONSE : quoteQuery.data,
     quoteLoading: quoteQuery.isLoading,
     quoteError: quoteQuery.error,
     confirmSwap: showSwapConfirmation,
     swapLoading: swapStatus === "loading",
     swapError,
     tradeOwner,
-    analytics: {
-      initSwap: analyticsInit,
-    },
+    analyticsInitTrade,
   };
 };

@@ -1,10 +1,11 @@
 import BN from "bignumber.js";
 import Web3 from "web3";
+import { useGlobalStore } from "../store/main";
 import { QuoteResponse } from "../type";
-import { amountBN, amountUi, waitForTxReceipt } from "../util";
+import { amountUi, waitForTxReceipt } from "../util";
 
 import { AnalyticsData, InitDexTrade, InitTrade } from "./types";
-const ANALYTICS_VERSION = 0.2;
+const ANALYTICS_VERSION = 0.3;
 const BI_ENDPOINT = `https://bi.orbs.network/putes/liquidity-hub-ui-${ANALYTICS_VERSION}`;
 const DEX_PRICE_BETTER_ERROR = "Dex trade is better than Clob trade";
 
@@ -31,19 +32,15 @@ const initialData: Partial<AnalyticsData> = {
   version: ANALYTICS_VERSION,
 };
 
-const initSwap = (args: InitTrade) => {
+const initSwap = (args: InitTrade): Partial<AnalyticsData> | undefined => {
   const srcToken = args.fromToken;
   const dstToken = args.toToken;
-  const quoteAmountOut = args.quoteAmountOut;
   if (!srcToken || !dstToken) {
     return;
   }
   const dstTokenUsdValue = new BN(args.dstTokenUsdValue || "0");
-  const dexAmountOut = args.dexAmountOut
-    ? args.dexAmountOut
-    : amountBN(dstToken?.decimals, args.dexAmountOutUI || "0").toString();
 
-  const outAmount = args.tradeOutAmount ? args.tradeOutAmount : dexAmountOut;
+  const outAmount = args.dexMinAmountOut || args.quoteAmountOut;
   let dstAmountOutUsd = 0;
   try {
     dstAmountOutUsd = new BN(outAmount || "0")
@@ -54,27 +51,41 @@ const initSwap = (args: InitTrade) => {
     console.log(error);
   }
 
-  const clobDexPriceDiffPercent = new BN(quoteAmountOut || "")
-    .dividedBy(new BN(dexAmountOut))
-    .minus(1)
-    .multipliedBy(100)
-    .toFixed(2);
+  const clobDexPriceDiffPercent = !args.dexMinAmountOut
+    ? "0"
+    : new BN(args.quoteAmountOut || "0")
+        .dividedBy(new BN(args.dexMinAmountOut))
+        .minus(1)
+        .multipliedBy(100)
+        .toFixed(2);
 
   return {
     clobDexPriceDiffPercent,
-    dexAmountOut,
-    dexAmountOutUI: Number(amountUi(dstToken.decimals, new BN(dexAmountOut))),
+    dexMinAmountOut: args.dexMinAmountOut || "0",
+    dexMinAmountOutUI: amountUi(dstToken.decimals, new BN(args.dexMinAmountOut || "0")),
+    dexExpectedAmountOut: args.dexExpectedAmountOut || "0",
+    dexExpectedAmountOutUI: amountUi(
+      dstToken.decimals,
+      new BN(args.dexExpectedAmountOut || "0")
+    ),
+
+    dexAmountOut: args.dexMinAmountOut || "0",
     dstAmountOutUsd,
+    srcTokenUsdValue: args.srcTokenUsdValue ? Number(args.srcTokenUsdValue) : 0,
+    dstTokenUsdValue: args.dstTokenUsdValue ? Number(args.dstTokenUsdValue) : 0,
     srcTokenAddress: srcToken?.address,
     srcTokenSymbol: srcToken?.symbol,
     dstTokenAddress: dstToken?.address,
     dstTokenSymbol: dstToken?.symbol,
-    srcAmount: args.srcAmount
+    srcAmountUI: args.srcAmount
       ? amountUi(srcToken.decimals, new BN(args.srcAmount))
       : args.srcAmountUI,
+    srcAmount: args.srcAmount,
     slippage: args.slippage,
     walletAddress: args.walletAddress,
     tradeType: args.tradeType,
+    quoteAmountOut: args.quoteAmountOut,
+    quoteAmountOutUI: amountUi(dstToken.decimals, new BN(args.quoteAmountOut || '0')),
   };
 };
 
@@ -113,7 +124,7 @@ export class Analytics {
       console.error("Missng chain or partner");
       return;
     }
-    this.data = { ...this.data, ...values };
+    this.data = { ...this.data, ...values, sessionId: useGlobalStore.getState().sessionId };
     clearTimeout(this.timeout);
     this.timeout = setTimeout(() => {
       sendBI(this.data);
@@ -264,11 +275,8 @@ export class Analytics {
     });
   }
 
-  setSessionId(id: string) {
-    this.data.sessionId = id;
-  }
-
   clearState() {
+   setTimeout(() => {
     this.data = {
       ...initialData,
       partner: this.data.partner,
@@ -276,6 +284,7 @@ export class Analytics {
       _id: crypto.randomUUID(),
       firstFailureSessionId: this.firstFailureSessionId,
     };
+   }, 1_000);
   }
 
   async onClobOnChainSwapSuccess() {

@@ -12,10 +12,10 @@ export interface InitTrade {
   toToken?: Token;
   fromTokenUsd?: string | number;
   dstTokenUsdValue?: string | number;
-  dexAmountOut?: string;
-  dexAmountOutUI?: string;
+  srcTokenUsdValue?: string | number;
+  dexMinAmountOut?: string;
+  dexExpectedAmountOut?: string;
   slippage?: number;
-  tradeOutAmount?: string;
   chainId?: number;
   partner?: string;
   quoteAmountOut?: string;
@@ -38,14 +38,22 @@ export interface AnalyticsData {
   firstFailureSessionId?: string;
   sessionId?: string;
   walletAddress: string;
+  dexMinAmountOut: string;
+  dexMinAmountOutUI: string;
+
   dexAmountOut: string;
-  dexAmountOutUI: number;
+  dexExpectedAmountOut: string;
+  dexExpectedAmountOutUI: string;
+
   isClobTrade: boolean;
   srcTokenAddress: string;
   srcTokenSymbol: string;
   dstTokenAddress: string;
   dstTokenSymbol: string;
+  dstTokenUsdValue: number;
+  srcTokenUsdValue: number;
   srcAmount: string;
+  srcAmountUI: string;
   quoteIndex: number;
   slippage: number;
   quoteState: analyticsActionState;
@@ -86,6 +94,8 @@ export interface AnalyticsData {
   onChainDexSwapState: analyticsActionState;
 
   quoteAmountOut?: string;
+  quoteAmountOutUI?: string;
+
   quoteSerializedOrder?: string;
   quoteMillis?: number;
   quoteError?: string;

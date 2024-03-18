@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import { useIsDisabled } from "./useIsDisabled";
 export const useTradeOwner = (
   lhOutAmount?: string,
-  dexOutAmount?: string,
+  dexMinAmountOut?: string,
 ): TradeOwner | undefined => {
   const disabled = useIsDisabled();
   const { liquidityHubEnabled, lhControl } = useLiquidityHubPersistedStore(
@@ -16,7 +16,7 @@ export const useTradeOwner = (
   );
   return useMemo(() => {
     if (disabled) return "dex";
-    if (new BN(dexOutAmount || "0").lte(0) && new BN(lhOutAmount || "0").lte(0))
+    if (new BN(dexMinAmountOut || "0").lte(0) && new BN(lhOutAmount || "0").lte(0))
       return;
 
     if (lhControl === LH_CONTROL.SKIP || !liquidityHubEnabled) {
@@ -26,11 +26,11 @@ export const useTradeOwner = (
       console.log("LH force mode on");
       return "lh";
     }
-    return new BN(lhOutAmount || "0").gt(new BN(dexOutAmount || "0"))
+    return new BN(lhOutAmount || "0").gt(new BN(dexMinAmountOut || "0"))
       ? "lh"
       : "dex";
   }, [
-    dexOutAmount,
+    dexMinAmountOut,
     lhOutAmount,
     lhControl,
     disabled,

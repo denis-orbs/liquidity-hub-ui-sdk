@@ -1,5 +1,5 @@
 import BN from "bignumber.js";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
 import { useShallow } from "zustand/react/shallow";
 import { useMutation } from "@tanstack/react-query";
@@ -45,7 +45,8 @@ export const useShowConfirmationButton = () => {
     toToken: s.toToken,
   }));
 
-  const { quote, confirmSwap, quoteLoading, quoteError } = useDexLH();
+  const { quote, confirmSwap, quoteLoading, quoteError, analyticsInitTrade } =
+    useDexLH();
   const fromAmount = useDebouncedFromAmount();
   const toAmount = quote?.outAmountUI;
   const { mutate: switchNetwork, isPending: switchNetworkLoading } =
@@ -57,6 +58,11 @@ export const useShowConfirmationButton = () => {
   const wToken = useChainConfig()?.wToken?.address;
   const { mutate: unwrap, isPending: unwrapLoading } = useUnwrapMF();
   const { connectWallet, account, supportedChains } = useMainContext();
+
+  const _confirmSwap = useCallback(() => {
+    analyticsInitTrade();
+    confirmSwap();
+  }, [confirmSwap, analyticsInitTrade]);
 
   const isLoading = quoteLoading || switchNetworkLoading || unwrapLoading;
 
@@ -113,7 +119,6 @@ export const useShowConfirmationButton = () => {
         isLoading,
       };
     }
-   
 
     if (fromAmountBN.gt(fromTokenBalanceBN)) {
       return {
@@ -132,7 +137,7 @@ export const useShowConfirmationButton = () => {
     return {
       disabled: false,
       text: "Swap",
-      onClick: confirmSwap,
+      onClick: _confirmSwap,
     };
   }, [
     wrongChain,
@@ -144,7 +149,7 @@ export const useShowConfirmationButton = () => {
     quoteError,
     switchNetwork,
     switchNetworkLoading,
-    confirmSwap,
+    _confirmSwap,
     quoteLoading,
     isLoading,
     account,

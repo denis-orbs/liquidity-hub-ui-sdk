@@ -2,8 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useMainContext } from "../provider";
 import { QuoteQueryArgs, QuoteResponse, Token } from "../type";
-import { useLiquidityHubPersistedStore, useSwapState } from "../store/main";
-import { QUERY_KEYS, QUOTE_ERRORS, zeroAddress } from "../config/consts";
+import { useGlobalStore, useLiquidityHubPersistedStore, useSwapState } from "../store/main";
+import { EMPTY_QUOTE_RESPONSE, QUERY_KEYS, QUOTE_ERRORS, zeroAddress } from "../config/consts";
 import { useShallow } from "zustand/react/shallow";
 import { useChainConfig } from "./useChainConfig";
 import { useIsDisabled } from "./useIsDisabled";
@@ -39,7 +39,7 @@ export const useQuote = (args: QuoteQueryArgs) => {
   const liquidityHubEnabled = useLiquidityHubPersistedStore(
     (s) => s.liquidityHubEnabled
   );
-  const { fromAmount, dexAmountOut, fromToken, toToken } = args;
+  const { fromAmount, dexMinAmountOut, fromToken, toToken } = args;
   const wTokenAddress = useChainConfig()?.wToken?.address;
   const {
     account,
@@ -52,7 +52,7 @@ export const useQuote = (args: QuoteQueryArgs) => {
   const apiUrl = useApiUrl();
   const showConfirmation = useSwapState(useShallow((s) => s.showConfirmation));
   const disabled = useIsDisabled();
-
+  const {sessionId, setSessionId} = useGlobalStore()
   const { fromAddress, toAddress } = useNormalizeAddresses(fromToken, toToken);
 
   const isUnwrap =
@@ -97,10 +97,10 @@ export const useQuote = (args: QuoteQueryArgs) => {
               inToken: fromAddress,
               outToken: toAddress,
               inAmount: fromAmount,
-              outAmount: !dexAmountOut
+              outAmount: !dexMinAmountOut
                 ? "-1"
-                : new BN(dexAmountOut).gt(0)
-                ? dexAmountOut
+                : new BN(dexMinAmountOut).gt(0)
+                ? dexMinAmountOut
                 : "0",
               user: account || zeroAddress,
               slippage,
@@ -108,7 +108,7 @@ export const useQuote = (args: QuoteQueryArgs) => {
                 window.location.hash || window.location.search
               ),
               partner: partner.toLowerCase(),
-              sessionId: swapAnalytics.data.sessionId,
+              sessionId,
             }),
             signal,
           });
@@ -159,17 +159,13 @@ export const useQuote = (args: QuoteQueryArgs) => {
         swapAnalytics.onQuoteFailed(error.message, count(), quote);
 
         if (shouldReturnZeroOutAmount(error.message) || signal.aborted) {
-          return {
-            outAmount: "0",
-            outAmountUI: "0",
-            disableInterval: true,
-          } as QuoteResponse;
+          return EMPTY_QUOTE_RESPONSE
         } else {
           throw new Error(error.message);
         }
       } finally {
         if (quote.sessionId) {
-          swapAnalytics.setSessionId(quote.sessionId);
+          setSessionId(quote.sessionId);
         }
       }
     },

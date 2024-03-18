@@ -14,6 +14,8 @@ export const useApprove = () => {
   const updateState = useSwapState(useShallow((s) => s.updateState));
   return useCallback(
     async (fromToken?: string, fromAmount?: string) => {
+      const count = counter();
+
       try {
         const fromTokenContract = getContract(fromToken);
         if (
@@ -26,7 +28,6 @@ export const useApprove = () => {
         ) {
           throw new Error("missing args");
         }
-        const count = counter();
         swapAnalytics.onApprovalRequest();
         updateState({ swapStatus: "loading", currentStep: STEPS.APPROVE });
         const tx = fromTokenContract.methods.approve(
@@ -39,6 +40,7 @@ export const useApprove = () => {
 
         updateState({ swapStatus: "success" });
       } catch (error) {
+        swapAnalytics.onApprovalFailed((error as any).message, count());
         throw error;
       }
     },

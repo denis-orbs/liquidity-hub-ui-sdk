@@ -12,7 +12,8 @@ interface SwapStateValues {
   txHash?: string;
   swapStatus: ActionStatus;
   swapError?: string;
-  dexAmountOut?: string;
+  dexMinAmountOut?: string;
+  dexExpectedAmountOut?: string;
   disableLh?: boolean;
   fromTokenUsd?: string | number;
   toTokenUsd?: string | number;
@@ -38,7 +39,8 @@ const initialSwapState: SwapStateValues = {
   txHash: undefined,
   swapStatus: undefined,
   swapError: undefined,
-  dexAmountOut: undefined,
+  dexMinAmountOut: undefined,
+  dexExpectedAmountOut: undefined,
   disableLh: false,
   fromTokenUsd: undefined,
   toTokenUsd: undefined,
@@ -53,6 +55,7 @@ export const useSwapState = create<SwapState>((set, get) => ({
     set({
       failures: 0,
       swapStatus: "success",
+      fromAmount: undefined,
     });
   },
   onSwapError: (swapError) =>
@@ -137,4 +140,17 @@ export const useOrdersStore = create<OrdersStore>((set) => ({
       return {orders}
     });
   }
+}));
+
+
+
+interface GlobalStore {
+  sessionId?: string;
+  setSessionId: (sessionId?: string) => void;
+}
+
+
+export const useGlobalStore = create<GlobalStore>((set) => ({
+  sessionId: undefined,
+  setSessionId: (sessionId) => set({ sessionId }),
 }));

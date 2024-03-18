@@ -1,4 +1,5 @@
 import BN from "bignumber.js";
+import { QuoteResponse } from "../type";
 export const WEBSITE_URL = "https://www.orbs.com/";
 export const DEFAULT_QUOTE_INTERVAL = 10_000;
 
@@ -41,3 +42,10 @@ export const THENA_TOKENS_LIST_API =
 
 
   export const FROM_AMOUNT_DEBOUNCE = 300;
+
+
+  export const EMPTY_QUOTE_RESPONSE = {
+    outAmount: "0",
+    outAmountUI: "0",
+    disableInterval: true,
+  } as QuoteResponse;
