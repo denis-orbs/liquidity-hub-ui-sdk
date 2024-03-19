@@ -31,15 +31,16 @@ export const useSwapConfirmation = () => {
       return store.dexExpectedAmountOut;
     }
     return quote?.outAmount;
-  }, [quote, store.dexExpectedAmountOut]);
+  }, [quote?.outAmount, store.dexExpectedAmountOut]);
 
   const title = useMemo(() => {
-    if (!store.swapStatus) {
-      return "Review Swap";
+    if (store.swapStatus === "failed") {
+      return 
     }
     if (store.swapStatus === "success") {
       return "Swap Successfull";
     }
+    return "Review Swap";
   }, [store.swapStatus]);
 
   return {
