@@ -5,7 +5,7 @@ import { QuoteResponse } from "../type";
 import { amountUi, waitForTxReceipt } from "../util";
 
 import { AnalyticsData, InitDexTrade, InitTrade } from "./types";
-const ANALYTICS_VERSION = 0.3;
+const ANALYTICS_VERSION = 0.4;
 const BI_ENDPOINT = `https://bi.orbs.network/putes/liquidity-hub-ui-${ANALYTICS_VERSION}`;
 const DEX_PRICE_BETTER_ERROR = "Dex trade is better than Clob trade";
 

@@ -1,6 +1,7 @@
-import { useLiquidityHub, usePriceUsd } from "../..";
+import { useLiquidityHub } from "../..";
 import { useDexState } from "../../store/dex";
 import { useDebouncedFromAmount } from "./useDebouncedFromAmount";
+import { usePriceUsd } from "./usePriceUsd";
 
 
 export const useDexLH = () => {

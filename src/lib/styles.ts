@@ -1,7 +1,6 @@
 import styled, {CSSObject} from "styled-components";
 import { FlexColumn, FlexRow } from "./base-styles";
 import { NumericInput } from "./components/NumericInput";
-import { SwapDetails } from "./components/SwapDetails/SwapDetails";
 
 
 export const StyledChangeTokens = styled(FlexRow)<{ $style?: CSSObject }>`
@@ -125,14 +124,4 @@ export const StyledTokenPanel = styled(FlexColumn)<{
   .lh-balance {
     order: ${({ $usdLeft }) => ($usdLeft ? 2 : 1)};
   }
-`;
-
-export const StyledSwapDetails = styled(SwapDetails)`
-  background-color: transparent;
-  border-radius: 10px;
-  border: 1px solid ${({ theme }) => theme.colors.borderMain};
-  padding: 16px;
-  margin-top: 10px;
-  padding-top: 10px;
-  padding-bottom: 10px;
 `;

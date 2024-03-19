@@ -10,7 +10,6 @@ export * from "./useSwapConfirmation";
 export * from "./useSwapButton";
 export * from "./useSteps";
 export * from './useEstimateGasPrice'
-export * from "./useMinAmountOut";
 export * from './useOrders'
 export * from "./useUnwrap";
 export * from "./useSteps"

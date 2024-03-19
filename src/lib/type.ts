@@ -128,6 +128,8 @@ export interface QuoteResponse {
   disableInterval?: boolean;
   gasCostOutputToken?: string;
   sessionId?: string;
+  minAmountOut?: string;
+minAmountOutUI?: string;
 }
 
 export enum LH_CONTROL {

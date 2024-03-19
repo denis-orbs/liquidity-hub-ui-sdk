@@ -1,9 +1,83 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { useUsdAmount } from "..";
 import { useSwapState } from "../store/main";
 import { useAmountUI } from "./useAmountUI";
+import { useFormatNumber } from "./useFormatNumber";
 import { useQuotePayload } from "./useQuoteData";
 import { useSwapButton } from "./useSwapButton";
+import BN from "bignumber.js";
+
+export const useRate = () => {
+  const [inverted, setInverted] = useState(false);
+  const store = useSwapState(
+    useShallow((s) => ({
+      fromToken: s.fromToken,
+      toToken: s.toToken,
+      fromTokenUsd: s.fromTokenUsd,
+      toTokenUsd: s.toTokenUsd,
+    }))
+  );
+
+  const value = useMemo(() => {
+    if (!store.fromTokenUsd || !store.toTokenUsd) return "";
+
+    if (!inverted) {
+      return BN(store.fromTokenUsd).dividedBy(store.toTokenUsd).toString();
+    }
+    return BN(store.toTokenUsd).dividedBy(store.fromTokenUsd).toString();
+  }, [store.fromTokenUsd, store.toTokenUsd, inverted]);
+
+  const formattedRate = useFormatNumber({ value });
+  const fromTokenUsd = useFormatNumber({ value: store.fromTokenUsd });
+  const toTokenUsd = useFormatNumber({ value: store.toTokenUsd });
+
+  const leftToken = inverted ? store.toToken?.symbol : store.fromToken?.symbol;
+  const rightToken = inverted ? store.fromToken?.symbol : store.toToken?.symbol;
+
+  const usd = useFormatNumber({
+    value: BN((inverted ? fromTokenUsd : toTokenUsd) || 0)
+      .multipliedBy(value)
+      .toString(),
+  });
+
+  return {
+    leftToken,
+    rightToken,
+    usd,
+    value: formattedRate,
+    invert: () => setInverted(!inverted),
+  };
+};
+
+
+export const useMinAmountOut = () => {
+  const {data: quote, isLoading} = useQuotePayload();
+  return {
+    value: useFormatNumber({ value: quote?.minAmountOutUI }),
+    isLoading
+  }
+};
+
+
+export function useGasCost() {
+  const address = useSwapState(useShallow((s) => s.toToken?.address));
+  const quote = useQuotePayload().data;
+
+  const { usd, isLoading } = useUsdAmount(
+    address,
+    quote?.gasCostOutputToken || "0"
+  );
+  return {
+    value:  quote?.gasCostOutputToken,
+    usd: useFormatNumber({
+      value: usd,
+    }),
+    isLoading,
+  };
+}
+
+
 
 export const useSwapConfirmation = () => {
   const store = useSwapState(
@@ -21,6 +95,8 @@ export const useSwapConfirmation = () => {
       onCloseSwap: s.onCloseSwap,
       fromTokenUsd: s.fromTokenUsd,
       toTokenUsd: s.toTokenUsd,
+      minAmountOut: useMinAmountOut(),
+      rate: useRate(),
     }))
   );
 
@@ -35,13 +111,17 @@ export const useSwapConfirmation = () => {
 
   const title = useMemo(() => {
     if (store.swapStatus === "failed") {
-      return 
+      return;
     }
     if (store.swapStatus === "success") {
       return "Swap Successfull";
     }
     return "Review Swap";
   }, [store.swapStatus]);
+
+
+
+  
 
   return {
     fromToken: store.fromToken,
@@ -51,11 +131,14 @@ export const useSwapConfirmation = () => {
     swapStatus: store.swapStatus,
     swapError: store.swapError,
     toAmount: useAmountUI(store.toToken?.decimals, toAmount),
-    showModal: !!store.showConfirmation,
-    closeModal: store.onCloseSwap,
+    open: !!store.showConfirmation,
+    onClose: store.onCloseSwap,
     fromTokenUsd: store.fromTokenUsd,
     toTokenUsd: store.toTokenUsd,
     ...useSwapButton(),
     title,
+    minAmountOut: useFormatNumber({value: quote?.minAmountOutUI}),
+    gasCost: useGasCost(),
+    rate: useRate(),
   };
 };

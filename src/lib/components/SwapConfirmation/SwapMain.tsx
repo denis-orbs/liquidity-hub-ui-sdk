@@ -4,32 +4,23 @@ import { SwapDetails } from "./Details";
 import { useSteps } from "../../hooks/useSteps";
 import { FlexColumn } from "../../base-styles";
 import { ReactNode } from "react";
-import { useSwapButton } from "../../hooks";
 
 export const SwapMain = ({
   style = {},
-  swapButton,
+  children,
 }: {
   style?: CSSObject;
-  swapButton: ReactNode;
+  children: ReactNode;
 }) => {
   return (
     <Container style={style}>
       <SwapDetails />
       <StepsComponent />
-      <SwapButton>{swapButton}</SwapButton>
+      {children}
     </Container>
   );
 };
 
-const SwapButton = ({ children }: { children: ReactNode }) => {
-  const { showButton } = useSwapButton();
-  if (!showButton) {
-    return null;
-  }
-
-  return <>{children}</>;
-};
 
 const StepsComponent = () => {
   const { steps, status } = useSteps();

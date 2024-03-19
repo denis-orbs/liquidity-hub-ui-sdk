@@ -48,12 +48,15 @@ export const useSubmitSwap = () => {
   const wTokenAddress = chainConfig?.wToken?.address;
   const explorerUrl = chainConfig?.explorerUrl;
   const addOrder = useOrders().addOrder;
-  const setSessionId = useGlobalStore().setSessionId
+  const setSessionId = useGlobalStore().setSessionId;
 
   const { data: approved } = useAllowance(fromToken, fromAmount);
 
   return useCallback(
-    async (hasFallback?: boolean) => {
+    async (props?: {
+      hasFallback?: boolean;
+      onSuccess?: () => Promise<void>;
+    }) => {
       let wrapped = false;
       try {
         if (!wTokenAddress) {
@@ -85,8 +88,10 @@ export const useSubmitSwap = () => {
         }
         if (!approved) {
           await approve(inTokenAddress, fromAmount);
+        } else {
+          swapAnalytics.onApprovedBeforeTheTrade(approved);
         }
-        swapAnalytics.onApprovedBeforeTheTrade(approved);
+
         const signature = await sign(quote.permitData);
         const txHash = await requestSwap({
           srcToken: inTokenAddress,
@@ -107,6 +112,7 @@ export const useSubmitSwap = () => {
           explorerLink: `${explorerUrl}/tx/${txHash}`,
         });
         setSessionId(undefined);
+        await props?.onSuccess?.();
         return txHash;
       } catch (error: any) {
         onSwapError(error.message);
@@ -115,14 +121,12 @@ export const useSubmitSwap = () => {
         if (wrapped) {
           // handle error happened after wrap
         }
-        if (hasFallback) {
+        if (props?.hasFallback) {
           onCloseSwap();
         }
         throw error;
       } finally {
-        
         swapAnalytics.clearState();
-
       }
     },
     [

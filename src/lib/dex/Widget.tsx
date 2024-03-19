@@ -17,7 +17,6 @@ import {
   StyledContainer,
   StyledInput,
   StyledPercentButtons,
-  StyledSwapDetails,
   StyledTokenPanel,
   StyledTokenPanelContent,
   StyledTokenSelect,
@@ -35,13 +34,14 @@ import { LoadingText } from "../components/LoadingText";
 import { TokenSearchInput } from "../components/SearchInput";
 import { useSwapButton } from "../hooks/useSwapButton";
 import { useShallow } from "zustand/react/shallow";
-import {
-  useFormatNumber,
-  useSwapConfirmation,
-} from "../hooks";
+import { useFormatNumber, useSwapConfirmation } from "../hooks";
 import { Text } from "../components/Text";
 import { Logo } from "../components/Logo";
-import { PoweredByOrbs, SwapConfirmation } from "../components";
+import {
+  PoweredByOrbs,
+  SwapConfirmation,
+  SwapModalInfoRow,
+} from "../components";
 import { FlexRow, FlexColumn } from "../base-styles";
 import { useTokenListBalance } from "./hooks/useTokenListBalance";
 import { LiquidityHubProvider, useMainContext } from "../provider";
@@ -202,7 +202,7 @@ const StyledPoweredByOrbs = styled(PoweredByOrbs)`
 `;
 
 const SwapModal = () => {
-  const { closeModal, swapStatus, showModal } = useSwapConfirmation();
+  const { onClose, swapStatus, open, showButton, minAmountOut, toToken, gasCost, rate } = useSwapConfirmation();
   const { swap, isPending, text } = useSwapButton();
 
   const onSuccess = useOnSwapSuccess();
@@ -217,24 +217,47 @@ const SwapModal = () => {
   return (
     <WidgetModal
       title={!swapStatus ? "Review swap" : ""}
-      open={showModal}
-      onClose={closeModal}
+      open={open}
+      onClose={onClose}
     >
-      <SwapConfirmation
-        swapButton={
+      <SwapConfirmation>
+        <StyledSwapDetails>
+        <SwapModalInfoRow label="Rate" onClick={rate.invert}>
+          <StyledRateUsd>{`1 ${rate.leftToken} = ${rate.rightToken} ${rate.value}`} <small>{`($${rate.usd})`}</small></StyledRateUsd>
+        </SwapModalInfoRow>
+        <SwapModalInfoRow label="Gas cost">
+          <StyledRateUsd>{`$${gasCost.usd}`}</StyledRateUsd>
+        </SwapModalInfoRow>
+        <SwapModalInfoRow label="Min amount out">
+          <StyledRateUsd>{`${minAmountOut} ${toToken?.symbol}`}</StyledRateUsd>
+        </SwapModalInfoRow>
+        </StyledSwapDetails>
+       
+        {showButton && (
           <StyledSubmitButton onClick={onClick} isLoading={isPending}>
             {text}
           </StyledSubmitButton>
-        }
-      />
+        )}
+      </SwapConfirmation>
     </WidgetModal>
   );
 };
 
+const StyledRateUsd = styled(Text)`
+small {
+  opacity: 0.5;
+}
+`
+
+const StyledSwapDetails = styled(FlexColumn)`
+  gap: 10px;
+  margin-bottom: 20px;
+  margin-top: 20px;
+  width: 100%;
+`
+
 export const SwapSubmitButton = () => {
   const { disabled, text, onClick, isLoading } = useShowConfirmationButton();
-
-  
 
   return (
     <StyledSubmitButton
@@ -459,7 +482,6 @@ export const Widget = (props: Props) => {
             <FromTokenPanel />
             <ChangeTokens />
             <ToTokenPanel />
-            <StyledSwapDetails />
             <SwapSubmitButton />
             <SwapModal />
             <StyledPoweredByOrbs />

@@ -1,7 +1,9 @@
 import { useCallback } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { useDexLH, useTokenListBalance, useTokenListBalances } from "../..";
 import { useDexState } from "../../store/dex";
+import { useDexLH } from "./useDexLH";
+import { useTokenListBalance } from "./useTokenListBalance";
+import { useTokenListBalances } from "./useTokenListBalances";
 
 export * from "./useDexLH";
 export * from "./usePercentSelect";

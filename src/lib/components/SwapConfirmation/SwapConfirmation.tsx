@@ -6,7 +6,7 @@ import { SwapFailed } from "./SwapFailed";
 import { SwapMain } from "./SwapMain";
 import { ReactNode } from "react";
 
-export const SwapConfirmation = ({ className = '', style = {}, swapButton }: { className?: string, style?: CSSObject, swapButton: ReactNode}) => {
+export const SwapConfirmation = ({ className = '', style = {}, children }: { className?: string, style?: CSSObject, children?: ReactNode}) => {
   const swapStatus = useSwapState(useShallow((s) => s.swapStatus));
   
   return (
@@ -16,7 +16,7 @@ export const SwapConfirmation = ({ className = '', style = {}, swapButton }: { c
       ) : swapStatus === "failed" ? (
         <SwapFailed />
       ) : (
-        <SwapMain swapButton={swapButton} />
+        <SwapMain children={children} />
       )}
     </Container>
   );

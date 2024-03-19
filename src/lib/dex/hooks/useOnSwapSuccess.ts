@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
-import { useRefreshBalancesAfterTx } from '../..';
 import { useDexState } from '../../store/dex';
+import { useRefreshBalancesAfterTx } from './useRefreshBalancesAfterTx';
 
 export function useOnSwapSuccess() {
     const refetchBalances = useRefreshBalancesAfterTx();

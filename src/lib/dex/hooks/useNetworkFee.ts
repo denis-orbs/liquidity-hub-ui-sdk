@@ -1,6 +1,6 @@
-import { useDexLH } from "../..";
 import { useFormatNumber } from "../../hooks";
 import { useDexState } from "../../store/dex";
+import { useDexLH } from "./useDexLH";
 import { useUsdAmount } from "./useUsdAmount";
 
 export function useNetworkFee(decimalScale?: number) {

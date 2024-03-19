@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { findTokenInList, useTokens } from "../..";
+import { findTokenInList } from "../..";
 import { useDexState } from "../../store/dex";
+import { useTokens } from "./useTokens";
 
 export function useInitialTokens(
   initialFromToken?: string,
