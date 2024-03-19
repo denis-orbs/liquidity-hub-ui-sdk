@@ -24,35 +24,35 @@ const useFromAmountWei = (args: UseLiquidityHubArgs) => {
 
 const useDexMinAmountOutWei = (args: UseLiquidityHubArgs) => {
   return useMemo(() => {
-    if ((!args.dexMinAmountOut && !args.dexMinAmountOutUI) || !args.toToken) {
+    if ((!args.minAmountOut && !args.minAmountOutUI) || !args.toToken) {
       return undefined;
     }
-    const value = args.dexMinAmountOut
-      ? args.dexMinAmountOut
+    const value = args.minAmountOut
+      ? args.minAmountOut
       : amountBN(
           args.toToken.decimals,
-          args.dexMinAmountOutUI || "0"
+          args.minAmountOutUI || "0"
         ).toString();
     return BN(value).decimalPlaces(0).toString();
-  }, [args.dexMinAmountOutUI, args.dexMinAmountOutUI, args.toToken]);
+  }, [args.minAmountOutUI, args.minAmountOutUI, args.toToken]);
 };
 
 const useDexExpectedAmountOutWei = (args: UseLiquidityHubArgs) => {
   return useMemo(() => {
     if (
-      (!args.dexExpectedAmountOut && !args.dexExpectedAmountOutUI) ||
+      (!args.expectedAmountOut && !args.expectedAmountOutUI) ||
       !args.toToken
     ) {
       return undefined;
     }
-    const value = args.dexExpectedAmountOut
-      ? args.dexExpectedAmountOut
+    const value = args.expectedAmountOut
+      ? args.expectedAmountOut
       : amountBN(
           args.toToken.decimals,
-          args.dexExpectedAmountOutUI || "0"
+          args.expectedAmountOutUI || "0"
         ).toString();
     return BN(value).decimalPlaces(0).toString();
-  }, [args.dexExpectedAmountOutUI, args.dexExpectedAmountOutUI, args.toToken]);
+  }, [args.expectedAmountOutUI, args.expectedAmountOutUI, args.toToken]);
 };
 
 const useConfirmSwap = (
@@ -91,9 +91,24 @@ const useConfirmSwap = (
   ]);
 };
 
+
+const useUpdateUsdAmounts = (args: UseLiquidityHubArgs) => {
+  const updateState = useSwapState(useShallow((s) => s.updateState));
+
+  return useCallback(
+    () => {
+      updateState({
+        fromTokenUsd: args.fromTokenUsd,
+        toTokenUsd: args.toTokenUsd,
+      });
+    },
+    [updateState, args.fromTokenUsd, args.toTokenUsd]
+  );
+}
+
 export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
   const { toToken, fromToken } = args;
-
+  useUpdateUsdAmounts(args);
   const { swapStatus, swapError } = useSwapState(
     useShallow((store) => ({
       swapStatus: store.swapStatus,

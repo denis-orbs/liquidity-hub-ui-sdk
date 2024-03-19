@@ -11,8 +11,7 @@ export interface InitTrade {
   fromToken?: Token;
   toToken?: Token;
   fromTokenUsd?: string | number;
-  dstTokenUsdValue?: string | number;
-  srcTokenUsdValue?: string | number;
+  toTokenUsd?: string | number;
   dexMinAmountOut?: string;
   dexExpectedAmountOut?: string;
   slippage?: number;
@@ -83,7 +82,6 @@ export interface AnalyticsData {
   dexSwapTxHash: string;
 
   userWasApprovedBeforeTheTrade?: boolean | string;
-  dstAmountOutUsd: number;
   isProMode: boolean;
   expertMode: boolean;
   tradeType?: string;
@@ -95,6 +93,7 @@ export interface AnalyticsData {
 
   quoteAmountOut?: string;
   quoteAmountOutUI?: string;
+  quoteAmountOutUsd?: number;
 
   quoteSerializedOrder?: string;
   quoteMillis?: number;

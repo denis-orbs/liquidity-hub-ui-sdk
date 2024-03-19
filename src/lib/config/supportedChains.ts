@@ -18,7 +18,7 @@ const fanton: Network = {
   chainId: networks.ftm.id,
   chainName: "Fantom",
   explorerUrl: "https://ftmscan.com",
-  apiUrl: "https://polygon.hub.orbs.network",
+  apiUrl: "https://ftm.hub.orbs.network",
   getTokens: api.getFantomTokens,
 };
 

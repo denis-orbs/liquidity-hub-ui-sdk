@@ -164,10 +164,10 @@ export type UseLiquidityHubArgs = {
   toToken?: Token;
   fromAmount?: string;
   fromAmountUI?: string;
-  dexMinAmountOut?: string;
-  dexMinAmountOutUI?: string;
-  dexExpectedAmountOut?: string;
-  dexExpectedAmountOutUI?: string;
+  minAmountOut?: string;
+  minAmountOutUI?: string;
+  expectedAmountOut?: string;
+  expectedAmountOutUI?: string;
   slippage?: number;
   fromTokenUsd?: TokenUsd;
   toTokenUsd?: TokenUsd;

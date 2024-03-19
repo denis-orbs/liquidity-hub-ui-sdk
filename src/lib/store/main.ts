@@ -55,7 +55,6 @@ export const useSwapState = create<SwapState>((set, get) => ({
     set({
       failures: 0,
       swapStatus: "success",
-      fromAmount: undefined,
     });
   },
   onSwapError: (swapError) =>
@@ -74,16 +73,19 @@ export const useSwapState = create<SwapState>((set, get) => ({
 
     if (get().swapError) {
       setTimeout(() => {
-        set({swapStatus: undefined, swapError: undefined, currentStep: undefined});
+        set({
+          swapStatus: undefined,
+          swapError: undefined,
+          currentStep: undefined,
+        });
       }, 200);
-    }
-    else if (get().swapStatus !== "loading") {
+    } else if (get().swapStatus !== "loading") {
       setTimeout(() => {
         set(initialSwapState);
       }, 200);
     }
   },
-  reset: () => set({...initialSwapState}),
+  reset: () => set({ ...initialSwapState }),
 }));
 
 interface LHControlStore {
@@ -92,7 +94,7 @@ interface LHControlStore {
   liquidityHubEnabled: boolean;
   updateLiquidityHubEnabled: () => void;
   orders: Orders;
- setOrders: (orders: Orders) => void;
+  setOrders: (orders: Orders) => void;
   password?: string;
   setPassword: (password: string) => void;
 }
@@ -115,14 +117,10 @@ export const useLiquidityHubPersistedStore = create(
   )
 );
 
-
-
-
 interface OrdersStore {
   orders: Orders;
   addOrder: (address: string, chain: number, order: Order) => void;
 }
-
 
 export const useOrdersStore = create<OrdersStore>((set) => ({
   orders: useLiquidityHubPersistedStore.getState().orders,
@@ -137,18 +135,15 @@ export const useOrdersStore = create<OrdersStore>((set) => ({
       }
       orders[address][chain].unshift(order);
       useLiquidityHubPersistedStore.getState().setOrders(orders);
-      return {orders}
+      return { orders };
     });
-  }
+  },
 }));
-
-
 
 interface GlobalStore {
   sessionId?: string;
   setSessionId: (sessionId?: string) => void;
 }
-
 
 export const useGlobalStore = create<GlobalStore>((set) => ({
   sessionId: undefined,

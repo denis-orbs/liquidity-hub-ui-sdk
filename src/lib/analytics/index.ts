@@ -38,18 +38,19 @@ const initSwap = (args: InitTrade): Partial<AnalyticsData> | undefined => {
   if (!srcToken || !dstToken) {
     return;
   }
-  const dstTokenUsdValue = new BN(args.dstTokenUsdValue || "0");
 
   const outAmount = args.dexMinAmountOut || args.quoteAmountOut;
-  let dstAmountOutUsd = 0;
+  let dstTokenUsdValue = 0;
   try {
-    dstAmountOutUsd = new BN(outAmount || "0")
-      .multipliedBy(dstTokenUsdValue || 0)
+    dstTokenUsdValue = new BN(outAmount || "0")
+      .multipliedBy(BN(args.toTokenUsd || "0"))
       .dividedBy(new BN(10).pow(new BN(dstToken?.decimals || 0)))
       .toNumber();
   } catch (error) {
     console.log(error);
   }
+
+  let srcTokenUsdValue = amountUi(args.fromToken?.decimals, BN(args.srcAmount || "0").multipliedBy(BN(args.fromTokenUsd || "0")))
 
   const clobDexPriceDiffPercent = !args.dexMinAmountOut
     ? "0"
@@ -58,6 +59,9 @@ const initSwap = (args: InitTrade): Partial<AnalyticsData> | undefined => {
         .minus(1)
         .multipliedBy(100)
         .toFixed(2);
+
+       let  quoteAmountOutUI =  amountUi(dstToken.decimals, new BN(args.quoteAmountOut || '0'))
+      const quoteAmountOutUsd =  BN(quoteAmountOutUI || "0").multipliedBy(BN(args.toTokenUsd || "0")).toNumber()
 
   return {
     clobDexPriceDiffPercent,
@@ -70,9 +74,8 @@ const initSwap = (args: InitTrade): Partial<AnalyticsData> | undefined => {
     ),
 
     dexAmountOut: args.dexMinAmountOut || "0",
-    dstAmountOutUsd,
-    srcTokenUsdValue: args.srcTokenUsdValue ? Number(args.srcTokenUsdValue) : 0,
-    dstTokenUsdValue: args.dstTokenUsdValue ? Number(args.dstTokenUsdValue) : 0,
+    srcTokenUsdValue: srcTokenUsdValue ? Number(srcTokenUsdValue) : 0,
+    dstTokenUsdValue,
     srcTokenAddress: srcToken?.address,
     srcTokenSymbol: srcToken?.symbol,
     dstTokenAddress: dstToken?.address,
@@ -85,7 +88,8 @@ const initSwap = (args: InitTrade): Partial<AnalyticsData> | undefined => {
     walletAddress: args.walletAddress,
     tradeType: args.tradeType,
     quoteAmountOut: args.quoteAmountOut,
-    quoteAmountOutUI: amountUi(dstToken.decimals, new BN(args.quoteAmountOut || '0')),
+    quoteAmountOutUI,
+    quoteAmountOutUsd
   };
 };
 

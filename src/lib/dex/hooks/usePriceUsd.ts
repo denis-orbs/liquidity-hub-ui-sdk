@@ -21,9 +21,9 @@ export const usePriceUsd = ({
   return useQuery({
     queryFn: async () => {
       if (!chainId || !address) return 0;
-      const chainConfig = getChainConfig();
+      const chainConfig = getChainConfig(chainId);
       const wTokenAddress = chainConfig?.wToken?.address;
-
+      
       const _address = isNativeAddress(address) ? wTokenAddress : address;
       if (!_address) return 0;
 

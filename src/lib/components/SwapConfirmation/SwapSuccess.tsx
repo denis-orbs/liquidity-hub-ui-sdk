@@ -3,54 +3,87 @@ import { useChainConfig } from "../../hooks/useChainConfig";
 import { useSwapConfirmation } from "../../hooks/useSwapConfirmation";
 import { useSwapState } from "../../store/main";
 import { Token } from "../../type";
-import { Check, ArrowRight } from "react-feather";
 import styled from "styled-components";
 import { Logo } from "../Logo";
 import { Text } from "../Text";
+import Confetti from "../../assets/confetti.svg";
+import { Separator } from "./Components";
 
 export const SwapSuccess = () => {
+  const { toToken, toAmount, fromToken, fromAmount } = useSwapConfirmation();
+
   return (
     <StyledSuccess className="lh-success">
-      <StyledSuccessLogo className="lh-success-img">
-        <Check />
-      </StyledSuccessLogo>
-      <SuccessText className="lh-success-text">
-        Swap success
-      </SuccessText>
-      <Bottom />
+      <StyledImg src={Confetti} />
+      <StyledTokensContainer>
+        <SuccessToken token={fromToken} amount={fromAmount} />
+        <Separator />
+        <SuccessToken token={toToken} amount={toAmount} />
+      </StyledTokensContainer>
+      {/* <UsingLH /> */}
       <TXLink />
     </StyledSuccess>
   );
 };
+
+
+// const UsingLH = () => {
+//   return <StyledLh className="lh-success-orbs">
+//     Using <a href={WEBSITE_URL} target="_blank">Liquity Hub</a>
+//   </StyledLh>
+// }
+
+// const StyledLh = styled(Text)`
+//   a {
+//     color: #386EDA;
+//     text-decoration: unset;
+//   }
+// `
+
+const StyledImg = styled("img")`
+  width: 75px;
+  height: 75px;
+  object-fit: contain;
+  margin-bottom: 40px;
+`;
+
+const StyledTokensContainer = styled(FlexColumn)`
+  width: 100%;
+  align-items: center;
+  gap: 30px;
+`;
 
 const TXLink = () => {
   const txHash = useSwapState((store) => store.txHash);
   const explorerUrl = useChainConfig()?.explorerUrl;
 
   return (
-    <StyledLink className="lh-success-link" target="_blank" href={`${explorerUrl}/tx/${txHash}`}>
+    <StyledLink
+      className="lh-success-link"
+      target="_blank"
+      href={`${explorerUrl}/tx/${txHash}`}
+    >
       View on explorer
     </StyledLink>
   );
 };
 
-const StyledLink = styled('a')`
-  margin-top: 20px;
-`;
-
-const StyledArrow = styled(ArrowRight)`
-  width: 20px;
-  color: white;
-  height: 20px;
+const StyledLink = styled("a")`
+  margin-top: 40px;
+  margin-bottom: 20px;
+  color: #D284CF;
+  font-size: 16px;
 `;
 
 const StyledLogo = styled(Logo)`
-  width: 24px;
-  height: 24px;
+  width: 40px;
+  height: 40px;
 `;
 
-const StyledTokenText = styled(Text)`
-  font-size: 15px;
+const StyledTokenAmount = styled(Text)`
+  font-size: 32px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.textMain};
 `;
 
 const SuccessToken = ({
@@ -61,50 +94,38 @@ const SuccessToken = ({
   amount?: string;
 }) => {
   return (
-    <FlexRow className="lh-swap-modal-success-token">
-      <StyledLogo
-        src={token?.logoUrl}
-        className="lh-swap-modal-success-token-logo"
-      />
-      <StyledTokenText className="lh-swap-modal-success-token-text">
-        {amount} {token?.symbol}
-      </StyledTokenText>
-    </FlexRow>
+    <StyledTokenDisplay className="lh-success-token">
+      <StyledTokenAmount className="lh-success-token-text">
+        {amount}
+      </StyledTokenAmount>
+      <StyledLogoAndSymbol>
+        <StyledLogo
+          src={token?.logoUrl}
+          className="lh-success-token-logo"
+        />
+        <StyledSymbol  className="lh-success-token-symbol">{token?.symbol || "USDC"}</StyledSymbol>
+      </StyledLogoAndSymbol>
+    </StyledTokenDisplay>
   );
 };
 
-const Bottom = () => {
-  const { toToken, toAmount, fromToken, fromAmount } = useSwapConfirmation();
 
-  return (
-    <FlexRow>
-      <SuccessToken token={fromToken} amount={fromAmount} />
-      <StyledArrow />
-      <SuccessToken token={toToken} amount={toAmount} />
-    </FlexRow>
-  );
-};
+const StyledTokenDisplay = styled(FlexRow)`
+  gap: 30px;
+`
 
-const SuccessText = styled(Text)`
-  font-size: 20px;
+
+const StyledSymbol = styled(Text)`
+  font-size: 18px;
+  font-weight: 500;
+`;
+
+const StyledLogoAndSymbol = styled(FlexRow)`
+  gap: 10px;
 `;
 
 const StyledSuccess = styled(FlexColumn)`
   width: 100%;
   align-items: center;
   gap: 20px;
-`;
-
-const StyledSuccessLogo = styled(FlexRow)`
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background-color: #4caf50;
-  align-items: center;
-  justify-content: center;
-  svg {
-    width: 60%;
-    height: 60%;
-    color: white;
-  }
 `;

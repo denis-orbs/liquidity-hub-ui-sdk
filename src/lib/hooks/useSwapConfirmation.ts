@@ -33,6 +33,15 @@ export const useSwapConfirmation = () => {
     return quote?.outAmount;
   }, [quote, store.dexExpectedAmountOut]);
 
+  const title = useMemo(() => {
+    if (!store.swapStatus) {
+      return "Review Swap";
+    }
+    if (store.swapStatus === "success") {
+      return "Swap Successfull";
+    }
+  }, [store.swapStatus]);
+
   return {
     fromToken: store.fromToken,
     toToken: store.toToken,
@@ -46,5 +55,6 @@ export const useSwapConfirmation = () => {
     fromTokenUsd: store.fromTokenUsd,
     toTokenUsd: store.toTokenUsd,
     ...useSwapButton(),
+    title,
   };
 };
