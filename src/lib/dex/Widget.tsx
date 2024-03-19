@@ -32,7 +32,6 @@ import { Modal } from "../components/Modal";
 import { Button } from "../components/Button";
 import { LoadingText } from "../components/LoadingText";
 import { TokenSearchInput } from "../components/SearchInput";
-import { useSwapButton } from "../hooks/useSwapButton";
 import { useShallow } from "zustand/react/shallow";
 import { useFormatNumber, useSwapConfirmation } from "../hooks";
 import { Text } from "../components/Text";
@@ -108,13 +107,13 @@ const WidgetModal = ({
   children: ReactNode;
   open: boolean;
   onClose: () => void;
-  title: string;
+  title?: string;
 }) => {
   const modal = useWidgetContext().UIconfig?.modalStyles;
 
   return (
     <Modal
-      title={title}
+      title={title || ""}
       containerStyles={modal?.containerStyles}
       bodyStyles={modal?.bodyStyles}
       open={open}
@@ -202,41 +201,54 @@ const StyledPoweredByOrbs = styled(PoweredByOrbs)`
 `;
 
 const SwapModal = () => {
-  const { onClose, swapStatus, open, showButton, minAmountOut, toToken, gasCost, rate } = useSwapConfirmation();
-  const { swap, isPending, text } = useSwapButton();
+  const {
+    onClose,
+    swapStatus,
+    open,
+    minAmountOut,
+    toToken,
+    gasCost,
+    rate,
+    swapButton,
+    title,
+  } = useSwapConfirmation();
 
   const onSuccess = useOnSwapSuccess();
 
   const onClick = useCallback(async () => {
     try {
-      await swap();
+      await swapButton.swap();
       onSuccess();
     } catch (error) {}
-  }, [swap, onSuccess]);
+  }, [swapButton.swap, onSuccess]);
 
   return (
-    <WidgetModal
-      title={!swapStatus ? "Review swap" : ""}
-      open={open}
-      onClose={onClose}
-    >
+    <WidgetModal title={title} open={open} onClose={onClose}>
       <SwapConfirmation>
-        <StyledSwapDetails>
-        <SwapModalInfoRow label="Rate" onClick={rate.invert}>
-          <StyledRateUsd>{`1 ${rate.leftToken} = ${rate.rightToken} ${rate.value}`} <small>{`($${rate.usd})`}</small></StyledRateUsd>
-        </SwapModalInfoRow>
-        <SwapModalInfoRow label="Gas cost">
-          <StyledRateUsd>{`$${gasCost.usd}`}</StyledRateUsd>
-        </SwapModalInfoRow>
-        <SwapModalInfoRow label="Min amount out">
-          <StyledRateUsd>{`${minAmountOut} ${toToken?.symbol}`}</StyledRateUsd>
-        </SwapModalInfoRow>
-        </StyledSwapDetails>
-       
-        {showButton && (
-          <StyledSubmitButton onClick={onClick} isLoading={isPending}>
-            {text}
-          </StyledSubmitButton>
+        {!swapStatus && (
+          <>
+            <StyledSwapDetails>
+              <SwapModalInfoRow label="Rate" onClick={rate.invert}>
+                <StyledRateUsd>
+                  {`1 ${rate.leftToken} = ${rate.rightToken} ${rate.value}`}{" "}
+                  <small>{`($${rate.usd})`}</small>
+                </StyledRateUsd>
+              </SwapModalInfoRow>
+              <SwapModalInfoRow label="Gas cost">
+                <StyledRateUsd>{`$${gasCost.usd}`}</StyledRateUsd>
+              </SwapModalInfoRow>
+              <SwapModalInfoRow label="Min amount out">
+                <StyledRateUsd>{`${minAmountOut} ${toToken?.symbol}`}</StyledRateUsd>
+              </SwapModalInfoRow>
+            </StyledSwapDetails>
+
+            <StyledSubmitButton
+              onClick={onClick}
+              isLoading={swapButton.isPending}
+            >
+              {swapButton.text}
+            </StyledSubmitButton>
+          </>
         )}
       </SwapConfirmation>
     </WidgetModal>
@@ -244,17 +256,17 @@ const SwapModal = () => {
 };
 
 const StyledRateUsd = styled(Text)`
-small {
-  opacity: 0.5;
-}
-`
+  small {
+    opacity: 0.5;
+  }
+`;
 
 const StyledSwapDetails = styled(FlexColumn)`
   gap: 10px;
   margin-bottom: 20px;
   margin-top: 20px;
   width: 100%;
-`
+`;
 
 export const SwapSubmitButton = () => {
   const { disabled, text, onClick, isLoading } = useShowConfirmationButton();

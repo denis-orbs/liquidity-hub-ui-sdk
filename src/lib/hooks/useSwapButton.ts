@@ -34,7 +34,6 @@ export const useSwapButton = () => {
       text: getText(),
       swap,
       isPending: swapStatus === "loading" || allowanceLoading,
-      showButton: Boolean(swapStatus) === false,
     };
   }, [
     approved,

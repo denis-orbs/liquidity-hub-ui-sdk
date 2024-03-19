@@ -27,7 +27,8 @@ export {
   useUnwrap,
 } from "./hooks";
 
-export * from "./dex/hooks";
+export * as AMMHooks from "./dex/hooks";
 export * from "./dex/Widget";
+
 
 export { LiquidityHubProvider } from "./provider";

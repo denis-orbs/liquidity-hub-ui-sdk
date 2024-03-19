@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { useUsdAmount } from "..";
 import { useSwapState } from "../store/main";
 import { useAmountUI } from "./useAmountUI";
 import { useFormatNumber } from "./useFormatNumber";
 import { useQuotePayload } from "./useQuoteData";
 import { useSwapButton } from "./useSwapButton";
 import BN from "bignumber.js";
+import { useUsdAmount } from "../dex/hooks";
 
 export const useRate = () => {
   const [inverted, setInverted] = useState(false);
@@ -135,7 +135,7 @@ export const useSwapConfirmation = () => {
     onClose: store.onCloseSwap,
     fromTokenUsd: store.fromTokenUsd,
     toTokenUsd: store.toTokenUsd,
-    ...useSwapButton(),
+    swapButton: useSwapButton(),
     title,
     minAmountOut: useFormatNumber({value: quote?.minAmountOutUI}),
     gasCost: useGasCost(),

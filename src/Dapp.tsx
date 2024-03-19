@@ -44,6 +44,7 @@ function Wrapped() {
       partner="playground"
       account={address}
       slippage={"0.5"}
+      apiUrl='http://10.11.11.27:3005'
       initialFromToken="USDC"
       supportedChains={[
         supportedChains.polygon.chainId,
