@@ -44,7 +44,7 @@ function Wrapped() {
       partner="playground"
       account={address}
       slippage={"0.5"}
-      apiUrl='http://10.11.11.27:3005'
+      apiUrl='https://ab15-2a06-c701-c4a5-c600-659e-2f74-220d-46d3.ngrok-free.app'
       initialFromToken="USDC"
       supportedChains={[
         supportedChains.polygon.chainId,

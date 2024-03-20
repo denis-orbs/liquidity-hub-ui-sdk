@@ -4,7 +4,7 @@ import BN from "bignumber.js";
 
 export const useUsdAmount = (address?: string, amount?: string) => {
   const { data: usd, isLoading } = usePriceUsd({ address, disabled: !amount });
-
+  
   const result = useMemo(() => {
     if (!amount || !usd) return undefined;
     return BN(amount).multipliedBy(usd).toString();

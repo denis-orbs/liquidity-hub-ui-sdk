@@ -9,6 +9,8 @@ export interface TokenPanelProps {
   label?: string;
   isSrc?: boolean;
   onTokenSelect: (token: Token) => void;
+  usd?: string;
+  usdLoading?: boolean;
 }
 
 export interface ModalStyles {

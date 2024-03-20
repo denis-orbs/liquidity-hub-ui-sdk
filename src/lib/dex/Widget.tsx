@@ -339,6 +339,8 @@ const FromTokenPanel = () => {
     }))
   );
 
+  const { usd, isLoading } = useUsdAmount(token?.address, amount);
+
   return (
     <TokenPanel
       token={token}
@@ -347,6 +349,8 @@ const FromTokenPanel = () => {
       label="From"
       isSrc={true}
       onTokenSelect={onTokenSelect}
+      usd={usd}
+      usdLoading={isLoading}
     />
   );
 };
@@ -359,14 +363,16 @@ const ToTokenPanel = () => {
     }))
   );
 
-  const amount = useDexLH().quote?.outAmountUI;
-
+  const amount = useDexLH().quote?.data?.outAmountUI;
+  const { usd, isLoading } = useUsdAmount(token?.address, amount);
   return (
     <TokenPanel
       onTokenSelect={onTokenSelect}
       token={token}
-      inputValue={amount || ""}
+      inputValue={useFormatNumber({value: amount})}
       label="To"
+      usd={usd}
+      usdLoading={isLoading}
     />
   );
 };
@@ -393,14 +399,12 @@ const TokenPanel = ({
   label,
   isSrc,
   onTokenSelect,
+  usd: _usd,
+  usdLoading,
 }: TokenPanelProps) => {
   const UIconfig = useWidgetContext();
   const account = useMainContext().account;
   const tokenPanelLayout = UIconfig?.layout?.tokenPanel;
-  const { usd: _usd, isLoading: usdLoading } = useUsdAmount(
-    token?.address,
-    inputValue
-  );
 
   const headerOutside = tokenPanelLayout?.headerOutside;
   const inputLeft = tokenPanelLayout?.inputSide === "left";

@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useAllowance } from "./useAllowance";
 import { useQuote } from "./useQuote";
 import BN from "bignumber.js";
@@ -8,8 +8,8 @@ import { amountBN } from "../util";
 import { useTradeOwner } from "./useTradeOwner";
 import { useShallow } from "zustand/react/shallow";
 import _ from "lodash";
-import { EMPTY_QUOTE_RESPONSE } from "../config/consts";
 import useAnalytics from "./useAnalytics";
+import { useDebounce } from "./useDebounce";
 
 const useFromAmountWei = (args: UseLiquidityHubArgs) => {
   return useMemo(() => {
@@ -29,10 +29,7 @@ const useDexMinAmountOutWei = (args: UseLiquidityHubArgs) => {
     }
     const value = args.minAmountOut
       ? args.minAmountOut
-      : amountBN(
-          args.toToken.decimals,
-          args.minAmountOutUI || "0"
-        ).toString();
+      : amountBN(args.toToken.decimals, args.minAmountOutUI || "0").toString();
     return BN(value).decimalPlaces(0).toString();
   }, [args.minAmountOutUI, args.minAmountOutUI, args.toToken]);
 };
@@ -55,129 +52,56 @@ const useDexExpectedAmountOutWei = (args: UseLiquidityHubArgs) => {
   }, [args.expectedAmountOutUI, args.expectedAmountOutUI, args.toToken]);
 };
 
-const useConfirmSwap = (
-  args: UseLiquidityHubArgs,
-  dexMinAmountOut?: string,
-  dexExpectedAmountOut?: string
-) => {
-  const fromAmount = useFromAmountWei(args);
-  const updateState = useSwapState(useShallow((s) => s.updateState));
-
-  return useCallback(() => {
-    if (!args.fromToken || !args.toToken || !fromAmount) {
-      console.error("Missing args ");
-      return;
-    }
-
-    updateState({
-      fromToken: args.fromToken,
-      toToken: args.toToken,
-      fromAmount,
-      showConfirmation: true,
-      dexMinAmountOut,
-      fromTokenUsd: args?.fromTokenUsd,
-      toTokenUsd: args?.toTokenUsd,
-      dexExpectedAmountOut,
-    });
-  }, [
-    args.fromToken,
-    args.toToken,
-    fromAmount,
-    updateState,
-    dexMinAmountOut,
-    args?.fromTokenUsd,
-    args?.toTokenUsd,
-    dexExpectedAmountOut,
-  ]);
-};
-
-
-const useUpdateUsdAmounts = (args: UseLiquidityHubArgs) => {
-  const updateState = useSwapState(useShallow((s) => s.updateState));
-
-  return useCallback(
-    () => {
-      updateState({
-        fromTokenUsd: args.fromTokenUsd,
-        toTokenUsd: args.toTokenUsd,
-      });
-    },
-    [updateState, args.fromTokenUsd, args.toTokenUsd]
-  );
-}
-
 export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
-  const { toToken, fromToken } = args;
-  useUpdateUsdAmounts(args);
-  const { swapStatus, swapError } = useSwapState(
+  const { swapStatus, swapError, updateState } = useSwapState(
     useShallow((store) => ({
       swapStatus: store.swapStatus,
       swapError: store.swapError,
+      updateState: store.updateState,
     }))
   );
-
-  const fromAmount = useFromAmountWei(args);
-
+  const _fromAmount = useFromAmountWei(args);
+  const fromAmount = useDebounce(_fromAmount, 200);
   const dexMinAmountOut = useDexMinAmountOutWei(args);
   const dexExpectedAmountOut = useDexExpectedAmountOutWei(args);
-
-  const quoteQuery = useQuote({
-    fromToken,
-    toToken,
-    fromAmount,
-    dexMinAmountOut,
-  });
-
-  // prefetching allowance
-  useAllowance(fromToken, fromAmount);
-
-  const tradeOwner = useTradeOwner(quoteQuery.data?.outAmount, dexMinAmountOut);
-  const analyticsInit = useAnalytics();
-
-  const analyticsInitTrade = useCallback(() => {
-    analyticsInit.initTrade({
-      fromToken,
-      toToken,
+    
+  useEffect(() => {
+    updateState({
       fromAmount,
       dexMinAmountOut,
       dexExpectedAmountOut,
-      quoteAmountOut: quoteQuery.data?.outAmount,
-      toTokenUsd: args.toTokenUsd,
       fromTokenUsd: args.fromTokenUsd,
+      toTokenUsd: args.toTokenUsd,
+      fromToken: args.fromToken,
+      toToken: args.toToken,
     });
   }, [
-    fromToken,
-    toToken,
+    updateState,
     fromAmount,
-    quoteQuery.data?.outAmount,
     dexMinAmountOut,
     dexExpectedAmountOut,
-    analyticsInit,
-    args.toTokenUsd,
     args.fromTokenUsd,
+    args.toTokenUsd,
+    args.fromToken,
+    args.toToken,
   ]);
 
-  const showSwapConfirmation = useConfirmSwap(
-    args,
-    dexMinAmountOut,
-    dexExpectedAmountOut
-  );
+  const quote = useQuote();
+  const isApproved = useAllowance().data;
+  const tradeOwner = useTradeOwner(quote.data?.outAmount, dexMinAmountOut);
+  const analyticsInit = useAnalytics().initTrade;
 
-  const noQuoteAmountOut = useMemo(() => {
-    if (quoteQuery.isLoading) return false;
-    if (quoteQuery.data?.outAmount && new BN(quoteQuery.data?.outAmount).gt(0))
-      return false;
-    return true;
-  }, [quoteQuery.data?.outAmount, quoteQuery.isLoading]);
+  const confirmSwap = useCallback(() => {
+    updateState({ showConfirmation: true });
+  }, [updateState]);
 
   return {
-    quote: noQuoteAmountOut ? EMPTY_QUOTE_RESPONSE : quoteQuery.data,
-    quoteLoading: quoteQuery.isLoading,
-    quoteError: quoteQuery.error,
-    confirmSwap: showSwapConfirmation,
+    quote,
+    confirmSwap,
     swapLoading: swapStatus === "loading",
     swapError,
     tradeOwner,
-    analyticsInitTrade,
+    analyticsInit,
+    isApproved,
   };
 };

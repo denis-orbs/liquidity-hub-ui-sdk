@@ -6,20 +6,16 @@ import { useSubmitSwap } from "./useSubmitSwap";
 import { isNativeAddress } from "../util";
 
 export const useSwapButton = () => {
-  const { fromToken, swapStatus, fromAmount } = useSwapState(
+  const { fromToken, swapStatus } = useSwapState(
     useShallow(
       useShallow((s) => ({
         fromToken: s.fromToken,
         swapStatus: s.swapStatus,
-        fromAmount: s.fromAmount,
       }))
     )
   );
 
-  const { data: approved, isLoading: allowanceLoading } = useAllowance(
-    fromToken,
-    fromAmount
-  );
+  const { data: approved, isLoading: allowanceLoading } = useAllowance();
 
   const swap = useSubmitSwap();
 

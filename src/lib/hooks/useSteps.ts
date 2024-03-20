@@ -10,17 +10,13 @@ import { isNativeAddress } from "../util";
 import { useShallow } from "zustand/react/shallow";
 
 export const useSteps = () => {
-  const { fromToken, fromAmount, currentStep, status } = useSwapState(useShallow((store) => ({
+  const { fromToken, currentStep, status } = useSwapState(useShallow((store) => ({
     fromToken: store.fromToken,
-    fromAmount: store.fromAmount,
     currentStep: store.currentStep,
     status: store.swapStatus
   })));
 
-  const { isLoading: allowanceQueryLoading, data: isApproved } = useAllowance(
-    fromToken,
-    fromAmount
-  );
+  const { isLoading: allowanceQueryLoading, data: isApproved } = useAllowance();
   const steps = useMemo(() => {
     if (allowanceQueryLoading) {
       return [];

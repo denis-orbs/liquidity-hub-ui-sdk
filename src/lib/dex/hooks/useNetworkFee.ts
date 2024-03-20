@@ -4,11 +4,11 @@ import { useDexLH } from "./useDexLH";
 import { useUsdAmount } from "./useUsdAmount";
 
 export function useNetworkFee(decimalScale?: number) {
-  const { quote, quoteLoading } = useDexLH();
+  const { quote } = useDexLH();
   const toToken = useDexState((s) => s.toToken);
   const usdPrice = useUsdAmount(
     toToken?.address,
-    quote?.gasCostOutputToken || "0"
+    quote?.data?.gasCostOutputToken || "0"
   );
 
   const value = useFormatNumber({
@@ -18,6 +18,6 @@ export function useNetworkFee(decimalScale?: number) {
 
   return {
     value,
-    isLoading: quoteLoading || quote?.gasCostOutputToken && !usdPrice.usd,
+    isLoading: quote.isLoading || quote?.data?.gasCostOutputToken && !usdPrice.usd,
   };
 }

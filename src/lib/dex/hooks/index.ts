@@ -61,7 +61,7 @@ export const useFromTokenAmount = () => {
 };
 
 export const useToTokenAmount = () => {
-  return useDexLH().quote?.outAmountUI;
+  return useDexLH().quote?.data?.outAmountUI;
 };
 
 export function useFromTokenPanel() {
@@ -88,7 +88,7 @@ export function useToTokenPanel() {
     onTokenSelect: s.onToTokenChange,
   }));
 
-  const amount = useDexLH().quote?.outAmountUI;
+  const amount = useDexLH().quote?.data?.outAmountUI;
   const { balance } = useTokenListBalance(token?.address);
 
   return {

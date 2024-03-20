@@ -17,7 +17,6 @@ import {
   eqIgnoreCase,
   isNativeAddress,
 } from "../../util";
-import { useDebouncedFromAmount } from "./useDebouncedFromAmount";
 
 export const useUnwrapMF = () => {
   const { refetch } = useTokenListBalances();
@@ -40,15 +39,15 @@ export const useUnwrapMF = () => {
 };
 
 export const useShowConfirmationButton = () => {
-  const { fromToken, toToken } = useDexState((s) => ({
+  const { fromToken, toToken, fromAmount } = useDexState((s) => ({
     fromToken: s.fromToken,
     toToken: s.toToken,
+    fromAmount: s.fromAmount,
   }));
 
-  const { quote, confirmSwap, quoteLoading, quoteError, analyticsInitTrade } =
+  const { quote, confirmSwap, analyticsInit } =
     useDexLH();
-  const fromAmount = useDebouncedFromAmount();
-  const toAmount = quote?.outAmountUI;
+  const toAmount = quote.data?.outAmountUI;
   const { mutate: switchNetwork, isPending: switchNetworkLoading } =
     useSwitchNetwork();
   const wrongChain = useIsInvalidChain();
@@ -60,18 +59,18 @@ export const useShowConfirmationButton = () => {
   const { connectWallet, account, supportedChains } = useMainContext();
 
   const _confirmSwap = useCallback(() => {
-    analyticsInitTrade();
+    analyticsInit();
     confirmSwap();
-  }, [confirmSwap, analyticsInitTrade]);
+  }, [confirmSwap, analyticsInit]);
 
-  const isLoading = quoteLoading || switchNetworkLoading || unwrapLoading;
+  const isLoading = quote.isLoading || switchNetworkLoading || unwrapLoading;
 
   return useMemo(() => {
-    if (quoteLoading) {
+    if (quote.isLoading) {
       return {
         disabled: false,
         text: "",
-        quoteLoading,
+        quoteLoading:true,
         isLoading,
       };
     }
@@ -127,7 +126,7 @@ export const useShowConfirmationButton = () => {
       };
     }
 
-    if (quoteError || BN(toAmount || "0").isZero()) {
+    if ( quote.error || BN(toAmount || "0").isZero()) {
       return {
         disabled: true,
         text: "No liquidity",
@@ -146,12 +145,17 @@ export const useShowConfirmationButton = () => {
     fromAmount,
     toAmount,
     fromTokenBalance,
-    quoteError,
+    quote,
     switchNetwork,
     switchNetworkLoading,
     _confirmSwap,
-    quoteLoading,
     isLoading,
     account,
+    connectWallet,
+    supportedChains,
+    wToken,
+    unwrap,
+    unwrapLoading,
+
   ]);
 };

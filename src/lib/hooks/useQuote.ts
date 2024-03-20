@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useMainContext } from "../provider";
-import { QuoteQueryArgs, QuoteResponse, Token } from "../type";
+import { QuoteResponse, Token } from "../type";
 import {
   useGlobalStore,
   useLiquidityHubPersistedStore,
@@ -27,7 +27,6 @@ import {
 import { useApiUrl } from "./useApiUrl";
 import { swapAnalytics } from "../analytics";
 import BN from "bignumber.js";
-import { numericFormatter } from "react-number-format";
 import _ from "lodash";
 const useNormalizeAddresses = (fromToken?: Token, toToken?: Token) => {
   const wTokenAddress = useChainConfig()?.wToken?.address;
@@ -44,11 +43,18 @@ const useNormalizeAddresses = (fromToken?: Token, toToken?: Token) => {
   }, [fromToken?.address, toToken?.address]);
 };
 
-export const useQuote = (args: QuoteQueryArgs) => {
+export const useQuote = () => {
   const liquidityHubEnabled = useLiquidityHubPersistedStore(
     (s) => s.liquidityHubEnabled
   );
-  const { fromAmount, dexMinAmountOut, fromToken, toToken } = args;
+  const { fromAmount, dexMinAmountOut, fromToken, toToken } = useSwapState(
+    useShallow((s) => ({
+      fromAmount: s.fromAmount,
+      dexMinAmountOut: s.dexMinAmountOut,
+      fromToken: s.fromToken,
+      toToken: s.toToken,
+    }))
+  );
   const wTokenAddress = useChainConfig()?.wToken?.address;
   const {
     account,
@@ -134,17 +140,13 @@ export const useQuote = (args: QuoteQueryArgs) => {
         }
         swapAnalytics.onQuoteSuccess(count(), quote);
 
-        const outAmountUI = numericFormatter(
-          amountUi(toToken?.decimals, new BN(quote.outAmount)),
-          { decimalScale: 4, thousandSeparator: "," }
+        const outAmountUI = amountUi(
+          toToken?.decimals,
+          new BN(quote.outAmount)
         );
-
-        const outAmountUIWithSlippage = numericFormatter(
-          amountUi(
-            toToken?.decimals,
-            new BN(addSlippage(quote.outAmount, slippage))
-          ),
-          { decimalScale: 4, thousandSeparator: "," }
+        const outAmountUIWithSlippage = amountUi(
+          toToken?.decimals,
+          new BN(addSlippage(quote.outAmount, slippage))
         );
         const minAmountOut = parseInt(
           quote?.permitData.values.witness.outputs[1].startAmount.hex,

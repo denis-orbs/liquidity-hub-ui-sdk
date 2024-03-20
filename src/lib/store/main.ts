@@ -79,10 +79,6 @@ export const useSwapState = create<SwapState>((set, get) => ({
           currentStep: undefined,
         });
       }, 200);
-    } else if (get().swapStatus !== "loading") {
-      setTimeout(() => {
-        set(initialSwapState);
-      }, 200);
     }
   },
   reset: () => set({ ...initialSwapState }),

@@ -23,7 +23,6 @@ export const useTradeOwner = (
       return "dex";
     }
     if (lhControl === LH_CONTROL.FORCE) {
-      console.log("LH force mode on");
       return "lh";
     }
     return new BN(lhOutAmount || "0").gt(new BN(dexMinAmountOut || "0"))

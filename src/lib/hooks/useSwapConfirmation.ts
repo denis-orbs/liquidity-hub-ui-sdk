@@ -3,10 +3,10 @@ import { useShallow } from "zustand/react/shallow";
 import { useSwapState } from "../store/main";
 import { useAmountUI } from "./useAmountUI";
 import { useFormatNumber } from "./useFormatNumber";
-import { useQuotePayload } from "./useQuoteData";
 import { useSwapButton } from "./useSwapButton";
 import BN from "bignumber.js";
 import { useUsdAmount } from "../dex/hooks";
+import { useQuote } from "./useQuote";
 
 export const useRate = () => {
   const [inverted, setInverted] = useState(false);
@@ -52,7 +52,7 @@ export const useRate = () => {
 
 
 export const useMinAmountOut = () => {
-  const {data: quote, isLoading} = useQuotePayload();
+  const {data: quote, isLoading} = useQuote();
   return {
     value: useFormatNumber({ value: quote?.minAmountOutUI }),
     isLoading
@@ -62,7 +62,7 @@ export const useMinAmountOut = () => {
 
 export function useGasCost() {
   const address = useSwapState(useShallow((s) => s.toToken?.address));
-  const quote = useQuotePayload().data;
+  const quote = useQuote().data;
 
   const { usd, isLoading } = useUsdAmount(
     address,
@@ -100,7 +100,7 @@ export const useSwapConfirmation = () => {
     }))
   );
 
-  const quote = useQuotePayload().data;
+  const quote = useQuote().data;
 
   const toAmount = useMemo(() => {
     if (store.dexExpectedAmountOut) {

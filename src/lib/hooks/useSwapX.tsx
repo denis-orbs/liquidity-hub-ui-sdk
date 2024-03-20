@@ -3,7 +3,7 @@ import { SubmitTxArgs } from "../type";
 import { useCallback } from "react";
 import { useMainContext } from "../provider";
 import { swapAnalytics } from "../analytics";
-import { counter, waitForTxReceipt } from "../util";
+import { counter, delay, waitForTxReceipt } from "../util";
 import { useApiUrl } from "./useApiUrl";
 
 export const useSwapX = () => {
@@ -31,7 +31,7 @@ export const useSwapX = () => {
       const count = counter();
       swapAnalytics.onSwapRequest();
       try {
-       const response = await fetch(`${apiUrl}/swapx?chainId=${chainId}`, {
+        fetch(`${apiUrl}/swapx?chainId=${chainId}`, {
           method: "POST",
           body: JSON.stringify({
             inToken: args.srcToken,
@@ -42,35 +42,35 @@ export const useSwapX = () => {
             ...args.quote,
           }),
         });
-        const swap = await response.json();
-        if (!swap) {
-          throw new Error("Missing swap response");
-        }
-        if (swap.error) {
-          throw new Error(swap.error);
-        }
-        if (!swap.txHash) {
-          throw new Error("Missing txHash");
-        }
-        // const result = await waitForSwap(chainId, apiUrl, sessionId);
-        //  if (!result) {
+        // const swap = await response.json();
+        // if (!swap) {
         //   throw new Error("Missing swap response");
         // }
-        // if (result.error) {
-        //   throw new Error(result.error);
+        // if (swap.error) {
+        //   throw new Error(swap.error);
         // }
-        // if (!result.txHash) {
+        // if (!swap.txHash) {
         //   throw new Error("Missing txHash");
         // }
-        swapAnalytics.onSwapSuccess(swap.txHash, count());
-        txDetails = await waitForTxReceipt(web3, swap.txHash);
+        const result = await waitForSwap(chainId, apiUrl, sessionId);
+         if (!result) {
+          throw new Error("Missing swap response");
+        }
+        if (result.error) {
+          throw new Error(result.error);
+        }
+        if (!result.txHash) {
+          throw new Error("Missing txHash");
+        }
+        swapAnalytics.onSwapSuccess(result.txHash, count());
+        txDetails = await waitForTxReceipt(web3, result.txHash);
         if (txDetails?.mined) {
           swapAnalytics.onClobOnChainSwapSuccess();
           updateState({
             swapStatus: "success",
-            txHash: swap.txHash,
+            txHash: result.txHash,
           });
-          return swap.txHash as string;
+          return result.txHash as string;
         } else {
           throw new Error(txDetails?.revertMessage);
         }
@@ -84,23 +84,23 @@ export const useSwapX = () => {
   );
 };
 
-// async function waitForSwap(chainId:number, apiUrl: string, sessionId?: string) {
+async function waitForSwap(chainId:number, apiUrl: string, sessionId?: string) {
 
-//   if (!sessionId) {
-//     throw new Error("Missing sessionId");
-//   }
-//   for (let i = 0; i < 30; ++i) {
-//     await delay(2_000);
-//     try {
-//       const response = await fetch(`${apiUrl}/swap/status/${sessionId}?chainId=${chainId}`);
-//       const result = await response.json();
-//       console.log({ result });
+  if (!sessionId) {
+    throw new Error("Missing sessionId");
+  }
+  for (let i = 0; i < 30; ++i) {
+    await delay(2_000);
+    try {
+      const response = await fetch(`${apiUrl}/swap/status/${sessionId}?chainId=${chainId}`);
+      const result = await response.json();
+      console.log({ result });
 
-//       if (result.txHash) {
-//         return result;
-//       }
-//     } catch (error: any) {
-//       throw new Error(error.message);
-//     }
-//   }
-// }
+      if (result.txHash) {
+        return result;
+      }
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+}

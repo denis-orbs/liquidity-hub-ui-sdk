@@ -8,11 +8,11 @@ import { useChainConfig } from "./useChainConfig";
 import { useSwapX } from "./useSwapX";
 import { useSign } from "./useSign";
 import { useWrap } from "./useWrap";
-import { useQuotePayload } from "./useQuoteData";
 import { amountUi, isNativeAddress } from "../util";
 import BN from "bignumber.js";
 import { zeroAddress } from "../config/consts";
 import { useOrders } from "./useOrders";
+import { useQuote } from "./useQuote";
 
 export const useSubmitSwap = () => {
   const {
@@ -39,7 +39,7 @@ export const useSubmitSwap = () => {
     }))
   );
 
-  const { data: quote } = useQuotePayload();
+  const { data: quote } = useQuote();
   const approve = useApprove();
   const wrap = useWrap(fromToken);
   const sign = useSign();
@@ -50,7 +50,7 @@ export const useSubmitSwap = () => {
   const addOrder = useOrders().addOrder;
   const setSessionId = useGlobalStore().setSessionId;
 
-  const { data: approved } = useAllowance(fromToken, fromAmount);
+  const { data: approved } = useAllowance();
 
   return useCallback(
     async (props?: {
