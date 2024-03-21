@@ -16,7 +16,7 @@ export * from "./useTokenListBalance";
 export * from "./useTokenList";
 export * from "./useTokens";
 export * from "./useNetworkFee";
-export * from "./useOnSwapSuccess";
+export * from "./useOnSwapSuccessCallback";
 export * from "./useInitialTokens";
 
 export const useSetMaxBalance = () => {
@@ -71,6 +71,9 @@ export function useFromTokenPanel() {
     onTokenSelect: s.onFromTokenChange,
     onChange: s.onFromAmountChange,
   }));
+
+  
+  
   const { balance } = useTokenListBalance(token?.address);
 
   return {

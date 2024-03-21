@@ -13,6 +13,8 @@ export const useFormatNumber = ({
   suffix?: string;
 }) => {
   const decimals = useMemo(() => {
+    const maxZero = 5;
+
     if (!value) return 0;
     const [, decimal] = value.toString().split(".");
     if (!decimal) return 0;
@@ -26,7 +28,7 @@ export const useFormatNumber = ({
         break;
       }
     }
-
+    if(count > maxZero) return 0;
     return !count ? decimalScale : count + decimalScale;
   }, [value, decimalScale]);
 

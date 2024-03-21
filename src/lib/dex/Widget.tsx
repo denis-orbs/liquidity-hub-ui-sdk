@@ -50,9 +50,11 @@ import {
   useShowConfirmationButton,
   useDexLH,
   useUsdAmount,
+  useFromTokenPanel,
+  useToTokenPanel,
 } from "./hooks";
 import _ from "lodash";
-import { useOnSwapSuccess } from "./hooks/useOnSwapSuccess";
+import { useOnSwapSuccessCallback } from "./hooks/useOnSwapSuccessCallback";
 import { useInitialTokens } from "./hooks/useInitialTokens";
 
 export const theme = {
@@ -213,7 +215,7 @@ const SwapModal = () => {
     title,
   } = useSwapConfirmation();
 
-  const onSuccess = useOnSwapSuccess();
+  const onSuccess = useOnSwapSuccessCallback();
 
   const onClick = useCallback(async () => {
     try {
@@ -235,7 +237,7 @@ const SwapModal = () => {
                 </StyledRateUsd>
               </SwapModalInfoRow>
               <SwapModalInfoRow label="Gas cost">
-                <StyledRateUsd>{`$${gasCost.usd}`}</StyledRateUsd>
+                <StyledRateUsd>{`$${gasCost}`}</StyledRateUsd>
               </SwapModalInfoRow>
               <SwapModalInfoRow label="Min amount out">
                 <StyledRateUsd>{`${minAmountOut} ${toToken?.symbol}`}</StyledRateUsd>
@@ -330,14 +332,7 @@ const ChangeTokens = () => {
 };
 
 const FromTokenPanel = () => {
-  const { token, amount, onChange, onTokenSelect } = useDexState(
-    useShallow((s) => ({
-      token: s.fromToken,
-      amount: s.fromAmount,
-      onChange: s.onFromAmountChange,
-      onTokenSelect: s.onFromTokenChange,
-    }))
-  );
+  const { token, amount, onChange, onTokenSelect } = useFromTokenPanel();
 
   const { usd, isLoading } = useUsdAmount(token?.address, amount);
 
@@ -356,12 +351,7 @@ const FromTokenPanel = () => {
 };
 
 const ToTokenPanel = () => {
-  const { token, onTokenSelect } = useDexState(
-    useShallow((s) => ({
-      token: s.toToken,
-      onTokenSelect: s.onToTokenChange,
-    }))
-  );
+  const { token, onTokenSelect } = useToTokenPanel();
 
   const amount = useDexLH().quote?.data?.outAmountUI;
   const { usd, isLoading } = useUsdAmount(token?.address, amount);
@@ -369,7 +359,7 @@ const ToTokenPanel = () => {
     <TokenPanel
       onTokenSelect={onTokenSelect}
       token={token}
-      inputValue={useFormatNumber({value: amount})}
+      inputValue={useFormatNumber({ value: amount })}
       label="To"
       usd={usd}
       usdLoading={isLoading}

@@ -5,7 +5,6 @@ import { useAmountUI } from "./useAmountUI";
 import { useFormatNumber } from "./useFormatNumber";
 import { useSwapButton } from "./useSwapButton";
 import BN from "bignumber.js";
-import { useUsdAmount } from "../dex/hooks";
 import { useQuote } from "./useQuote";
 
 export const useRate = () => {
@@ -50,34 +49,23 @@ export const useRate = () => {
   };
 };
 
-
 export const useMinAmountOut = () => {
-  const {data: quote, isLoading} = useQuote();
+  const { data: quote, isLoading } = useQuote();
   return {
     value: useFormatNumber({ value: quote?.minAmountOutUI }),
-    isLoading
-  }
-};
-
-
-export function useGasCost() {
-  const address = useSwapState(useShallow((s) => s.toToken?.address));
-  const quote = useQuote().data;
-
-  const { usd, isLoading } = useUsdAmount(
-    address,
-    quote?.gasCostOutputToken || "0"
-  );
-  return {
-    value:  quote?.gasCostOutputToken,
-    usd: useFormatNumber({
-      value: usd,
-    }),
     isLoading,
   };
+};
+
+export function useGasCost() {
+  const toTokenUsd = useSwapState(useShallow((s) => s.toTokenUsd));
+  const quote = useQuote().data;
+
+  return useMemo(() => {
+    if (!quote?.gasCostOutputToken || !toTokenUsd) return "";
+    return BN(quote?.gasCostOutputToken).multipliedBy(toTokenUsd).toString();
+  }, [quote?.gasCostOutputToken, toTokenUsd]);
 }
-
-
 
 export const useSwapConfirmation = () => {
   const store = useSwapState(
@@ -95,8 +83,6 @@ export const useSwapConfirmation = () => {
       onCloseSwap: s.onCloseSwap,
       fromTokenUsd: s.fromTokenUsd,
       toTokenUsd: s.toTokenUsd,
-      minAmountOut: useMinAmountOut(),
-      rate: useRate(),
     }))
   );
 
@@ -119,10 +105,6 @@ export const useSwapConfirmation = () => {
     return "Review Swap";
   }, [store.swapStatus]);
 
-
-
-  
-
   return {
     fromToken: store.fromToken,
     toToken: store.toToken,
@@ -133,12 +115,12 @@ export const useSwapConfirmation = () => {
     toAmount: useAmountUI(store.toToken?.decimals, toAmount),
     open: !!store.showConfirmation,
     onClose: store.onCloseSwap,
-    fromTokenUsd: store.fromTokenUsd,
-    toTokenUsd: store.toTokenUsd,
+    fromTokenUsd: BN(store.fromTokenUsd || 0).isZero() ? undefined :store.fromTokenUsd ,
+    toTokenUsd: BN(store.toTokenUsd || 0).isZero() ? undefined :store.toTokenUsd ,
     swapButton: useSwapButton(),
     title,
-    minAmountOut: useFormatNumber({value: quote?.minAmountOutUI}),
     gasCost: useGasCost(),
     rate: useRate(),
+    minAmountOut: useMinAmountOut().value,
   };
 };

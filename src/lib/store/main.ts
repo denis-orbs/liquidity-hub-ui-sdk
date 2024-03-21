@@ -1,4 +1,4 @@
-import { ActionStatus, LH_CONTROL, Order, Orders, STEPS, Token } from "../type";
+import { ActionStatus, LH_CONTROL, Order, Orders, QuoteResponse, STEPS, Token } from "../type";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -18,12 +18,21 @@ interface SwapStateValues {
   fromTokenUsd?: string | number;
   toTokenUsd?: string | number;
   quoteOutdated?: boolean;
+  isSigned?: boolean;
+  successDetails?: {
+    fromTokenUsd?: string | number;
+    toTokenUsd?: string | number;
+    fromAmount: string;
+    toAmount?: string;
+    fromToken: Token;
+    toToken: Token;
+  };
 }
 
 interface SwapState extends SwapStateValues {
   updateState: (state: Partial<SwapState>) => void;
   onSwapError: (error: string) => void;
-  onSwapSuccess: () => void;
+  onSwapSuccess: (quote?: QuoteResponse) => void;
   onSwapStart: () => void;
   onCloseSwap: () => void;
   reset: () => void;
@@ -45,16 +54,26 @@ const initialSwapState: SwapStateValues = {
   fromTokenUsd: undefined,
   toTokenUsd: undefined,
   quoteOutdated: undefined,
+  isSigned: false,
+  successDetails: undefined,
 };
 
 export const useSwapState = create<SwapState>((set, get) => ({
   ...initialSwapState,
   onSwapStart: () => set({ swapStatus: "loading" }),
   updateState: (state) => set({ ...state }),
-  onSwapSuccess: () => {
+  onSwapSuccess: (quote) => {
     set({
       failures: 0,
       swapStatus: "success",
+      successDetails: {
+        fromAmount: get().fromAmount || "0",
+        fromTokenUsd: get().fromTokenUsd,
+        toTokenUsd: get().toTokenUsd,
+        toAmount: get().dexExpectedAmountOut || quote?.outAmount,
+        fromToken: get().fromToken!,
+        toToken: get().toToken!,
+      },
     });
   },
   onSwapError: (swapError) =>
@@ -80,6 +99,12 @@ export const useSwapState = create<SwapState>((set, get) => ({
         });
       }, 200);
     }
+
+    if (get().swapStatus === "success") {
+      setTimeout(() => {
+        get().reset();
+      }, 200);
+    }
   },
   reset: () => set({ ...initialSwapState }),
 }));
@@ -93,6 +118,7 @@ interface LHControlStore {
   setOrders: (orders: Orders) => void;
   password?: string;
   setPassword: (password: string) => void;
+  setForce: () => void;
 }
 export const useLiquidityHubPersistedStore = create(
   persist<LHControlStore>(
@@ -102,6 +128,7 @@ export const useLiquidityHubPersistedStore = create(
       lhControl: undefined,
       setLHControl: (lhControl) => set({ lhControl }),
       liquidityHubEnabled: true,
+      setForce: () => set({ lhControl: LH_CONTROL.FORCE }),
       updateLiquidityHubEnabled: () =>
         set({ liquidityHubEnabled: !get().liquidityHubEnabled }),
       orders: {},

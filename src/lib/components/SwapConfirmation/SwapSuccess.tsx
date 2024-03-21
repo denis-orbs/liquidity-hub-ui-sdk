@@ -1,6 +1,5 @@
 import { FlexColumn, FlexRow } from "../../base-styles";
 import { useChainConfig } from "../../hooks/useChainConfig";
-import { useSwapConfirmation } from "../../hooks/useSwapConfirmation";
 import { useSwapState } from "../../store/main";
 import { Token } from "../../type";
 import styled from "styled-components";
@@ -8,9 +7,10 @@ import { Logo } from "../Logo";
 import { Text } from "../Text";
 import Confetti from "../../assets/confetti.svg";
 import { Separator } from "./Components";
+import { useSwapSuccessData } from "../../hooks/useSwapSuccessData";
 
 export const SwapSuccess = () => {
-  const { toToken, toAmount, fromToken, fromAmount } = useSwapConfirmation();
+  const { toToken, toAmount, fromToken, fromAmount } = useSwapSuccessData();
 
   return (
     <StyledSuccess className="lh-success">
@@ -20,25 +20,10 @@ export const SwapSuccess = () => {
         <Separator />
         <SuccessToken token={toToken} amount={toAmount} />
       </StyledTokensContainer>
-      {/* <UsingLH /> */}
       <TXLink />
     </StyledSuccess>
   );
 };
-
-
-// const UsingLH = () => {
-//   return <StyledLh className="lh-success-orbs">
-//     Using <a href={WEBSITE_URL} target="_blank">Liquity Hub</a>
-//   </StyledLh>
-// }
-
-// const StyledLh = styled(Text)`
-//   a {
-//     color: #386EDA;
-//     text-decoration: unset;
-//   }
-// `
 
 const StyledImg = styled("img")`
   width: 75px;
@@ -69,9 +54,8 @@ const TXLink = () => {
 };
 
 const StyledLink = styled("a")`
-  margin-top: 40px;
-  margin-bottom: 20px;
-  color: #D284CF;
+  margin-top: 20px;
+  color: #d284cf;
   font-size: 16px;
 `;
 
@@ -81,7 +65,7 @@ const StyledLogo = styled(Logo)`
 `;
 
 const StyledTokenAmount = styled(Text)`
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.textMain};
 `;
@@ -99,21 +83,18 @@ const SuccessToken = ({
         {amount}
       </StyledTokenAmount>
       <StyledLogoAndSymbol>
-        <StyledLogo
-          src={token?.logoUrl}
-          className="lh-success-token-logo"
-        />
-        <StyledSymbol  className="lh-success-token-symbol">{token?.symbol || "USDC"}</StyledSymbol>
+        <StyledLogo src={token?.logoUrl} className="lh-success-token-logo" />
+        <StyledSymbol className="lh-success-token-symbol">
+          {token?.symbol || "USDC"}
+        </StyledSymbol>
       </StyledLogoAndSymbol>
     </StyledTokenDisplay>
   );
 };
 
-
 const StyledTokenDisplay = styled(FlexRow)`
   gap: 30px;
-`
-
+`;
 
 const StyledSymbol = styled(Text)`
   font-size: 18px;

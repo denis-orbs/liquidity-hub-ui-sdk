@@ -1,28 +1,38 @@
 import { useGlobalStore, useSwapState } from "../store/main";
-import { SubmitTxArgs } from "../type";
 import { useCallback } from "react";
 import { useMainContext } from "../provider";
 import { swapAnalytics } from "../analytics";
 import { counter, delay, waitForTxReceipt } from "../util";
 import { useApiUrl } from "./useApiUrl";
+import { useShallow } from "zustand/react/shallow";
+import { QuoteResponse } from "../type";
 
 export const useSwapX = () => {
   const { account, chainId, web3 } = useMainContext();
-  const updateState = useSwapState((s) => s.updateState);
+  const updateState = useSwapState(useShallow((s) => s.updateState));
   const apiUrl = useApiUrl();
   const sessionId = useGlobalStore((s) => s.sessionId);
-
   return useCallback(
-    async (args: SubmitTxArgs) => {
+    async ({
+      inTokenAddress,
+      outTokenAddress,
+      signature,
+      fromAmount,
+      quote,
+    }: {
+      signature: string;
+      inTokenAddress: string;
+      outTokenAddress: string;
+      fromAmount: string;
+      quote: QuoteResponse;
+    }) => {
       if (
         !account ||
         !web3 ||
         !chainId ||
         !apiUrl ||
-        !args.signature ||
-        !args.srcAmount ||
-        !args.srcToken ||
-        !args.destToken
+        !signature ||
+        !fromAmount
       ) {
         throw new Error("Missing args");
       }
@@ -31,46 +41,32 @@ export const useSwapX = () => {
       const count = counter();
       swapAnalytics.onSwapRequest();
       try {
-        fetch(`${apiUrl}/swapx?chainId=${chainId}`, {
+        await fetch(`${apiUrl}/swap-async?chainId=${chainId}`, {
           method: "POST",
           body: JSON.stringify({
-            inToken: args.srcToken,
-            outToken: args.destToken,
-            inAmount: args.srcAmount,
+            ...quote,
+            inToken: inTokenAddress,
+            outToken: outTokenAddress,
+            inAmount: fromAmount,
             user: account,
-            signature: args.signature,
-            ...args.quote,
+            signature: signature,
+           
           }),
         });
-        // const swap = await response.json();
-        // if (!swap) {
-        //   throw new Error("Missing swap response");
-        // }
-        // if (swap.error) {
-        //   throw new Error(swap.error);
-        // }
-        // if (!swap.txHash) {
-        //   throw new Error("Missing txHash");
-        // }
-        const result = await waitForSwap(chainId, apiUrl, sessionId);
-         if (!result) {
-          throw new Error("Missing swap response");
-        }
-        if (result.error) {
-          throw new Error(result.error);
-        }
-        if (!result.txHash) {
+        const txHash = await waitForSwap(chainId, apiUrl, sessionId);
+        if (!txHash) {
           throw new Error("Missing txHash");
         }
-        swapAnalytics.onSwapSuccess(result.txHash, count());
-        txDetails = await waitForTxReceipt(web3, result.txHash);
+        swapAnalytics.onSwapSuccess(txHash, count());
+        txDetails = await waitForTxReceipt(web3, txHash);
         if (txDetails?.mined) {
           swapAnalytics.onClobOnChainSwapSuccess();
           updateState({
             swapStatus: "success",
-            txHash: result.txHash,
+            txHash: txHash,
           });
-          return result.txHash as string;
+
+          return txHash as string;
         } else {
           throw new Error(txDetails?.revertMessage);
         }
@@ -84,20 +80,29 @@ export const useSwapX = () => {
   );
 };
 
-async function waitForSwap(chainId:number, apiUrl: string, sessionId?: string) {
-
+async function waitForSwap(
+  chainId: number,
+  apiUrl: string,
+  sessionId?: string
+) {
   if (!sessionId) {
     throw new Error("Missing sessionId");
   }
-  for (let i = 0; i < 30; ++i) {
+  for (let i = 0; i < 120; ++i) {
     await delay(2_000);
     try {
-      const response = await fetch(`${apiUrl}/swap/status/${sessionId}?chainId=${chainId}`);
+      const response = await fetch(
+        `${apiUrl}/swap/status/${sessionId}?chainId=${chainId}`
+      );
       const result = await response.json();
       console.log({ result });
 
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
       if (result.txHash) {
-        return result;
+        return result.txHash as string;
       }
     } catch (error: any) {
       throw new Error(error.message);

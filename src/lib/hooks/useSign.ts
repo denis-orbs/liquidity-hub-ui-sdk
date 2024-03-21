@@ -22,7 +22,7 @@ export const useSign = () => {
 
         const signature = await signEIP712(web3, account, permitData);
         swapAnalytics.onSignatureSuccess(signature, count());
-
+        updateState({isSigned: true });
         return signature;
       } catch (error) {
         swapAnalytics.onSignatureFailed((error as any).message, count());

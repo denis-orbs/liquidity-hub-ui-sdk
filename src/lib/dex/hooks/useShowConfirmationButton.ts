@@ -17,6 +17,8 @@ import {
   eqIgnoreCase,
   isNativeAddress,
 } from "../../util";
+import { useSwapState } from "../../store/main";
+import { useAmountBN } from "../../hooks/useAmountBN";
 
 export const useUnwrapMF = () => {
   const { refetch } = useTokenListBalances();
@@ -39,7 +41,7 @@ export const useUnwrapMF = () => {
 };
 
 export const useShowConfirmationButton = () => {
-  const { fromToken, toToken, fromAmount } = useDexState((s) => ({
+  const { fromToken, toToken, fromAmount } = useSwapState((s) => ({
     fromToken: s.fromToken,
     toToken: s.toToken,
     fromAmount: s.fromAmount,
@@ -51,12 +53,15 @@ export const useShowConfirmationButton = () => {
   const { mutate: switchNetwork, isPending: switchNetworkLoading } =
     useSwitchNetwork();
   const wrongChain = useIsInvalidChain();
+  
   const fromAmountBN = new BN(fromAmount || "0");
   const { balance: fromTokenBalance } = useTokenListBalance(fromToken?.address);
-  const fromTokenBalanceBN = new BN(fromTokenBalance || "0");
+  
+  const fromTokenBalanceBN = useAmountBN(fromToken?.decimals, fromTokenBalance)
   const wToken = useChainConfig()?.wToken?.address;
   const { mutate: unwrap, isPending: unwrapLoading } = useUnwrapMF();
   const { connectWallet, account, supportedChains } = useMainContext();
+  
 
   const _confirmSwap = useCallback(() => {
     analyticsInit();

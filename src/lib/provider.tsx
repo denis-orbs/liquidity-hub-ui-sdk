@@ -16,6 +16,7 @@ import { useSwapState } from "./store/main";
 import { useShallow } from "zustand/react/shallow";
 import BN from "bignumber.js";
 import { useDexState } from "./store/dex";
+import { useLhControllListener } from "./hooks/useLhControllListener";
 const client = new QueryClient({
   defaultOptions: {
     queries: {
@@ -47,10 +48,10 @@ export const LiquidityHubProvider = ({
   slippage: _slippage,
   maxFailures,
   connectWallet,
-  getTokens
+  getTokens,
 }: Props) => {
   const slippage = useMemo(() => {
-    if (!_slippage) return 0 ;
+    if (!_slippage) return 0;
     return BN(_slippage).isNaN() ? 0 : Number(_slippage);
   }, [_slippage]);
 
@@ -77,8 +78,10 @@ export const LiquidityHubProvider = ({
 
   useEffect(() => {
     reset();
-    resetDex()
+    resetDex();
   }, [chainId]);
+
+  useLhControllListener();
 
   return (
     <QueryClientProvider client={client}>
@@ -95,7 +98,7 @@ export const LiquidityHubProvider = ({
           slippage,
           maxFailures,
           connectWallet,
-          getTokens
+          getTokens,
         }}
       >
         <ThemeProvider theme={_theme}>{children}</ThemeProvider>

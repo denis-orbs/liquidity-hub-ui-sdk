@@ -105,14 +105,6 @@ export interface ApproveArgs {
   provider: any;
 }
 
-export interface SubmitTxArgs {
-  srcToken: string;
-  destToken: string;
-  srcAmount: string;
-  signature: string;
-  quote: QuoteResponse;
-}
-
 export interface UseSwapCallback {
   fromToken?: Token;
   toToken?: Token;
@@ -167,7 +159,6 @@ export type UseLiquidityHubArgs = {
   fromToken?: Token;
   toToken?: Token;
   fromAmount?: string;
-  fromAmountUI?: string;
   minAmountOut?: string;
   minAmountOutUI?: string;
   expectedAmountOut?: string;

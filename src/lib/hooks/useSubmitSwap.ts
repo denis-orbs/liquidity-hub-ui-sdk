@@ -94,13 +94,13 @@ export const useSubmitSwap = () => {
 
         const signature = await sign(quote.permitData);
         const txHash = await requestSwap({
-          srcToken: inTokenAddress,
-          destToken: outTokenAddress,
-          srcAmount: fromAmount,
           signature,
-          quote,
+          inTokenAddress,
+          outTokenAddress,
+          fromAmount,
+          quote
         });
-        onSwapSuccess();
+        onSwapSuccess(quote);
         addOrder({
           fromToken: fromToken,
           toToken: toToken,
@@ -113,6 +113,7 @@ export const useSubmitSwap = () => {
         });
         setSessionId(undefined);
         await props?.onSuccess?.();
+      
         return txHash;
       } catch (error: any) {
         onSwapError(error.message);

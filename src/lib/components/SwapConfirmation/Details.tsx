@@ -14,10 +14,11 @@ const StyledSwapDetails = styled(FlexColumn)`
 `;
 
 export function SwapDetails() {
-  const { fromToken, fromAmount, toAmount, toToken, fromTokenUsd, toTokenUsd } = useSwapConfirmation();
+  const { fromToken, fromAmount, toAmount, toToken, fromTokenUsd, toTokenUsd } =
+    useSwapConfirmation();
 
   return (
-    <StyledSwapDetails className="lh-summary-details">
+    <StyledSwapDetails className="lh-details">
       <TokenDisplay
         title="Swap from"
         usd={fromTokenUsd}
@@ -34,7 +35,6 @@ export function SwapDetails() {
     </StyledSwapDetails>
   );
 }
-
 
 const TokenDisplay = ({
   amount,
@@ -60,37 +60,41 @@ const TokenDisplay = ({
   const _amount = useFormatNumber({ value: amount });
 
   return (
-    <StyledTokenDisplay className="lh-summary-token">
-      <Title className="lh-summary-token-title">{title}</Title>
+    <StyledTokenDisplay className="lh-token">
+      <Title className="lh-token-title">{title}</Title>
       <FlexRow
         $justifyContent="space-between"
         $alignItems="flex-start"
         style={{ width: "100%" }}
       >
-        <FlexColumn $alignItems="flex-start">
-          <TokenAmount>
-            {_amount}
-          </TokenAmount>
-          {_totalUsd && (
-            <USD className="lh-swap-modal-usd">{`$${_totalUsd}`}</USD>
-          )}
-        </FlexColumn>
-        <StyledLogoAndSymbol>
-        <StyledLogo src={token.logoUrl} />
-        <StyledSymbol>{token.symbol}</StyledSymbol>
+        <StyledLeft $alignItems="flex-start" className="lh-token-left">
+          <TokenAmount className="lh-token-amount">{_amount}</TokenAmount>
+          <USD className="lh-token-usd">
+            {BN(totalUsd).gt(0) ? `$${_totalUsd}` : "-"}
+          </USD>
+        </StyledLeft>
+        <StyledLogoAndSymbol className="lh-token-right">
+          <StyledLogo src={token.logoUrl} className="lh-token-logo" />
+          <StyledSymbol className="lh-token-symbol">
+            {token.symbol}
+          </StyledSymbol>
         </StyledLogoAndSymbol>
-      
       </FlexRow>
     </StyledTokenDisplay>
   );
 };
 
-const StyledLogoAndSymbol = styled(FlexRow)``
+const StyledLeft = styled(FlexColumn)`
+  align-items: flex-start;
+  gap: 8px;
+`;
+
+const StyledLogoAndSymbol = styled(FlexRow)``;
 
 const StyledSymbol = styled(Text)`
-font-size: 18px;
-color: ${({ theme }) => theme.colors.textSecondary};
-`
+  font-size: 18px;
+  color: ${({ theme }) => theme.colors.textSecondary};
+`;
 
 const StyledLogo = styled(Logo)`
   width: 36px;

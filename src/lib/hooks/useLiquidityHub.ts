@@ -9,18 +9,8 @@ import { useTradeOwner } from "./useTradeOwner";
 import { useShallow } from "zustand/react/shallow";
 import _ from "lodash";
 import useAnalytics from "./useAnalytics";
-import { useDebounce } from "./useDebounce";
+import { useAmountBN } from "./useAmountBN";
 
-const useFromAmountWei = (args: UseLiquidityHubArgs) => {
-  return useMemo(() => {
-    if ((!args.fromAmount && !args.fromAmountUI) || !args.fromToken) {
-      return "0";
-    }
-    return args.fromAmount
-      ? args.fromAmount
-      : amountBN(args.fromToken.decimals, args.fromAmountUI || "0").toString();
-  }, [args.fromAmount, args.fromAmountUI, args.fromToken]);
-};
 
 const useDexMinAmountOutWei = (args: UseLiquidityHubArgs) => {
   return useMemo(() => {
@@ -60,20 +50,20 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
       updateState: store.updateState,
     }))
   );
-  const _fromAmount = useFromAmountWei(args);
-  const fromAmount = useDebounce(_fromAmount, 200);
+
+  const fromAmount = useAmountBN(args.fromToken?.decimals, args.fromAmount)
   const dexMinAmountOut = useDexMinAmountOutWei(args);
   const dexExpectedAmountOut = useDexExpectedAmountOutWei(args);
     
   useEffect(() => {
     updateState({
-      fromAmount,
       dexMinAmountOut,
       dexExpectedAmountOut,
       fromTokenUsd: args.fromTokenUsd,
       toTokenUsd: args.toTokenUsd,
       fromToken: args.fromToken,
       toToken: args.toToken,
+      fromAmount,
     });
   }, [
     updateState,
@@ -82,8 +72,8 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     dexExpectedAmountOut,
     args.fromTokenUsd,
     args.toTokenUsd,
-    args.fromToken,
-    args.toToken,
+    args.fromToken?.address,
+    args.toToken?.address,
   ]);
 
   const quote = useQuote();
