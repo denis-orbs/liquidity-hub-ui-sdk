@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useNumericFormat } from "react-number-format";
+import {  formatNumberDecimals } from "../util";
 
 export const useFormatNumber = ({
   value,
@@ -13,23 +14,7 @@ export const useFormatNumber = ({
   suffix?: string;
 }) => {
   const decimals = useMemo(() => {
-    const maxZero = 5;
-
-    if (!value) return 0;
-    const [, decimal] = value.toString().split(".");
-    if (!decimal) return 0;
-    const arr = decimal.split("");
-    let count = 0;
-
-    for (let i = 0; i < arr.length; i++) {
-      if (arr[i] === "0") {
-        count++;
-      } else {
-        break;
-      }
-    }
-    if(count > maxZero) return 0;
-    return !count ? decimalScale : count + decimalScale;
+    return formatNumberDecimals(decimalScale, value);
   }, [value, decimalScale]);
 
   const result = useNumericFormat({

@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import styled from "styled-components";
 import BN from "bignumber.js";
 import { FlexColumn, FlexRow } from "../../base-styles";
@@ -14,21 +13,21 @@ const StyledSwapDetails = styled(FlexColumn)`
 `;
 
 export function SwapDetails() {
-  const { fromToken, fromAmount, toAmount, toToken, fromTokenUsd, toTokenUsd } =
+  const { fromToken, fromAmount, toAmount, toToken, inAmountUsd, outAmountUsd } =
     useSwapConfirmation();
 
   return (
     <StyledSwapDetails className="lh-details">
       <TokenDisplay
         title="Swap from"
-        usd={fromTokenUsd}
+        usd={inAmountUsd}
         token={fromToken}
         amount={fromAmount}
       />
       <Separator />
       <TokenDisplay
         title="Swap to"
-        usd={toTokenUsd}
+        usd={outAmountUsd}
         token={toToken}
         amount={toAmount}
       />
@@ -49,14 +48,8 @@ const TokenDisplay = ({
 }) => {
   if (!token) return null;
 
-  const totalUsd = useMemo(() => {
-    if (!usd || !amount) {
-      return "0";
-    }
-    return new BN(usd).times(amount).toString();
-  }, [usd, amount]);
 
-  const _totalUsd = useFormatNumber({ value: totalUsd });
+  const totalUsd = useFormatNumber({ value: usd });
   const _amount = useFormatNumber({ value: amount });
 
   return (
@@ -70,7 +63,7 @@ const TokenDisplay = ({
         <StyledLeft $alignItems="flex-start" className="lh-token-left">
           <TokenAmount className="lh-token-amount">{_amount}</TokenAmount>
           <USD className="lh-token-usd">
-            {BN(totalUsd).gt(0) ? `$${_totalUsd}` : "-"}
+            {BN(totalUsd || 0).gt(0) ? `$${totalUsd}` : "-"}
           </USD>
         </StyledLeft>
         <StyledLogoAndSymbol className="lh-token-right">

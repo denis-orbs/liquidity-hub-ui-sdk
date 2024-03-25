@@ -8,6 +8,7 @@ import { Text } from "../Text";
 import Confetti from "../../assets/confetti.svg";
 import { Separator } from "./Components";
 import { useSwapSuccessData } from "../../hooks/useSwapSuccessData";
+import { useFormatNumber } from "../../hooks";
 
 export const SwapSuccess = () => {
   const { toToken, toAmount, fromToken, fromAmount } = useSwapSuccessData();
@@ -77,10 +78,12 @@ const SuccessToken = ({
   token?: Token;
   amount?: string;
 }) => {
+
+  const formattedAmount = useFormatNumber({ value: amount });
   return (
     <StyledTokenDisplay className="lh-success-token">
       <StyledTokenAmount className="lh-success-token-text">
-        {amount}
+        {formattedAmount}
       </StyledTokenAmount>
       <StyledLogoAndSymbol>
         <StyledLogo src={token?.logoUrl} className="lh-success-token-logo" />

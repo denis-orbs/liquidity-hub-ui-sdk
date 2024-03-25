@@ -149,8 +149,15 @@ export const useQuote = () => {
           new BN(addSlippage(quote.outAmount, slippage))
         );
         const minAmountOut = parseInt(
-          quote?.permitData.values.witness.outputs[1].startAmount.hex,
+          quote?.permitData.values.witness.outputs[1].endAmount.hex,
           16
+        );
+
+        const inTokenUsd = quote.inTokenUsd;
+        const outTokenUsd = quote.outTokenUsd;
+        const fromAmountUI = amountUi(
+          fromToken?.decimals,
+          BN(fromAmount || "0")
         );
         return {
           ...quote,
@@ -167,6 +174,14 @@ export const useQuote = () => {
               )
             )
           ),
+          inTokenUsd,
+          outTokenUsd,
+          inAmountUsd: BN(inTokenUsd)
+            .times(fromAmountUI || 0)
+            .toString(),
+          outAmountUsd: BN(outTokenUsd)
+            .times(outAmountUI || 0)
+            .toString(),
         } as QuoteResponse;
       } catch (error: any) {
         swapAnalytics.onQuoteFailed(error.message, count(), quote);

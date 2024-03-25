@@ -58,7 +58,6 @@ export interface Token {
 
 type TokenUsd = string | number | undefined;
 
-
 export interface ProviderArgs {
   supportedChains: number[];
   slippage?: any;
@@ -123,7 +122,11 @@ export interface QuoteResponse {
   gasCostOutputToken?: string;
   sessionId?: string;
   minAmountOut?: string;
-minAmountOutUI?: string;
+  minAmountOutUI?: string;
+  inTokenUsd?: TokenUsd;
+  outTokenUsd?: TokenUsd;
+  inAmountUsd?: TokenUsd;
+  outAmountUsd?: TokenUsd;
 }
 
 export enum LH_CONTROL {
@@ -138,7 +141,12 @@ export enum STEPS {
   SEND_TX,
 }
 
-export type ActionStatus = "pending"  | "loading" | "success" | "failed" | undefined;
+export type ActionStatus =
+  | "pending"
+  | "loading"
+  | "success"
+  | "failed"
+  | undefined;
 
 export interface Step {
   title: string;

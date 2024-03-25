@@ -33,7 +33,12 @@ import { Button } from "../components/Button";
 import { LoadingText } from "../components/LoadingText";
 import { TokenSearchInput } from "../components/SearchInput";
 import { useShallow } from "zustand/react/shallow";
-import { useFormatNumber, useSwapConfirmation } from "../hooks";
+import {
+  useFormatNumber,
+  usePriceImpact,
+  useSwapButton,
+  useSwapConfirmation,
+} from "../hooks";
 import { Text } from "../components/Text";
 import { Logo } from "../components/Logo";
 import {
@@ -56,6 +61,8 @@ import {
 import _ from "lodash";
 import { useOnSwapSuccessCallback } from "./hooks/useOnSwapSuccessCallback";
 import { useInitialTokens } from "./hooks/useInitialTokens";
+import { useGasCost } from "../hooks/useGasCost";
+import { useRate } from "../hooks/useRate";
 
 export const theme = {
   colors: {
@@ -203,19 +210,20 @@ const StyledPoweredByOrbs = styled(PoweredByOrbs)`
 `;
 
 const SwapModal = () => {
-  const {
-    onClose,
-    swapStatus,
-    open,
-    minAmountOut,
-    toToken,
-    gasCost,
-    rate,
-    swapButton,
-    title,
-  } = useSwapConfirmation();
+  const { onClose, swapStatus, isOpen, minAmountOut, toToken, title } =
+    useSwapConfirmation();
+  const gasCost = useGasCost();
+  const rate = useRate();
+  const swapButton = useSwapButton();
+  const priceImpact = useFormatNumber({value: usePriceImpact(), decimalScale: 2 });
 
   const onSuccess = useOnSwapSuccessCallback();
+  const gas = useFormatNumber({ value: gasCost, decimalScale: 2 });
+  const rateUsd = useFormatNumber({
+    value: rate.usd,
+    decimalScale: 2,
+    prefix: "$",
+  });
 
   const onClick = useCallback(async () => {
     try {
@@ -225,7 +233,7 @@ const SwapModal = () => {
   }, [swapButton.swap, onSuccess]);
 
   return (
-    <WidgetModal title={title} open={open} onClose={onClose}>
+    <WidgetModal title={title} open={isOpen} onClose={onClose}>
       <SwapConfirmation>
         {!swapStatus && (
           <>
@@ -233,14 +241,19 @@ const SwapModal = () => {
               <SwapModalInfoRow label="Rate" onClick={rate.invert}>
                 <StyledRateUsd>
                   {`1 ${rate.leftToken} = ${rate.rightToken} ${rate.value}`}{" "}
-                  <small>{`($${rate.usd})`}</small>
+                  <small>{`(${rateUsd})`}</small>
                 </StyledRateUsd>
               </SwapModalInfoRow>
               <SwapModalInfoRow label="Gas cost">
-                <StyledRateUsd>{`$${gasCost}`}</StyledRateUsd>
+                <StyledRateUsd>{`$${gas}`}</StyledRateUsd>
               </SwapModalInfoRow>
               <SwapModalInfoRow label="Min amount out">
                 <StyledRateUsd>{`${minAmountOut} ${toToken?.symbol}`}</StyledRateUsd>
+              </SwapModalInfoRow>
+              <SwapModalInfoRow label="Price impact">
+                <StyledRateUsd>{`${
+                  priceImpact ? `${priceImpact}%` : "-"
+                }`}</StyledRateUsd>
               </SwapModalInfoRow>
             </StyledSwapDetails>
 
