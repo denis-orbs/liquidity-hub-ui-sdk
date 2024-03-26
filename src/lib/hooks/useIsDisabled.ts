@@ -6,13 +6,14 @@ import { useIsInvalidChain } from "./useIsInvalidChain";
 export function useIsDisabled() {
   const maxFailures = useMainContext().maxFailures;
   const invalidChain = useIsInvalidChain();
-  const { failures } = useSwapState(
+  const { failures, disabledByDex } = useSwapState(
     useShallow((s) => ({
       failures: s.failures,
+      disabledByDex: s.disabledByDex,
     }))
   );
 
   const failed = !maxFailures ? false :  (failures || 0) > maxFailures;
 
-  return failed || invalidChain;
+  return failed || invalidChain || disabledByDex;
 }

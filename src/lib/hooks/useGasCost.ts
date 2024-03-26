@@ -5,10 +5,7 @@ import { useUsdValues } from "./useUsdValues";
 
 export function useGasCost() {
   const { outTokenUsd } = useUsdValues();
-  const gasCostOutputToken = useQuote().data?.gasCostOutputToken;
-
-  console.log({ gasCostOutputToken, outTokenUsd });
-  
+  const gasCostOutputToken = useQuote().data?.gasCostOutputToken;  
 
   return useMemo(() => {
     if (!gasCostOutputToken || !outTokenUsd) return "";

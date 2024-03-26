@@ -172,8 +172,8 @@ export type UseLiquidityHubArgs = {
   expectedAmountOut?: string;
   expectedAmountOutUI?: string;
   slippage?: number;
-  fromTokenUsd?: TokenUsd;
-  toTokenUsd?: TokenUsd;
+  disabled?: boolean;
+  debounceFromAmountMillis?: number;
 };
 
 export type TradeOwner = "dex" | "lh";

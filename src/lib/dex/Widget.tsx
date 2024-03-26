@@ -54,7 +54,6 @@ import {
   usePercentSelect,
   useShowConfirmationButton,
   useDexLH,
-  useUsdAmount,
   useFromTokenPanel,
   useToTokenPanel,
 } from "./hooks";
@@ -63,6 +62,7 @@ import { useOnSwapSuccessCallback } from "./hooks/useOnSwapSuccessCallback";
 import { useInitialTokens } from "./hooks/useInitialTokens";
 import { useGasCost } from "../hooks/useGasCost";
 import { useRate } from "../hooks/useRate";
+import { useUsdValues } from "../hooks/useUsdValues";
 
 export const theme = {
   colors: {
@@ -347,7 +347,7 @@ const ChangeTokens = () => {
 const FromTokenPanel = () => {
   const { token, amount, onChange, onTokenSelect } = useFromTokenPanel();
 
-  const { usd, isLoading } = useUsdAmount(token?.address, amount);
+  const usd = useUsdValues().inAmountUsd
 
   return (
     <TokenPanel
@@ -358,7 +358,7 @@ const FromTokenPanel = () => {
       isSrc={true}
       onTokenSelect={onTokenSelect}
       usd={usd}
-      usdLoading={isLoading}
+      usdLoading={!!amount && !usd}
     />
   );
 };
@@ -367,7 +367,8 @@ const ToTokenPanel = () => {
   const { token, onTokenSelect } = useToTokenPanel();
 
   const amount = useDexLH().quote?.data?.outAmountUI;
-  const { usd, isLoading } = useUsdAmount(token?.address, amount);
+  const usd = useUsdValues().outAmountUsd
+
   return (
     <TokenPanel
       onTokenSelect={onTokenSelect}
@@ -375,7 +376,7 @@ const ToTokenPanel = () => {
       inputValue={useFormatNumber({ value: amount })}
       label="To"
       usd={usd}
-      usdLoading={isLoading}
+      usdLoading={!!amount && !usd}
     />
   );
 };

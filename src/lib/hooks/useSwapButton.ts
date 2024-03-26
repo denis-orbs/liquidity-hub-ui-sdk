@@ -21,8 +21,8 @@ export const useSwapButton = () => {
 
   return useMemo(() => {
     const getText = () => {
-      if (isNativeAddress(fromToken?.address || "")) return "Wrap and swap";
-      if (!approved) return "Approve and swap";
+      if (isNativeAddress(fromToken?.address || "")) return "Wrap and Swap";
+      if (!approved) return "Approve and Swap";
       return "Sign and Swap";
     };
 

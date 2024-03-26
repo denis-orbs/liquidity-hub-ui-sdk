@@ -9,8 +9,6 @@ import { useOutAmount } from "./useOutAmount";
 export function useUsdValues() {
   const store = useSwapState(
     useShallow((s) => ({
-      fromTokenUsd: s.fromTokenUsd,
-      toTokenUsd: s.toTokenUsd,
       fromToken: s.fromToken,
       fromAmount: s.fromAmount,
       toToken: s.toToken,
@@ -18,30 +16,21 @@ export function useUsdValues() {
   );
 
   const quote = useQuote();
-  console.log(quote.data);
-  
-  const inTokenUsd = useMemo(() => {
-    return BN(store.fromTokenUsd || 0).gt(0)
-      ? store.fromTokenUsd
-      : quote?.data?.inTokenUsd;
-  }, [store.fromTokenUsd, quote?.data?.inTokenUsd]);
 
-  const outTokenUsd = useMemo(() => {
-    return BN(store.toTokenUsd || 0).gt(0)
-      ? store.toTokenUsd
-      : quote?.data?.outTokenUsd;
-  }, [store.toTokenUsd, quote?.data?.outTokenUsd]);
-
+  const inTokenUsd = quote?.data?.inTokenUsd
+  const outTokenUsd = quote?.data?.outTokenUsd
   const outAmount = useOutAmount();
 
   const inAmountUsd = useMemo(() => {
-    return BN(inTokenUsd || "0")
+    if(!inTokenUsd || !store.fromAmount) return 
+    return BN(inTokenUsd || "")
       .times(amountUi(store.fromToken?.decimals, BN(store.fromAmount || "0")))
       .toString();
   }, [inTokenUsd, store.fromAmount, store.fromToken]);
 
   const outAmountUsd = useMemo(() => {
-    return BN(outTokenUsd || "0")
+    if(!outTokenUsd || !outAmount) return
+    return BN(outTokenUsd || "")
       .times(amountUi(store.toToken?.decimals, BN(outAmount || "0")))
       .toString();
   }, [outTokenUsd, outAmount, store.toToken]);

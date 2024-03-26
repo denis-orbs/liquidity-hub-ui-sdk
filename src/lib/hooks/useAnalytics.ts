@@ -8,27 +8,26 @@ import { useQuote } from "./useQuote";
 function useAnalytics() {
   const slippage = useMainContext().slippage;
   const {
-    fromTokenUsd,
     fromToken,
     toToken,
     dexMinAmountOut,
-    toTokenUsd,
     fromAmount,
     dexExpectedAmountOut,
   } = useSwapState(
     useShallow((s) => ({
-      fromTokenUsd: s.fromTokenUsd,
       fromToken: s.fromToken,
       toToken: s.toToken,
       dexMinAmountOut: s.dexMinAmountOut,
-      toTokenUsd: s.toTokenUsd,
       fromAmount: s.fromAmount,
       dexExpectedAmountOut: s.dexExpectedAmountOut,
     }))
   );
 
-  const quoteAmountOut = useQuote().data?.minAmountOut;
+  const { data: quote } = useQuote();
 
+  const quoteAmountOut = quote?.minAmountOut;
+  const fromTokenUsd = quote?.inTokenUsd;
+  const toTokenUsd = quote?.outTokenUsd;
   const initTrade = useCallback(() => {
     swapAnalytics.onInitSwap({
       fromTokenUsd,

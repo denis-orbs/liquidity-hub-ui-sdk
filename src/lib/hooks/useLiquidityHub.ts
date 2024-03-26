@@ -10,7 +10,7 @@ import { useShallow } from "zustand/react/shallow";
 import _ from "lodash";
 import useAnalytics from "./useAnalytics";
 import { useAmountBN } from "./useAmountBN";
-
+import { useDebounce } from "./useDebounce";
 
 const useDexMinAmountOutWei = (args: UseLiquidityHubArgs) => {
   return useMemo(() => {
@@ -51,29 +51,28 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     }))
   );
 
-  const fromAmount = useAmountBN(args.fromToken?.decimals, args.fromAmount)
+  const _fromAmount = useAmountBN(args.fromToken?.decimals, args.fromAmount);
+  const fromAmount = useDebounce(_fromAmount, args.debounceFromAmountMillis);
   const dexMinAmountOut = useDexMinAmountOutWei(args);
   const dexExpectedAmountOut = useDexExpectedAmountOutWei(args);
-    
+
   useEffect(() => {
     updateState({
       dexMinAmountOut,
       dexExpectedAmountOut,
-      fromTokenUsd: args.fromTokenUsd,
-      toTokenUsd: args.toTokenUsd,
       fromToken: args.fromToken,
       toToken: args.toToken,
       fromAmount,
+      disabledByDex: args.disabled,
     });
   }, [
     updateState,
     fromAmount,
     dexMinAmountOut,
     dexExpectedAmountOut,
-    args.fromTokenUsd,
-    args.toTokenUsd,
     args.fromToken?.address,
     args.toToken?.address,
+    args.disabled,
   ]);
 
   const quote = useQuote();

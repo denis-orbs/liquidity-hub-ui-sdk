@@ -23,8 +23,6 @@ export const useSubmitSwap = () => {
     fromAmount,
     fromToken,
     toToken,
-    fromTokenUsd,
-    toTokenUsd,
   } = useSwapState(
     useShallow((store) => ({
       onSwapSuccess: store.onSwapSuccess,
@@ -34,8 +32,6 @@ export const useSubmitSwap = () => {
       fromAmount: store.fromAmount,
       fromToken: store.fromToken,
       toToken: store.toToken,
-      fromTokenUsd: store.fromTokenUsd,
-      toTokenUsd: store.toTokenUsd,
     }))
   );
 
@@ -89,7 +85,7 @@ export const useSubmitSwap = () => {
         if (!approved) {
           await approve(inTokenAddress, fromAmount);
         } else {
-          swapAnalytics.onApprovedBeforeTheTrade(approved);
+          swapAnalytics.onApprovedBeforeTheTrade();
         }
 
         const signature = await sign(quote.permitData);
@@ -106,8 +102,8 @@ export const useSubmitSwap = () => {
           toToken: toToken,
           fromAmount: amountUi(fromToken.decimals, new BN(fromAmount)),
           toAmount: quote.outAmountUI,
-          fromUsd: fromTokenUsd,
-          toUsd: toTokenUsd,
+          fromUsd: quote.inTokenUsd,
+          toUsd: quote.outTokenUsd,
           txHash,
           explorerLink: `${explorerUrl}/tx/${txHash}`,
         });
@@ -147,8 +143,6 @@ export const useSubmitSwap = () => {
       onCloseSwap,
       addOrder,
       explorerUrl,
-      fromTokenUsd,
-      toTokenUsd,
     ]
   );
 };

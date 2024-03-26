@@ -12,21 +12,7 @@ const DEX_PRICE_BETTER_ERROR = "Dex trade is better than Clob trade";
 const initialData: Partial<AnalyticsData> = {
   _id: crypto.randomUUID(),
   isClobTrade: false,
-  isNotClobTradeReason: "null",
-  firstFailureSessionId: "null",
-  clobDexPriceDiffPercent: "null",
   quoteIndex: 0,
-  quoteState: "null",
-  approvalState: "null",
-  signatureState: "null",
-  swapState: "null",
-  wrapState: "null",
-  onChainClobSwapState: "null",
-  onChainDexSwapState: "null",
-  dexSwapState: "null",
-  dexSwapError: "null",
-  dexSwapTxHash: "null",
-  userWasApprovedBeforeTheTrade: "null",
   isForceClob: false,
   isDexTrade: false,
   version: ANALYTICS_VERSION,
@@ -189,9 +175,9 @@ export class Analytics {
     }
   }
 
-  onApprovedBeforeTheTrade(userWasApprovedBeforeTheTrade?: boolean) {
+  onApprovedBeforeTheTrade() {
     this.updateAndSend({
-      userWasApprovedBeforeTheTrade: Boolean(userWasApprovedBeforeTheTrade),
+      userWasApprovedBeforeTheTrade: true,
     });
   }
 

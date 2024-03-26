@@ -95,8 +95,6 @@ async function waitForSwap(
         `${apiUrl}/swap/status/${sessionId}?chainId=${chainId}`
       );
       const result = await response.json();
-      console.log({ result });
-
       if (result.error) {
         throw new Error(result.error);
       }

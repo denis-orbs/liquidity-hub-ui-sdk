@@ -14,6 +14,7 @@ export const useTradeOwner = (
       lhControl: s.lhControl,
     })
   );
+  
   return useMemo(() => {
     if (disabled) return "dex";
     if (new BN(dexMinAmountOut || "0").lte(0) && new BN(lhOutAmount || "0").lte(0))

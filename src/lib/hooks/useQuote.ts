@@ -47,12 +47,13 @@ export const useQuote = () => {
   const liquidityHubEnabled = useLiquidityHubPersistedStore(
     (s) => s.liquidityHubEnabled
   );
-  const { fromAmount, dexMinAmountOut, fromToken, toToken } = useSwapState(
+  const { fromAmount, dexMinAmountOut, fromToken, toToken, disabledByDex } = useSwapState(
     useShallow((s) => ({
       fromAmount: s.fromAmount,
       dexMinAmountOut: s.dexMinAmountOut,
       fromToken: s.fromToken,
       toToken: s.toToken,
+      disabledByDex: s.disabledByDex,
     }))
   );
   const wTokenAddress = useChainConfig()?.wToken?.address;
@@ -85,6 +86,7 @@ export const useQuote = () => {
     !!fromAmount &&
     fromAmount !== "0" &&
     liquidityHubEnabled &&
+    !disabledByDex &&
     !!apiUrl &&
     !disabled;
 

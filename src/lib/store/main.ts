@@ -15,10 +15,9 @@ interface SwapStateValues {
   dexMinAmountOut?: string;
   dexExpectedAmountOut?: string;
   disableLh?: boolean;
-  fromTokenUsd?: string | number;
-  toTokenUsd?: string | number;
   quoteOutdated?: boolean;
   isSigned?: boolean;
+  disabledByDex?: boolean;
   successDetails?: {
     fromTokenUsd?: string | number;
     toTokenUsd?: string | number;
@@ -51,11 +50,10 @@ const initialSwapState: SwapStateValues = {
   dexMinAmountOut: undefined,
   dexExpectedAmountOut: undefined,
   disableLh: false,
-  fromTokenUsd: undefined,
-  toTokenUsd: undefined,
   quoteOutdated: undefined,
   isSigned: false,
   successDetails: undefined,
+  disabledByDex: false,
 };
 
 export const useSwapState = create<SwapState>((set, get) => ({
@@ -68,8 +66,8 @@ export const useSwapState = create<SwapState>((set, get) => ({
       swapStatus: "success",
       successDetails: {
         fromAmount: get().fromAmount || "0",
-        fromTokenUsd: get().fromTokenUsd,
-        toTokenUsd: get().toTokenUsd,
+        fromTokenUsd: quote?.inTokenUsd,
+        toTokenUsd: quote?.outTokenUsd,
         toAmount: get().dexExpectedAmountOut || quote?.outAmount,
         fromToken: get().fromToken!,
         toToken: get().toToken!,
