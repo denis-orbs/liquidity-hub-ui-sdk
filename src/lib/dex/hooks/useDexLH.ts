@@ -8,6 +8,7 @@ export const useDexLH = () => {
     fromToken: store.fromToken,
     toToken: store.toToken,
     fromAmount: store.fromAmount,
-    debounceFromAmountMillis: 300
+    debounceFromAmountMillis: 300,
+    quoteDelayMillis: 7_000
   });
 };

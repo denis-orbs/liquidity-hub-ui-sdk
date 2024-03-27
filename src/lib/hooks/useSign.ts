@@ -26,7 +26,7 @@ export const useSign = () => {
         return signature;
       } catch (error) {
         swapAnalytics.onSignatureFailed((error as any).message, count());
-        throw new Error((error as any).message);
+        throw new Error('Failed to sign');
       }
     },
     [updateState, account, web3]

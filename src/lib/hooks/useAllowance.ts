@@ -59,7 +59,7 @@ export const useAllowance = () => {
       !!account &&
       !!chainId &&
       !!fromAmount &&
-      fromAmount !== "0",
+      BN(fromAmount).gt(0),
     staleTime: Infinity,
   });
 };

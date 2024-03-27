@@ -117,7 +117,6 @@ export interface QuoteResponse {
   callData: string;
   rawData: any;
   outAmountUI: string;
-  outAmountUIWithSlippage?: string;
   disableInterval?: boolean;
   gasCostOutputToken?: string;
   sessionId?: string;
@@ -127,6 +126,7 @@ export interface QuoteResponse {
   outTokenUsd?: TokenUsd;
   inAmountUsd?: TokenUsd;
   outAmountUsd?: TokenUsd;
+  outAmountMinusGas?: string;
 }
 
 export enum LH_CONTROL {
@@ -174,6 +174,7 @@ export type UseLiquidityHubArgs = {
   slippage?: number;
   disabled?: boolean;
   debounceFromAmountMillis?: number;
+  quoteDelayMillis?: number;
 };
 
 export type TradeOwner = "dex" | "lh";

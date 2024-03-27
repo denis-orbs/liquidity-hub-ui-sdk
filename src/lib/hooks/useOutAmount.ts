@@ -12,7 +12,7 @@ export function useOutAmount() {
     if (dexExpectedAmountOut) {
       return dexExpectedAmountOut;
     }
-    return quote?.outAmount;
-  }, [quote?.outAmount, dexExpectedAmountOut]);
+    return quote?.outAmountMinusGas;
+  }, [quote?.outAmountMinusGas, dexExpectedAmountOut]);
 }
 

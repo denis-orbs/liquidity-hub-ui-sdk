@@ -18,6 +18,8 @@ interface SwapStateValues {
   quoteOutdated?: boolean;
   isSigned?: boolean;
   disabledByDex?: boolean;
+  quoteDelayMillis?: number;
+  isFirstQuote?: boolean;
   successDetails?: {
     fromTokenUsd?: string | number;
     toTokenUsd?: string | number;
@@ -54,6 +56,8 @@ const initialSwapState: SwapStateValues = {
   isSigned: false,
   successDetails: undefined,
   disabledByDex: false,
+  quoteDelayMillis: undefined,
+  isFirstQuote: true,
 };
 
 export const useSwapState = create<SwapState>((set, get) => ({

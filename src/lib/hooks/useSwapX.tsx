@@ -7,32 +7,28 @@ import { useApiUrl } from "./useApiUrl";
 import { useShallow } from "zustand/react/shallow";
 import { QuoteResponse } from "../type";
 
+interface Args {
+  signature: string;
+  inTokenAddress: string;
+  outTokenAddress: string;
+  fromAmount: string;
+  quote: QuoteResponse;
+}
+
 export const useSwapX = () => {
   const { account, chainId, web3 } = useMainContext();
   const updateState = useSwapState(useShallow((s) => s.updateState));
   const apiUrl = useApiUrl();
   const sessionId = useGlobalStore((s) => s.sessionId);
   return useCallback(
-    async ({
-      inTokenAddress,
-      outTokenAddress,
-      signature,
-      fromAmount,
-      quote,
-    }: {
-      signature: string;
-      inTokenAddress: string;
-      outTokenAddress: string;
-      fromAmount: string;
-      quote: QuoteResponse;
-    }) => {
+    async (args:Args) => {
       if (
         !account ||
         !web3 ||
         !chainId ||
         !apiUrl ||
-        !signature ||
-        !fromAmount
+        !args.signature ||
+        !args.fromAmount
       ) {
         throw new Error("Missing args");
       }
@@ -44,12 +40,12 @@ export const useSwapX = () => {
         const response = await fetch(`${apiUrl}/swapx?chainId=${chainId}`, {
           method: "POST",
           body: JSON.stringify({
-            ...quote,
-            inToken: inTokenAddress,
-            outToken: outTokenAddress,
-            inAmount: fromAmount,
+            ...args.quote,
+            inToken: args.inTokenAddress,
+            outToken: args.outTokenAddress,
+            inAmount: args.fromAmount,
             user: account,
-            signature: signature,
+            signature: args.signature,
           }),
         });
         const swap = await response.json();
@@ -80,7 +76,7 @@ export const useSwapX = () => {
       } catch (error: any) {
         const msg = error.message.error || error.message;
         swapAnalytics.onSwapFailed(msg, count(), !!txDetails?.revertMessage);
-        throw new Error(msg);
+        throw new Error('Swap failed');
       }
     },
     [web3, account, chainId, updateState, sessionId, apiUrl]

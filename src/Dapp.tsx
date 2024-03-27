@@ -6,6 +6,7 @@ import styled from "styled-components";
 import { Widget } from "./lib/dex/Widget";
 import { supportedChains } from "./lib";
 import { RainbowProvider } from "./RainbowProvider";
+import _ from "lodash";
 
 export const useProvider = () => {
   const { data } = useConfig();
@@ -44,15 +45,8 @@ function Wrapped() {
       partner="playground"
       account={address}
       slippage={"0.5"}
-      apiUrl='https://4358-109-67-131-108.ngrok-free.app'
       initialFromToken="USDT"
-      supportedChains={[
-        supportedChains.polygon.chainId,
-        supportedChains.base.chainId,
-        supportedChains.zkEvm.chainId,
-        supportedChains.bsc.chainId,
-        supportedChains.fanton.chainId,
-      ]}
+      supportedChains={_.map(supportedChains, "chainId")}
       UIconfig={{
         modalStyles: {
           containerStyles: {

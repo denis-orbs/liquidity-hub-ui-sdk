@@ -1,25 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
 import { useMainContext } from "../provider";
-import { QuoteResponse, Token } from "../type";
-import {
-  useGlobalStore,
-  useLiquidityHubPersistedStore,
-  useSwapState,
-} from "../store/main";
+import { QuoteResponse } from "../type";
+import { useGlobalStore, useSwapState } from "../store/main";
 import {
   EMPTY_QUOTE_RESPONSE,
   QUERY_KEYS,
   QUOTE_ERRORS,
   zeroAddress,
 } from "../config/consts";
-import { useShallow } from "zustand/react/shallow";
 import { useChainConfig } from "./useChainConfig";
 import { useIsDisabled } from "./useIsDisabled";
 import {
   addSlippage,
   amountUi,
   counter,
+  delay,
   eqIgnoreCase,
   isNativeAddress,
   shouldReturnZeroOutAmount,
@@ -28,65 +23,34 @@ import { useApiUrl } from "./useApiUrl";
 import { swapAnalytics } from "../analytics";
 import BN from "bignumber.js";
 import _ from "lodash";
-const useNormalizeAddresses = (fromToken?: Token, toToken?: Token) => {
-  const wTokenAddress = useChainConfig()?.wToken?.address;
-
-  return useMemo(() => {
-    return {
-      fromAddress: isNativeAddress(fromToken?.address || "")
-        ? wTokenAddress
-        : fromToken?.address,
-      toAddress: isNativeAddress(toToken?.address || "")
-        ? zeroAddress
-        : toToken?.address,
-    };
-  }, [fromToken?.address, toToken?.address]);
-};
+import { useHandleTokenAddresses } from "./useHandleTokenAddresses";
 
 export const useQuote = () => {
-  const liquidityHubEnabled = useLiquidityHubPersistedStore(
-    (s) => s.liquidityHubEnabled
-  );
-  const { fromAmount, dexMinAmountOut, fromToken, toToken, disabledByDex } = useSwapState(
-    useShallow((s) => ({
-      fromAmount: s.fromAmount,
-      dexMinAmountOut: s.dexMinAmountOut,
-      fromToken: s.fromToken,
-      toToken: s.toToken,
-      disabledByDex: s.disabledByDex,
-    }))
-  );
+  const store = useSwapState();
   const wTokenAddress = useChainConfig()?.wToken?.address;
-  const {
-    account,
-    chainId: connectedChainId,
-    partner,
-    quoteInterval,
-    slippage,
-    supportedChains,
-  } = useMainContext();
+  const context = useMainContext();
   const apiUrl = useApiUrl();
-  const showConfirmation = useSwapState(useShallow((s) => s.showConfirmation));
   const disabled = useIsDisabled();
   const { sessionId, setSessionId } = useGlobalStore();
-  const { fromAddress, toAddress } = useNormalizeAddresses(fromToken, toToken);
+  const { fromAddress, toAddress } = useHandleTokenAddresses(
+    store.fromToken,
+    store.toToken
+  );
 
   const isUnwrap =
-    eqIgnoreCase(wTokenAddress || "", fromToken?.address || "") &&
-    isNativeAddress(toToken?.address || "");
+    eqIgnoreCase(wTokenAddress || "", store.fromToken?.address || "") &&
+    isNativeAddress(store.toToken?.address || "");
 
-  const chainId = connectedChainId || _.first(supportedChains);
+  const chainId = context.chainId || _.first(context.supportedChains);
 
   const enabled =
     !isUnwrap &&
-    !!partner &&
+    !!context.partner &&
     !!chainId &&
-    !!fromToken &&
-    !!toToken &&
-    !!fromAmount &&
-    fromAmount !== "0" &&
-    liquidityHubEnabled &&
-    !disabledByDex &&
+    !!store.fromToken &&
+    !!store.toToken &&
+    !!store.fromAmount &&
+    BN(store.fromAmount || "0").gt(0) &&
     !!apiUrl &&
     !disabled;
 
@@ -95,15 +59,17 @@ export const useQuote = () => {
       QUERY_KEYS.QUOTE,
       fromAddress,
       toAddress,
-      fromAmount,
-      slippage,
+      store.fromAmount,
+      context.slippage,
       apiUrl,
       chainId,
+      Boolean(BN(store.dexMinAmountOut || "0").gt(0)),
     ],
     queryFn: async ({ signal }) => {
       swapAnalytics.onQuoteRequest();
       let quote;
       const count = counter();
+      const countDelay = counter();
 
       try {
         const response = await fetch(`${apiUrl}/quote?chainId=${chainId}`, {
@@ -111,18 +77,18 @@ export const useQuote = () => {
           body: JSON.stringify({
             inToken: fromAddress,
             outToken: toAddress,
-            inAmount: fromAmount,
-            outAmount: !dexMinAmountOut
+            inAmount: store.fromAmount,
+            outAmount: !store.dexMinAmountOut
               ? "-1"
-              : new BN(dexMinAmountOut).gt(0)
-              ? dexMinAmountOut
+              : new BN(store.dexMinAmountOut).gt(0)
+              ? store.dexMinAmountOut
               : "0",
-            user: account || zeroAddress,
-            slippage,
+            user: context.account || zeroAddress,
+            slippage: context.slippage,
             qs: encodeURIComponent(
               window.location.hash || window.location.search
             ),
-            partner: partner.toLowerCase(),
+            partner: context.partner.toLowerCase(),
             sessionId,
           }),
           signal,
@@ -142,14 +108,20 @@ export const useQuote = () => {
         }
         swapAnalytics.onQuoteSuccess(count(), quote);
 
+        if (store.quoteDelayMillis && store.isFirstQuote) {
+          const delayMillisDiff = store.quoteDelayMillis - countDelay();
+
+          if (delayMillisDiff > 0) {
+            await delay(delayMillisDiff);
+          }
+          store.updateState({ isFirstQuote: false });
+        }
+
         const outAmountUI = amountUi(
-          toToken?.decimals,
+          store.toToken?.decimals,
           new BN(quote.outAmount)
         );
-        const outAmountUIWithSlippage = amountUi(
-          toToken?.decimals,
-          new BN(addSlippage(quote.outAmount, slippage))
-        );
+
         const minAmountOut = parseInt(
           quote?.permitData.values.witness.outputs[1].endAmount.hex,
           16
@@ -157,27 +129,34 @@ export const useQuote = () => {
 
         const inTokenUsd = quote.inTokenUsd;
         const outTokenUsd = quote.outTokenUsd;
+
+        const gasCost = parseInt(
+          quote?.permitData.values.witness.outputs[0].startAmount.hex,
+          16
+        );
+
+        const gasCostOutputToken = amountUi(
+          store.toToken?.decimals,
+          BN(gasCost)
+        );
+
         const fromAmountUI = amountUi(
-          fromToken?.decimals,
-          BN(fromAmount || "0")
+          store.fromToken?.decimals,
+          BN(store.fromAmount || "0")
         );
         return {
           ...quote,
           outAmountUI,
-          outAmountUIWithSlippage,
+          outAmountMsinusGas: BN(quote.outAmount)
+            .minus(gasCostOutputToken)
+            .toString(),
           minAmountOut,
-          minAmountOutUI: amountUi(toToken?.decimals, BN(minAmountOut || 0)),
-          gasCostOutputToken: amountUi(
-            toToken?.decimals,
-            BN(
-              parseInt(
-                quote?.permitData.values.witness.outputs[0].startAmount.hex,
-                16
-              )
-            )
+          minAmountOutUI: amountUi(
+            store.toToken?.decimals,
+            BN(minAmountOut || 0)
           ),
-          inTokenUsd,
-          outTokenUsd,
+          gasCostOutputToken,
+          // amount minus gas cost
           inAmountUsd: BN(inTokenUsd)
             .times(fromAmountUI || 0)
             .toString(),
@@ -200,11 +179,11 @@ export const useQuote = () => {
       }
     },
     refetchInterval: (q) =>
-      showConfirmation
+      store.showConfirmation
         ? undefined
         : q.state.data?.disableInterval
         ? undefined
-        : quoteInterval,
+        : context.quoteInterval,
     staleTime: Infinity,
     enabled,
     gcTime: 0,

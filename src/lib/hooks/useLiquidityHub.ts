@@ -52,7 +52,7 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
   );
 
   const _fromAmount = useAmountBN(args.fromToken?.decimals, args.fromAmount);
-  const fromAmount = useDebounce(_fromAmount, args.debounceFromAmountMillis);
+  const fromAmount = useDebounce(_fromAmount, _.isUndefined(args.debounceFromAmountMillis) ? 3_00 : args.debounceFromAmountMillis);
   const dexMinAmountOut = useDexMinAmountOutWei(args);
   const dexExpectedAmountOut = useDexExpectedAmountOutWei(args);
 
@@ -64,6 +64,7 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
       toToken: args.toToken,
       fromAmount,
       disabledByDex: args.disabled,
+      quoteDelayMillis: args.quoteDelayMillis,
     });
   }, [
     updateState,
@@ -73,6 +74,7 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     args.fromToken?.address,
     args.toToken?.address,
     args.disabled,
+    args.quoteDelayMillis,
   ]);
 
   const quote = useQuote();

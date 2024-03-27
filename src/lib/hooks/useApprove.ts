@@ -41,7 +41,7 @@ export const useApprove = () => {
         updateState({ swapStatus: "success" });
       } catch (error) {
         swapAnalytics.onApprovalFailed((error as any).message, count());
-        throw error;
+        throw new Error('Failed to approve');
       }
     },
     [account, updateState, getContract]

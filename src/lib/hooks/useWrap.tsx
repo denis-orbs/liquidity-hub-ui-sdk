@@ -39,7 +39,7 @@ export const useWrap = (fromToken?: Token) => {
          return true;
       } catch (error) {
         swapAnalytics.onWrapFailed((error as any).message, count());
-        throw new Error((error as any).message);
+        throw new Error('Failed to wrap');
       }
     },
     [account, updateState, getContract, fromToken, gas]
