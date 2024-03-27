@@ -3,7 +3,7 @@ import { useShallow } from "zustand/react/shallow";
 import { useSwapState } from "../store/main";
 import BN from "bignumber.js";
 import { useFormatNumber } from "./useFormatNumber";
-import { useUsdValues } from "./useUsdValues";
+import { useQuote } from "./useQuote";
 
 export const useRate = () => {
   const [inverted, setInverted] = useState(false);
@@ -14,16 +14,16 @@ export const useRate = () => {
     }))
   );
 
-  const { inTokenUsd, outTokenUsd } = useUsdValues();
+  const quote = useQuote().data;
 
   const value = useMemo(() => {
-    if (!inTokenUsd || !outTokenUsd) return "";
+    if (!quote || !quote?.inTokenUsd || !quote.outTokenUsd) return "";
 
     if (!inverted) {
-      return BN(inTokenUsd).dividedBy(outTokenUsd).toString();
+      return BN(quote?.inTokenUsd).dividedBy(quote.outTokenUsd).toString();
     }
-    return BN(outTokenUsd).dividedBy(inTokenUsd).toString();
-  }, [inTokenUsd, outTokenUsd, inverted]);
+    return BN(quote.outTokenUsd).dividedBy(quote?.inTokenUsd).toString();
+  }, [quote, inverted]);
 
   const formattedRate = useFormatNumber({ value });
 
@@ -31,7 +31,7 @@ export const useRate = () => {
   const rightToken = inverted ? store.fromToken?.symbol : store.toToken?.symbol;
 
   const usd = useFormatNumber({
-    value: BN((inverted ? inTokenUsd : outTokenUsd) || 0)
+    value: BN((inverted ? quote?.inTokenUsd : quote?.outTokenUsd) || 0)
       .multipliedBy(value)
       .toString(),
   });

@@ -101,7 +101,7 @@ export const useSubmitSwap = () => {
           fromToken: fromToken,
           toToken: toToken,
           fromAmount: amountUi(fromToken.decimals, new BN(fromAmount)),
-          toAmount: quote.outAmountUI,
+          toAmount: quote.ui.outAmount || '',
           fromUsd: quote.inTokenUsd,
           toUsd: quote.outTokenUsd,
           txHash,

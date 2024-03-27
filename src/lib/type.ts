@@ -116,17 +116,17 @@ export interface QuoteResponse {
   serializedOrder: string;
   callData: string;
   rawData: any;
-  outAmountUI: string;
-  disableInterval?: boolean;
-  gasCostOutputToken?: string;
   sessionId?: string;
-  minAmountOut?: string;
-  minAmountOutUI?: string;
   inTokenUsd?: TokenUsd;
   outTokenUsd?: TokenUsd;
-  inAmountUsd?: TokenUsd;
-  outAmountUsd?: TokenUsd;
-  outAmountMinusGas?: string;
+  disableInterval?: boolean;
+  gasCostOutputToken?: string;
+  minAmountOut?: string;
+  ui: {
+    outAmount?: string;
+    minAmountOut?: string;
+    gasCostOutputToken?: string;
+  };
 }
 
 export enum LH_CONTROL {

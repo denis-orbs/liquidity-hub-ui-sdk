@@ -1,14 +1,24 @@
 import { useMemo } from "react";
 import { useQuote } from "./useQuote";
 import BN from "bignumber.js";
-import { useUsdValues } from "./useUsdValues";
+import { useAmountUI } from "./useAmountUI";
+import { useSwapState } from "../store/main";
+import { useShallow } from "zustand/react/shallow";
 
 export function useGasCost() {
-  const { outTokenUsd } = useUsdValues();
-  const gasCostOutputToken = useQuote().data?.gasCostOutputToken;  
+  const { data: quote, isLoading } = useQuote();
+  const toToken = useSwapState(useShallow((s) => s.toToken));
 
-  return useMemo(() => {
-    if (!gasCostOutputToken || !outTokenUsd) return "";
-    return BN(gasCostOutputToken).multipliedBy(outTokenUsd).toString();
-  }, [gasCostOutputToken, outTokenUsd]);
+  const gasCostOutputToken = quote?.gasCostOutputToken;
+
+  const price = useMemo(() => {
+    if (!gasCostOutputToken || !quote.outTokenUsd) return "";
+    return BN(gasCostOutputToken).multipliedBy(quote.outTokenUsd).toString();
+  }, [gasCostOutputToken, quote]);
+
+  return {
+    price,
+    priceUi: useAmountUI(toToken?.decimals, price),
+    isLoading,
+  };
 }

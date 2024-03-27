@@ -11,10 +11,8 @@ import {
 import { useChainConfig } from "./useChainConfig";
 import { useIsDisabled } from "./useIsDisabled";
 import {
-  addSlippage,
   amountUi,
   counter,
-  delay,
   eqIgnoreCase,
   isNativeAddress,
   shouldReturnZeroOutAmount,
@@ -51,8 +49,10 @@ export const useQuote = () => {
     !!store.toToken &&
     !!store.fromAmount &&
     BN(store.fromAmount || "0").gt(0) &&
+    store.fromAmount !== "0" &&
     !!apiUrl &&
-    !disabled;
+    !disabled &&
+    store.quoteEnabled;
 
   return useQuery({
     queryKey: [
@@ -63,14 +63,11 @@ export const useQuote = () => {
       context.slippage,
       apiUrl,
       chainId,
-      Boolean(BN(store.dexMinAmountOut || "0").gt(0)),
     ],
     queryFn: async ({ signal }) => {
       swapAnalytics.onQuoteRequest();
       let quote;
       const count = counter();
-      const countDelay = counter();
-
       try {
         const response = await fetch(`${apiUrl}/quote?chainId=${chainId}`, {
           method: "POST",
@@ -108,15 +105,6 @@ export const useQuote = () => {
         }
         swapAnalytics.onQuoteSuccess(count(), quote);
 
-        if (store.quoteDelayMillis && store.isFirstQuote) {
-          const delayMillisDiff = store.quoteDelayMillis - countDelay();
-
-          if (delayMillisDiff > 0) {
-            await delay(delayMillisDiff);
-          }
-          store.updateState({ isFirstQuote: false });
-        }
-
         const outAmountUI = amountUi(
           store.toToken?.decimals,
           new BN(quote.outAmount)
@@ -126,43 +114,26 @@ export const useQuote = () => {
           quote?.permitData.values.witness.outputs[1].endAmount.hex,
           16
         );
-
-        const inTokenUsd = quote.inTokenUsd;
-        const outTokenUsd = quote.outTokenUsd;
-
-        const gasCost = parseInt(
+        const gasCostOutputToken = parseInt(
           quote?.permitData.values.witness.outputs[0].startAmount.hex,
           16
         );
 
-        const gasCostOutputToken = amountUi(
-          store.toToken?.decimals,
-          BN(gasCost)
-        );
-
-        const fromAmountUI = amountUi(
-          store.fromToken?.decimals,
-          BN(store.fromAmount || "0")
-        );
         return {
           ...quote,
-          outAmountUI,
-          outAmountMsinusGas: BN(quote.outAmount)
-            .minus(gasCostOutputToken)
-            .toString(),
           minAmountOut,
-          minAmountOutUI: amountUi(
-            store.toToken?.decimals,
-            BN(minAmountOut || 0)
-          ),
           gasCostOutputToken,
-          // amount minus gas cost
-          inAmountUsd: BN(inTokenUsd)
-            .times(fromAmountUI || 0)
-            .toString(),
-          outAmountUsd: BN(outTokenUsd)
-            .times(outAmountUI || 0)
-            .toString(),
+          ui: {
+            outAmount: outAmountUI,
+            minAmountOut: amountUi(
+              store.toToken?.decimals,
+              BN(minAmountOut || 0)
+            ),
+            gasCostOutputToken: amountUi(
+              store.toToken?.decimals,
+              BN(gasCostOutputToken)
+            ),
+          },
         } as QuoteResponse;
       } catch (error: any) {
         swapAnalytics.onQuoteFailed(error.message, count(), quote);

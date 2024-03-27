@@ -1,8 +1,8 @@
 import { useMemo } from "react";
-import { useUsdValues } from "./useUsdValues";
 import BN from "bignumber.js";
+import { useTotalUsdValues } from "./useTotalUsdValues";
 export function usePriceImpact() {
-  const values = useUsdValues();
+  const values = useTotalUsdValues();
 
   return useMemo(() => {
     console.log(

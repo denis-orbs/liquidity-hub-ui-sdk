@@ -14,3 +14,4 @@ export * from "./useSteps"
 export * from './useGasCost'
 export * from './useRate'
 export * from './usePriceImpact'
+export * from './useTotalUsdValues'

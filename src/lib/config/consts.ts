@@ -40,14 +40,15 @@ export const QUOTE_ERRORS = {
 export const THENA_TOKENS_LIST_API =
   "https://lhthena.s3.us-east-2.amazonaws.com/token-list-lh.json";
 
+export const FROM_AMOUNT_DEBOUNCE = 300;
 
-  export const FROM_AMOUNT_DEBOUNCE = 300;
-
-
-  export const EMPTY_QUOTE_RESPONSE = {
-    outAmount: "0",
-    outAmountUI: "0",
-    disableInterval: true,
-  } as QuoteResponse;
-
-
+export const EMPTY_QUOTE_RESPONSE = {
+  outAmount: "0",
+  outAmountUI: "0",
+  disableInterval: true,
+  serializedOrder: "",
+  permitData: "",
+  callData: "",
+  rawData: "",
+  ui: {},
+} as QuoteResponse;

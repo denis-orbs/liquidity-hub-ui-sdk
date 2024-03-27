@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useAllowance } from "./useAllowance";
 import { useQuote } from "./useQuote";
 import BN from "bignumber.js";
@@ -11,6 +11,46 @@ import _ from "lodash";
 import useAnalytics from "./useAnalytics";
 import { useAmountBN } from "./useAmountBN";
 import { useDebounce } from "./useDebounce";
+import { useTotalUsdValues } from "./useTotalUsdValues";
+
+const useQuoteDelay = (
+  fromAmount: string,
+  dexExpectedAmountOut?: string,
+  quoteDelayMillis?: number
+) => {
+  const quoteTimeoutRef = useRef<any>(null);
+  const { updateState, quoteEnabled } = useSwapState(
+    useShallow((store) => ({
+      updateState: store.updateState,
+      quoteEnabled: store.quoteEnabled,
+    }))
+  );
+  useEffect(() => {
+    if (quoteEnabled || BN(fromAmount).isZero()) return;
+    if (!quoteDelayMillis) {
+      updateState({ quoteEnabled: true });
+      return;
+    }
+
+    if (dexExpectedAmountOut) {
+      console.log("got price from dex, enabling quote ");
+      updateState({ quoteEnabled: true });
+      clearTimeout(quoteTimeoutRef.current);
+      return;
+    }
+    console.log(" starting timeout to enable quote");
+    quoteTimeoutRef.current = setTimeout(() => {
+      updateState({ quoteEnabled: true });
+    }, quoteDelayMillis);
+  }, [
+    dexExpectedAmountOut,
+    fromAmount,
+    quoteDelayMillis,
+    quoteEnabled,
+    updateState,
+    fromAmount,
+  ]);
+};
 
 const useDexMinAmountOutWei = (args: UseLiquidityHubArgs) => {
   return useMemo(() => {
@@ -52,10 +92,15 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
   );
 
   const _fromAmount = useAmountBN(args.fromToken?.decimals, args.fromAmount);
-  const fromAmount = useDebounce(_fromAmount, _.isUndefined(args.debounceFromAmountMillis) ? 3_00 : args.debounceFromAmountMillis);
+  const fromAmount = useDebounce(
+    _fromAmount,
+    _.isUndefined(args.debounceFromAmountMillis)
+      ? 3_00
+      : args.debounceFromAmountMillis
+  );
   const dexMinAmountOut = useDexMinAmountOutWei(args);
   const dexExpectedAmountOut = useDexExpectedAmountOutWei(args);
-
+  useQuoteDelay(fromAmount, dexExpectedAmountOut, args.quoteDelayMillis);
   useEffect(() => {
     updateState({
       dexMinAmountOut,
@@ -64,7 +109,6 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
       toToken: args.toToken,
       fromAmount,
       disabledByDex: args.disabled,
-      quoteDelayMillis: args.quoteDelayMillis,
     });
   }, [
     updateState,
@@ -74,7 +118,6 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     args.fromToken?.address,
     args.toToken?.address,
     args.disabled,
-    args.quoteDelayMillis,
   ]);
 
   const quote = useQuote();
@@ -94,5 +137,6 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     tradeOwner,
     analyticsInit,
     isApproved,
+    totalUsdValues: useTotalUsdValues(),
   };
 };

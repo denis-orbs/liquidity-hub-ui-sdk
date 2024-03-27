@@ -1,5 +1,7 @@
 import { useCallback } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { useOutAmount } from "../../hooks/useOutAmount";
+import { useTotalUsdValues } from "../../hooks/useTotalUsdValues";
 import { useDexState } from "../../store/dex";
 import { useDexLH } from "./useDexLH";
 import { useTokenListBalance } from "./useTokenListBalance";
@@ -7,17 +9,17 @@ import { useTokenListBalances } from "./useTokenListBalances";
 
 export * from "./useDexLH";
 export * from "./usePercentSelect";
-export * from "./usePriceUsd";
 export * from "./useRefreshBalancesAfterTx";
 export * from "./useShowConfirmationButton";
-export * from "./useUsdAmount";
 export * from "./useTokenListBalances";
 export * from "./useTokenListBalance";
 export * from "./useTokenList";
 export * from "./useTokens";
-export * from "./useNetworkFee";
 export * from "./useOnSwapSuccessCallback";
 export * from "./useInitialTokens";
+export * from './useUsdAmount'
+export * from './usePriceUsd'
+
 
 export const useSetMaxBalance = () => {
   const onFromAmountChange = useDexState(
@@ -61,7 +63,7 @@ export const useFromTokenAmount = () => {
 };
 
 export const useToTokenAmount = () => {
-  return useDexLH().quote?.data?.outAmountUI;
+  return useDexLH().quote?.data?.ui.outAmount;
 };
 
 export function useFromTokenPanel() {
@@ -72,16 +74,16 @@ export function useFromTokenPanel() {
     onChange: s.onFromAmountChange,
   }));
 
-  
-  
   const { balance } = useTokenListBalance(token?.address);
-
+  const {inAmountUsd, isLoading} = useTotalUsdValues()
   return {
     token,
     amount,
     onTokenSelect,
     onChange,
     balance,
+    usd: inAmountUsd,
+    usdLoading: isLoading
   };
 }
 
@@ -91,14 +93,17 @@ export function useToTokenPanel() {
     onTokenSelect: s.onToTokenChange,
   }));
 
-  const amount = useDexLH().quote?.data?.outAmountUI;
-  const { balance } = useTokenListBalance(token?.address);
+  const balance = useTokenListBalance(token?.address).balance;
 
+  const { outAmountUsd, isLoading } = useTotalUsdValues();
+  
   return {
     token,
-    amount,
+    amount: useOutAmount().ui,
     onTokenSelect,
     balance,
+    usd: outAmountUsd,
+    usdLoading: isLoading,
   };
 }
 

@@ -53,7 +53,6 @@ import { useDexState } from "../store/dex";
 import {
   usePercentSelect,
   useShowConfirmationButton,
-  useDexLH,
   useFromTokenPanel,
   useToTokenPanel,
 } from "./hooks";
@@ -62,7 +61,6 @@ import { useOnSwapSuccessCallback } from "./hooks/useOnSwapSuccessCallback";
 import { useInitialTokens } from "./hooks/useInitialTokens";
 import { useGasCost } from "../hooks/useGasCost";
 import { useRate } from "../hooks/useRate";
-import { useUsdValues } from "../hooks/useUsdValues";
 
 export const theme = {
   colors: {
@@ -218,7 +216,7 @@ const SwapModal = () => {
   const priceImpact = useFormatNumber({value: usePriceImpact(), decimalScale: 2 });
 
   const onSuccess = useOnSwapSuccessCallback();
-  const gas = useFormatNumber({ value: gasCost, decimalScale: 2 });
+  const gas = useFormatNumber({ value: gasCost.priceUi, decimalScale: 2 });
   const rateUsd = useFormatNumber({
     value: rate.usd,
     decimalScale: 2,
@@ -345,9 +343,8 @@ const ChangeTokens = () => {
 };
 
 const FromTokenPanel = () => {
-  const { token, amount, onChange, onTokenSelect } = useFromTokenPanel();
+  const { token, amount, onChange, onTokenSelect, usd, usdLoading } = useFromTokenPanel();
 
-  const usd = useUsdValues().inAmountUsd
 
   return (
     <TokenPanel
@@ -358,16 +355,14 @@ const FromTokenPanel = () => {
       isSrc={true}
       onTokenSelect={onTokenSelect}
       usd={usd}
-      usdLoading={!!amount && !usd}
+      usdLoading={usdLoading}
     />
   );
 };
 
 const ToTokenPanel = () => {
-  const { token, onTokenSelect } = useToTokenPanel();
+  const { token, onTokenSelect, amount, usd, usdLoading } = useToTokenPanel();
 
-  const amount = useDexLH().quote?.data?.outAmountUI;
-  const usd = useUsdValues().outAmountUsd
 
   return (
     <TokenPanel
@@ -376,7 +371,7 @@ const ToTokenPanel = () => {
       inputValue={useFormatNumber({ value: amount })}
       label="To"
       usd={usd}
-      usdLoading={!!amount && !usd}
+      usdLoading={usdLoading}
     />
   );
 };
@@ -427,7 +422,7 @@ const TokenPanel = ({
   const usd = useFormatNumber({ value: _usd });
 
   const header = <TokenPanelHeader isSrc={isSrc} label={label} />;
-
+    
   return (
     <StyledTokenPanel
       $inputLeft={inputLeft}

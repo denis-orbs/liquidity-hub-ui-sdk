@@ -4,7 +4,7 @@ import { useSwapState } from "../store/main";
 import { useAmountUI } from "./useAmountUI";
 import { useFormatNumber } from "./useFormatNumber";
 import { useQuote } from "./useQuote";
-import { useUsdValues } from "./useUsdValues";
+import { useTotalUsdValues } from "./useTotalUsdValues";
 import { useOutAmount } from "./useOutAmount";
 
 export const useSwapConfirmation = () => {
@@ -32,14 +32,13 @@ export const useSwapConfirmation = () => {
     return "Review Swap";
   }, [store.swapStatus]);
 
-  const toAmount = useOutAmount();
+  const toAmount = useOutAmount().ui;
   const fromAmountUI = useAmountUI(store.fromToken?.decimals, store.fromAmount);
-  const toAmountUI = useAmountUI(store.toToken?.decimals, toAmount);
 
-  const { inAmountUsd, outAmountUsd } = useUsdValues();
+  const { inAmountUsd, outAmountUsd } = useTotalUsdValues();
   const { data: quote } = useQuote();
 
-  const minAmountOut = useFormatNumber({ value: quote?.minAmountOutUI })
+  const minAmountOut = useFormatNumber({ value: quote?.ui.minAmountOut })
 
   return {
     fromToken: store.fromToken,
@@ -48,7 +47,7 @@ export const useSwapConfirmation = () => {
     txHash: store.txHash,
     swapStatus: store.swapStatus,
     swapError: store.swapError,
-    toAmount: toAmountUI,
+    toAmount,
     isOpen: !!store.showConfirmation,
     onClose: store.onCloseSwap,
     inAmountUsd,

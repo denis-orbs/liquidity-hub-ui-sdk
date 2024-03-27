@@ -49,7 +49,7 @@ export const useShowConfirmationButton = () => {
 
   const { quote, confirmSwap, analyticsInit } =
     useDexLH();
-  const toAmount = quote.data?.outAmountUI;
+  const toAmount = quote.data?.ui.outAmount;
   const { mutate: switchNetwork, isPending: switchNetworkLoading } =
     useSwitchNetwork();
   const wrongChain = useIsInvalidChain();

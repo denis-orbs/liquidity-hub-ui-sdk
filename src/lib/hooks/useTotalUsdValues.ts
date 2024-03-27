@@ -6,7 +6,7 @@ import { useShallow } from "zustand/react/shallow";
 import { amountUi } from "../util";
 import { useOutAmount } from "./useOutAmount";
 
-export function useUsdValues() {
+export function useTotalUsdValues() {
   const store = useSwapState(
     useShallow((s) => ({
       fromToken: s.fromToken,
@@ -16,30 +16,27 @@ export function useUsdValues() {
   );
 
   const quote = useQuote();
-
-  const inTokenUsd = quote?.data?.inTokenUsd
-  const outTokenUsd = quote?.data?.outTokenUsd
-  const outAmount = useOutAmount();
+  const inTokenUsd = quote?.data?.inTokenUsd;
+  const outTokenUsd = quote?.data?.outTokenUsd;
+  const outAmount = useOutAmount().ui;
 
   const inAmountUsd = useMemo(() => {
-    if(!inTokenUsd || !store.fromAmount) return 
+    if (!inTokenUsd || !store.fromAmount) return;
     return BN(inTokenUsd || "")
       .times(amountUi(store.fromToken?.decimals, BN(store.fromAmount || "0")))
       .toString();
   }, [inTokenUsd, store.fromAmount, store.fromToken]);
 
   const outAmountUsd = useMemo(() => {
-    if(!outTokenUsd || !outAmount) return
+    if (!outTokenUsd || !outAmount) return;
     return BN(outTokenUsd || "")
-      .times(amountUi(store.toToken?.decimals, BN(outAmount || "0")))
+      .times(outAmount)
       .toString();
   }, [outTokenUsd, outAmount, store.toToken]);
 
-
   return {
-    inTokenUsd,
-    outTokenUsd,
     inAmountUsd,
     outAmountUsd,
+    isLoading: quote.isLoading,
   };
 }
