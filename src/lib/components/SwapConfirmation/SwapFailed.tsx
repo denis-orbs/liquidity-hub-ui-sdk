@@ -2,24 +2,45 @@ import { FlexColumn, FlexRow } from "../../base-styles";
 import { AlertCircle } from "react-feather";
 import styled from "styled-components";
 import { Text } from "../Text";
+import { useSwapState } from "../../store/main";
+import { useShallow } from "zustand/react/shallow";
+import { useChainConfig } from "../../hooks";
+import { ReactNode } from "react";
 
+export const SwapFailed = ({children}:{children?: ReactNode}) => {
+  const { swapStaus, isWrapped } = useSwapState(
+    useShallow((s) => ({
+      isWrapped: s.isWrapped,
+      swapStaus: s.swapStatus,
+    }))
+  );
 
-export const SwapFailed = () => {
+  const chainConfig = useChainConfig();
   return (
     <Container className="lh-failed">
       <MainLogo className="lh-failed-img">
         <AlertCircle />
       </MainLogo>
-      <Title className="lh-failed-title">Swap failed</Title>
+      <Title className="lh-failed-title">Swap failed on Liquidity Hub</Title>
+      {swapStaus === "failed" && isWrapped && (
+        <Message>{chainConfig?.native.symbol} has been wrapped to {chainConfig?.wToken?.symbol}</Message>
+      )}
+      {children}
     </Container>
   );
 };
 
-const Title = styled(Text)`
-  font-size: 20px;
-  font-weight: 500;
+const Message = styled(Text)`
+  text-align: center;
+  font-size: 15px;
+  line-height: normal;
+  margin-top: 5px;
 `;
 
+const Title = styled(Text)`
+  font-size: 20px;
+  font-weight:500;
+`;
 
 const Container = styled(FlexColumn)`
   width: 100%;

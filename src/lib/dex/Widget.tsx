@@ -34,8 +34,8 @@ import { LoadingText } from "../components/LoadingText";
 import { TokenSearchInput } from "../components/SearchInput";
 import { useShallow } from "zustand/react/shallow";
 import {
+  useChainConfig,
   useFormatNumber,
-  usePriceImpact,
   useSwapButton,
   useSwapConfirmation,
 } from "../hooks";
@@ -59,9 +59,9 @@ import {
 import _ from "lodash";
 import { useOnSwapSuccessCallback } from "./hooks/useOnSwapSuccessCallback";
 import { useInitialTokens } from "./hooks/useInitialTokens";
-import { useGasCost } from "../hooks/useGasCost";
 import { useRate } from "../hooks/useRate";
 import { ConfirmationPoweredBy } from "../components/SwapConfirmation/ConfirmationPoweredBy";
+import { useQuote } from "../hooks/useQuote";
 
 export const theme = {
   colors: {
@@ -204,23 +204,42 @@ const TokenSelect = ({
   );
 };
 
-
-
 const SwapModal = () => {
-  const { onClose, swapStatus, isOpen, minAmountOut, toToken, title } =
-    useSwapConfirmation();
-  const gasCost = useGasCost();
+  const {
+    onClose,
+    swapStatus,
+    isOpen,
+    toToken,
+    title,
+    priceImpact,
+    gasCostUsd,
+  } = useSwapConfirmation();
+  const updateStore = useDexState(useShallow((s) => s.updateStore));
   const rate = useRate();
-  const swapButton = useSwapButton();
-  const priceImpact = useFormatNumber({value: usePriceImpact(), decimalScale: 2 });
+  const wToken = useChainConfig()?.wToken;
 
+  const onWrapSuccess = useCallback(() => {
+    updateStore({ fromToken: wToken });
+  }, [updateStore, wToken]);
+
+  const swapButton = useSwapButton(onWrapSuccess);
+  const priceImpactF = useFormatNumber({
+    value: priceImpact,
+    decimalScale: 2,
+  });
+  const quote = useQuote().data;
+  const minAmountOut = useFormatNumber({ value: quote?.ui.minAmountOut });
   const onSuccess = useOnSwapSuccessCallback();
-  const gas = useFormatNumber({ value: gasCost.priceUi, decimalScale: 2 });
+  const gas = useFormatNumber({ value: gasCostUsd, decimalScale: 2 });
   const rateUsd = useFormatNumber({
     value: rate.usd,
     decimalScale: 2,
     prefix: "$",
   });
+
+  const TryAgainButton = () => {
+    return <StyledSubmitButton onClick={onClose}>Try again</StyledSubmitButton>;
+  };
 
   const onClick = useCallback(async () => {
     try {
@@ -231,38 +250,41 @@ const SwapModal = () => {
 
   return (
     <WidgetModal title={title} open={isOpen} onClose={onClose}>
-      <SwapConfirmation>
-        {!swapStatus && (
-          <>
-            <StyledSwapDetails>
-              <SwapModalInfoRow label="Rate" onClick={rate.invert}>
-                <StyledRateUsd>
-                  {`1 ${rate.leftToken} = ${rate.rightToken} ${rate.value}`}{" "}
-                  <small>{`(${rateUsd})`}</small>
-                </StyledRateUsd>
-              </SwapModalInfoRow>
-              <SwapModalInfoRow label="Gas cost">
-                <StyledRateUsd>{`$${gas}`}</StyledRateUsd>
-              </SwapModalInfoRow>
-              <SwapModalInfoRow label="Min amount out">
-                <StyledRateUsd>{`${minAmountOut} ${toToken?.symbol}`}</StyledRateUsd>
-              </SwapModalInfoRow>
-              <SwapModalInfoRow label="Price impact">
-                <StyledRateUsd>{`${
-                  priceImpact ? `${priceImpact}%` : "-"
-                }`}</StyledRateUsd>
-              </SwapModalInfoRow>
-            </StyledSwapDetails>
+      <SwapConfirmation outAmount={quote?.ui.outAmount}>
+        {swapStatus === "failed" ? (
+          <TryAgainButton />
+        ) : (
+          !swapStatus && (
+            <>
+              <StyledSwapDetails>
+                <SwapModalInfoRow label="Rate" onClick={rate.invert}>
+                  <StyledRateUsd>
+                    {`1 ${rate.leftToken} = ${rate.rightToken} ${rate.value}`}{" "}
+                    <small>{`(${rateUsd})`}</small>
+                  </StyledRateUsd>
+                </SwapModalInfoRow>
+                <SwapModalInfoRow label="Gas cost">
+                  <StyledRateUsd>{`$${gas}`}</StyledRateUsd>
+                </SwapModalInfoRow>
+                <SwapModalInfoRow label="Min amount out">
+                  <StyledRateUsd>{`${minAmountOut} ${toToken?.symbol}`}</StyledRateUsd>
+                </SwapModalInfoRow>
+                <SwapModalInfoRow label="Price impact">
+                  <StyledRateUsd>{`${
+                    priceImpact ? `${priceImpactF}%` : "-"
+                  }`}</StyledRateUsd>
+                </SwapModalInfoRow>
+              </StyledSwapDetails>
 
-            <StyledSubmitButton
-              onClick={onClick}
-              isLoading={swapButton.isPending}
-            >
-              {swapButton.text}
-            </StyledSubmitButton>
-          </>
+              <StyledSubmitButton
+                onClick={onClick}
+                isLoading={swapButton.isPending}
+              >
+                {swapButton.text}
+              </StyledSubmitButton>
+            </>
+          )
         )}
-      
       </SwapConfirmation>
       <ConfirmationPoweredBy />
     </WidgetModal>
@@ -271,7 +293,7 @@ const SwapModal = () => {
 
 const StyledPoweredByOrbs = styled(PoweredByOrbs)`
   margin-top: 30px;
-`
+`;
 
 const StyledRateUsd = styled(Text)`
   small {
@@ -348,8 +370,8 @@ const ChangeTokens = () => {
 };
 
 const FromTokenPanel = () => {
-  const { token, amount, onChange, onTokenSelect, usd, usdLoading } = useFromTokenPanel();
-
+  const { token, amount, onChange, onTokenSelect, usd, usdLoading } =
+    useFromTokenPanel();
 
   return (
     <TokenPanel
@@ -367,7 +389,6 @@ const FromTokenPanel = () => {
 
 const ToTokenPanel = () => {
   const { token, onTokenSelect, amount, usd, usdLoading } = useToTokenPanel();
-
 
   return (
     <TokenPanel
@@ -427,7 +448,7 @@ const TokenPanel = ({
   const usd = useFormatNumber({ value: _usd });
 
   const header = <TokenPanelHeader isSrc={isSrc} label={label} />;
-    
+
   return (
     <StyledTokenPanel
       $inputLeft={inputLeft}

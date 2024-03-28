@@ -5,7 +5,7 @@ import { useAllowance } from "./useAllowance";
 import { useSubmitSwap } from "./useSubmitSwap";
 import { isNativeAddress } from "../util";
 
-export const useSwapButton = () => {
+export const useSwapButton = (onWrapSuccess?: () => void) => {
   const { fromToken, swapStatus } = useSwapState(
     useShallow(
       useShallow((s) => ({
@@ -17,7 +17,7 @@ export const useSwapButton = () => {
 
   const { data: approved, isLoading: allowanceLoading } = useAllowance();
 
-  const swap = useSubmitSwap();
+  const swap = useSubmitSwap(onWrapSuccess);
 
   return useMemo(() => {
     const getText = () => {

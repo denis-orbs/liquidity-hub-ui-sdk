@@ -76,7 +76,7 @@ export const useSwapX = () => {
       } catch (error: any) {
         const msg = error.message.error || error.message;
         swapAnalytics.onSwapFailed(msg, count(), !!txDetails?.revertMessage);
-        throw new Error('Swap failed');
+        throw new Error('Something went wrong');
       }
     },
     [web3, account, chainId, updateState, sessionId, apiUrl]

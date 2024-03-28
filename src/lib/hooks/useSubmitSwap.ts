@@ -14,7 +14,7 @@ import { zeroAddress } from "../config/consts";
 import { useOrders } from "./useOrders";
 import { useQuote } from "./useQuote";
 
-export const useSubmitSwap = () => {
+export const useSubmitSwap = (onWrapSuccess?: () => void) => {
   const {
     onSwapSuccess,
     onSwapError,
@@ -94,14 +94,14 @@ export const useSubmitSwap = () => {
           inTokenAddress,
           outTokenAddress,
           fromAmount,
-          quote
+          quote,
         });
         onSwapSuccess(quote);
         addOrder({
           fromToken: fromToken,
           toToken: toToken,
           fromAmount: amountUi(fromToken.decimals, new BN(fromAmount)),
-          toAmount: quote.ui.outAmount || '',
+          toAmount: quote.ui.outAmount || "",
           fromUsd: quote.inTokenUsd,
           toUsd: quote.outTokenUsd,
           txHash,
@@ -109,7 +109,7 @@ export const useSubmitSwap = () => {
         });
         setSessionId(undefined);
         await props?.onSuccess?.();
-      
+
         return txHash;
       } catch (error: any) {
         onSwapError(error.message, isWrapped);
@@ -123,6 +123,9 @@ export const useSubmitSwap = () => {
         }
         throw error;
       } finally {
+        if (isWrapped) {
+          onWrapSuccess?.();
+        }
         swapAnalytics.clearState();
       }
     },

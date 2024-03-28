@@ -5,22 +5,25 @@ import { useSteps } from "../../hooks/useSteps";
 import { FlexColumn } from "../../base-styles";
 import { ReactNode } from "react";
 
+interface Props {
+  style?: CSSObject;
+  children: ReactNode;
+  outAmount?: string;
+}
+
 export const SwapMain = ({
   style = {},
   children,
-}: {
-  style?: CSSObject;
-  children: ReactNode;
-}) => {
+  outAmount,
+}: Props) => {
   return (
     <Container style={style}>
-      <SwapDetails />
+      <SwapDetails outAmount={outAmount} />
       <StepsComponent />
       {children}
     </Container>
   );
 };
-
 
 const StepsComponent = () => {
   const { steps, status } = useSteps();

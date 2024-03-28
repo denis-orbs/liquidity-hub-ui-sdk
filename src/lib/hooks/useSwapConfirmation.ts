@@ -2,10 +2,7 @@ import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useSwapState } from "../store/main";
 import { useAmountUI } from "./useAmountUI";
-import { useFormatNumber } from "./useFormatNumber";
 import { useQuote } from "./useQuote";
-import { useTotalUsdValues } from "./useTotalUsdValues";
-import { useOutAmount } from "./useOutAmount";
 
 export const useSwapConfirmation = () => {
   const store = useSwapState(
@@ -31,14 +28,8 @@ export const useSwapConfirmation = () => {
     }
     return "Review Swap";
   }, [store.swapStatus]);
-
-  const toAmount = useOutAmount().ui;
-  const fromAmountUI = useAmountUI(store.fromToken?.decimals, store.fromAmount);
-
-  const { inAmountUsd, outAmountUsd } = useTotalUsdValues();
   const { data: quote } = useQuote();
-
-  const minAmountOut = useFormatNumber({ value: quote?.ui.minAmountOut })
+  const fromAmountUI = useAmountUI(store.fromToken?.decimals, store.fromAmount);
 
   return {
     fromToken: store.fromToken,
@@ -47,12 +38,11 @@ export const useSwapConfirmation = () => {
     txHash: store.txHash,
     swapStatus: store.swapStatus,
     swapError: store.swapError,
-    toAmount,
     isOpen: !!store.showConfirmation,
     onClose: store.onCloseSwap,
-    inAmountUsd,
-    outAmountUsd,
+    inAmountUsd: quote?.ui.inAmountUsd,
     title,
-    minAmountOut,
+    priceImpact: quote?.ui.priceImpact,
+    gasCostUsd: quote?.ui.gasCostUsd,
   };
 };

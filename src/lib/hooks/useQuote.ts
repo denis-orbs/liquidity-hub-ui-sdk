@@ -119,11 +119,24 @@ export const useQuote = () => {
           16
         );
 
+        const inAmountUsd = BN(quote.inTokenUsd || "")
+        .times(amountUi(store.fromToken?.decimals, BN(store.fromAmount || "0")))
+        .toString()
+            const outAmountUsd = BN(quote.outTokenUsd || "")
+            .times(outAmountUI)
+            .toString()
         return {
           ...quote,
           minAmountOut,
           gasCostOutputToken,
           ui: {
+            priceImpact: BN(outAmountUsd || "0")
+            .div(inAmountUsd || "0")
+            .minus(1)
+            .times(100)
+            .toString(),
+            inAmountUsd,
+            outAmountUsd,
             outAmount: outAmountUI,
             minAmountOut: amountUi(
               store.toToken?.decimals,
@@ -133,6 +146,7 @@ export const useQuote = () => {
               store.toToken?.decimals,
               BN(gasCostOutputToken)
             ),
+            gasCostUsd: amountUi(store.toToken?.decimals, BN(gasCostOutputToken).multipliedBy(quote.outTokenUsd || '0'))
           },
         } as QuoteResponse;
       } catch (error: any) {

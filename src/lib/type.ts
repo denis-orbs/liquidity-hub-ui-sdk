@@ -126,6 +126,10 @@ export interface QuoteResponse {
     outAmount?: string;
     minAmountOut?: string;
     gasCostOutputToken?: string;
+    inAmountUsd?: string;
+    outAmountUsd?: string;
+    priceImpact?: string;
+    gasCostUsd?: string;
   };
 }
 
@@ -175,7 +179,10 @@ export type UseLiquidityHubArgs = {
   disabled?: boolean;
   debounceFromAmountMillis?: number;
   quoteDelayMillis?: number;
+  outAmount?: string;
+  outAmountUsd?: string;
 };
+
 
 export type TradeOwner = "dex" | "lh";
 

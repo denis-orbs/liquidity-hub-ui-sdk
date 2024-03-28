@@ -81,11 +81,12 @@ const useDexExpectedAmountOutWei = (args: UseLiquidityHubArgs) => {
 };
 
 export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
-  const { swapStatus, swapError, updateState } = useSwapState(
+  const { swapStatus, swapError, updateState, showConfirmation } = useSwapState(
     useShallow((store) => ({
       swapStatus: store.swapStatus,
       swapError: store.swapError,
       updateState: store.updateState,
+      showConfirmation: store.showConfirmation,
     }))
   );
 
@@ -103,11 +104,16 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     updateState({
       dexMinAmountOut,
       dexExpectedAmountOut,
-      fromToken: args.fromToken,
-      toToken: args.toToken,
-      fromAmount,
       disabledByDex: args.disabled,
     });
+    // we dont want the dex to reset after success
+    if (!showConfirmation) {
+      updateState({
+        fromAmount,
+        fromToken: args.fromToken,
+        toToken: args.toToken,
+      });
+    }
   }, [
     updateState,
     fromAmount,
@@ -116,6 +122,8 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     args.fromToken?.address,
     args.toToken?.address,
     args.disabled,
+    showConfirmation,
+
   ]);
 
   const quote = useQuote();
@@ -132,6 +140,6 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     swapLoading: swapStatus === "loading",
     swapError,
     analyticsInit,
-    isApproved
+    isApproved,
   };
 };

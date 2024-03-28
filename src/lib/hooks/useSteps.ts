@@ -10,13 +10,12 @@ import { isNativeAddress } from "../util";
 import { useShallow } from "zustand/react/shallow";
 
 export const useSteps = () => {
-  const { fromToken, currentStep, status, isSigned, swapStatus } = useSwapState(
+  const { fromToken, currentStep, status, isSigned } = useSwapState(
     useShallow((store) => ({
       fromToken: store.fromToken,
       currentStep: store.currentStep,
       status: store.swapStatus,
       isSigned: store.isSigned,
-      swapStatus: store.swapStatus,
     }))
   );
 
@@ -40,11 +39,7 @@ export const useSteps = () => {
 
     const sendTx: Step = {
       id: STEPS.SEND_TX,
-      title: isSigned
-        ? "Swap pending..."
-        : swapStatus === "loading"
-        ? "Sign in wallet"
-        : "Sign and Confirm swap",
+      title: isSigned ? "Swap pending..." : "Sign and Confirm swap",
       image: SwapImg,
     };
 
@@ -58,7 +53,13 @@ export const useSteps = () => {
       steps.unshift(wrap);
     }
     return steps;
-  }, [fromToken, isApproved, allowanceQueryLoading, isSigned, swapStatus]);
+  }, [
+    fromToken,
+    isApproved,
+    allowanceQueryLoading,
+    isSigned,
+    currentStep,
+  ]);
 
   return {
     steps,

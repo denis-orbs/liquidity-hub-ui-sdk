@@ -6,31 +6,39 @@ import styled from "styled-components";
 import { Logo } from "../Logo";
 import { Text } from "../Text";
 import { Separator } from "./Components";
-import { useSwapSuccessData } from "../../hooks/useSwapSuccessData";
 import { useFormatNumber } from "../../hooks";
 import SuccessImg from "../../assets/okay.png";
+import { useShallow } from "zustand/react/shallow";
+import { useAmountUI } from "../../hooks/useAmountUI";
+
+export const SwapSuccess = ({ outAmount }: { outAmount?: string }) => {
+  const { fromToken, toToken, fromAmount } = useSwapState(
+    useShallow((s) => ({
+      fromToken: s.fromToken,
+      toToken: s.toToken,
+      fromAmount: s.fromAmount,
+    }))
+  );
 
 
-
-export const SwapSuccess = () => {
-  const { toToken, toAmount, fromToken, fromAmount } = useSwapSuccessData();
+  const fromAmountUI = useAmountUI(fromToken?.decimals, fromAmount);
 
   return (
     <StyledSuccess className="lh-success">
       <StyledTop>
-      <StyledImg src={SuccessImg} />
-      <TopText>
-        Successfully Swapped <br /> Using{" "}
-        <a href="https://www.orbs.com/liquidity-hub/" target="_blank">
-          Liquidity Hub
-        </a>
-      </TopText>
+        <StyledImg src={SuccessImg} />
+        <TopText>
+          Successfully Swapped <br /> Using{" "}
+          <a href="https://www.orbs.com/liquidity-hub/" target="_blank">
+            Liquidity Hub
+          </a>
+        </TopText>
       </StyledTop>
-     
+
       <StyledTokensContainer>
-        <SuccessToken token={fromToken} amount={fromAmount} />
+        <SuccessToken token={fromToken} amount={fromAmountUI} />
         <Separator />
-        <SuccessToken token={toToken} amount={toAmount} />
+        <SuccessToken token={toToken} amount={outAmount} />
       </StyledTokensContainer>
       <TXLink />
     </StyledSuccess>
@@ -40,13 +48,13 @@ export const SwapSuccess = () => {
 const StyledImg = styled.img`
   width: 63px;
   height: 63px;
-`
+`;
 
 const StyledTop = styled(FlexColumn)`
   gap: 20px;
   margin-bottom: 40px;
   align-items: center;
-`
+`;
 
 const TopText = styled(Text)`
   line-height: 24px;
