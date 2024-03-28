@@ -19,6 +19,7 @@ interface SwapStateValues {
   isSigned?: boolean;
   disabledByDex?: boolean;
   quoteEnabled?: boolean;
+  isWrapped?: boolean;
   successDetails?: {
     fromTokenUsd?: string | number;
     toTokenUsd?: string | number;
@@ -31,7 +32,7 @@ interface SwapStateValues {
 
 interface SwapState extends SwapStateValues {
   updateState: (state: Partial<SwapState>) => void;
-  onSwapError: (error: string) => void;
+  onSwapError: (error: string, isWrapped: boolean ) => void;
   onSwapSuccess: (quote?: QuoteResponse) => void;
   onSwapStart: () => void;
   onCloseSwap: () => void;
@@ -56,6 +57,7 @@ const initialSwapState: SwapStateValues = {
   successDetails: undefined,
   disabledByDex: false,
   quoteEnabled: false,
+  isWrapped: false,
 };
 
 export const useSwapState = create<SwapState>((set, get) => ({
@@ -76,13 +78,14 @@ export const useSwapState = create<SwapState>((set, get) => ({
       },
     });
   },
-  onSwapError: (swapError) =>
+  onSwapError: (swapError, isWrapped) =>
     set((s) => {
       const failures = (s.failures || 0) + 1;
       return {
         failures,
         swapError,
         swapStatus: "failed",
+        isWrapped
       };
     }),
   onCloseSwap: () => {
@@ -90,12 +93,13 @@ export const useSwapState = create<SwapState>((set, get) => ({
       showConfirmation: false,
     });
 
-    if (get().swapError) {
+    if (get().swapStatus === 'failed') {
       setTimeout(() => {
         set({
           swapStatus: undefined,
           swapError: undefined,
           currentStep: undefined,
+          isWrapped: false
         });
       }, 200);
     }

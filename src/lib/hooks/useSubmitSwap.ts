@@ -53,7 +53,7 @@ export const useSubmitSwap = () => {
       hasFallback?: boolean;
       onSuccess?: () => Promise<void>;
     }) => {
-      let wrapped = false;
+      let isWrapped = false;
       try {
         if (!wTokenAddress) {
           throw new Error("Missing weth address");
@@ -80,7 +80,7 @@ export const useSubmitSwap = () => {
         if (isNativeIn) {
           await wrap(fromAmount);
           inTokenAddress = wTokenAddress;
-          wrapped = true;
+          isWrapped = true;
         }
         if (!approved) {
           await approve(inTokenAddress, fromAmount);
@@ -112,10 +112,10 @@ export const useSubmitSwap = () => {
       
         return txHash;
       } catch (error: any) {
-        onSwapError(error.message);
+        onSwapError(error.message, isWrapped);
         swapAnalytics.onClobFailure();
 
-        if (wrapped) {
+        if (isWrapped) {
           // handle error happened after wrap
         }
         if (props?.hasFallback) {

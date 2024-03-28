@@ -5,13 +5,11 @@ import BN from "bignumber.js";
 import { useSwapState } from "../store/main";
 import { UseLiquidityHubArgs } from "../type";
 import { amountBN } from "../util";
-import { useTradeOwner } from "./useTradeOwner";
 import { useShallow } from "zustand/react/shallow";
 import _ from "lodash";
 import useAnalytics from "./useAnalytics";
 import { useAmountBN } from "./useAmountBN";
 import { useDebounce } from "./useDebounce";
-import { useTotalUsdValues } from "./useTotalUsdValues";
 
 const useQuoteDelay = (
   fromAmount: string,
@@ -122,7 +120,6 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
 
   const quote = useQuote();
   const isApproved = useAllowance().data;
-  const tradeOwner = useTradeOwner(quote.data?.outAmount, dexMinAmountOut);
   const analyticsInit = useAnalytics().initTrade;
 
   const confirmSwap = useCallback(() => {
@@ -134,9 +131,7 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     confirmSwap,
     swapLoading: swapStatus === "loading",
     swapError,
-    tradeOwner,
     analyticsInit,
-    isApproved,
-    totalUsdValues: useTotalUsdValues(),
+    isApproved
   };
 };

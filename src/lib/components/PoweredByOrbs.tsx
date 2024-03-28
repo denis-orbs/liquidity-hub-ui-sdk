@@ -22,12 +22,12 @@ export const PoweredByOrbs = ({
       rel="noreferrer"
     >
       <span style={labelStyles} className="lh-powered-by-title">
-        Powered by
-      </span>{" "}
+        powered by
+      </span>
+      <OrbsLogo width={18} height={18} />
       <span className="lh-powered-by-symbol" style={symbolStyle}>
-        Orbs
-      </span>{" "}
-      <OrbsLogo />
+        ORBS
+      </span>
     </StyledLink>
   );
 };
@@ -35,13 +35,21 @@ export const PoweredByOrbs = ({
 const StyledLink = styled.a`
   color: ${(props) => props.theme.colors.textMain};
   text-decoration: none;
-  font-size: 14px;
+  font-size: 15px;
+  line-height: 18px;
   display: flex;
   align-items: center;
-  gap: 3px;
   width: 100%;
   justify-content: center;
+  border:1px solid rgba(255,255,255,0.4);
+  width: auto;
+  padding: 5px 9px;
+  border-radius: 8px;
+  margin-left: auto;
+  margin-right: auto;
   img {
-    margin-left: 5px;
+    margin-left: 6px;
+    margin-right: 6px;
+
   }
 `;

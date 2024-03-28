@@ -3,9 +3,9 @@ import { useLiquidityHubPersistedStore } from "../store/main";
 import { LH_CONTROL, TradeOwner } from "../type";
 import { useMemo } from "react";
 import { useIsDisabled } from "./useIsDisabled";
-export const useTradeOwner = (
-  lhOutAmount?: string,
-  dexMinAmountOut?: string,
+export const useSwapOwner = (
+  lhAmountOut?: string,
+  dexAmountOut?: string,
 ): TradeOwner | undefined => {
   const disabled = useIsDisabled();
   const { liquidityHubEnabled, lhControl } = useLiquidityHubPersistedStore(
@@ -17,7 +17,7 @@ export const useTradeOwner = (
   
   return useMemo(() => {
     if (disabled) return "dex";
-    if (new BN(dexMinAmountOut || "0").lte(0) && new BN(lhOutAmount || "0").lte(0))
+    if (new BN(dexAmountOut || "0").lte(0) && new BN(lhAmountOut || "0").lte(0))
       return;
 
     if (lhControl === LH_CONTROL.SKIP || !liquidityHubEnabled) {
@@ -26,12 +26,12 @@ export const useTradeOwner = (
     if (lhControl === LH_CONTROL.FORCE) {
       return "lh";
     }
-    return new BN(lhOutAmount || "0").gt(new BN(dexMinAmountOut || "0"))
+    return new BN(lhAmountOut || "0").gt(new BN(dexAmountOut || "0"))
       ? "lh"
       : "dex";
   }, [
-    dexMinAmountOut,
-    lhOutAmount,
+    dexAmountOut,
+    lhAmountOut,
     lhControl,
     disabled,
     liquidityHubEnabled,

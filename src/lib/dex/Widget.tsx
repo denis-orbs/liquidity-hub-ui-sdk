@@ -61,6 +61,7 @@ import { useOnSwapSuccessCallback } from "./hooks/useOnSwapSuccessCallback";
 import { useInitialTokens } from "./hooks/useInitialTokens";
 import { useGasCost } from "../hooks/useGasCost";
 import { useRate } from "../hooks/useRate";
+import { ConfirmationPoweredBy } from "../components/SwapConfirmation/ConfirmationPoweredBy";
 
 export const theme = {
   colors: {
@@ -203,9 +204,7 @@ const TokenSelect = ({
   );
 };
 
-const StyledPoweredByOrbs = styled(PoweredByOrbs)`
-  margin-top: 30px;
-`;
+
 
 const SwapModal = () => {
   const { onClose, swapStatus, isOpen, minAmountOut, toToken, title } =
@@ -263,10 +262,16 @@ const SwapModal = () => {
             </StyledSubmitButton>
           </>
         )}
+      
       </SwapConfirmation>
+      <ConfirmationPoweredBy />
     </WidgetModal>
   );
 };
+
+const StyledPoweredByOrbs = styled(PoweredByOrbs)`
+  margin-top: 30px;
+`
 
 const StyledRateUsd = styled(Text)`
   small {

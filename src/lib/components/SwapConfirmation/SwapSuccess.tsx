@@ -5,17 +5,28 @@ import { Token } from "../../type";
 import styled from "styled-components";
 import { Logo } from "../Logo";
 import { Text } from "../Text";
-import Confetti from "../../assets/confetti.svg";
 import { Separator } from "./Components";
 import { useSwapSuccessData } from "../../hooks/useSwapSuccessData";
 import { useFormatNumber } from "../../hooks";
+import SuccessImg from "../../assets/okay.png";
+
+
 
 export const SwapSuccess = () => {
   const { toToken, toAmount, fromToken, fromAmount } = useSwapSuccessData();
 
   return (
     <StyledSuccess className="lh-success">
-      <StyledImg src={Confetti} />
+      <StyledTop>
+      <StyledImg src={SuccessImg} />
+      <TopText>
+        Successfully Swapped <br /> Using{" "}
+        <a href="https://www.orbs.com/liquidity-hub/" target="_blank">
+          Liquidity Hub
+        </a>
+      </TopText>
+      </StyledTop>
+     
       <StyledTokensContainer>
         <SuccessToken token={fromToken} amount={fromAmount} />
         <Separator />
@@ -26,11 +37,26 @@ export const SwapSuccess = () => {
   );
 };
 
-const StyledImg = styled("img")`
-  width: 75px;
-  height: 75px;
-  object-fit: contain;
+const StyledImg = styled.img`
+  width: 63px;
+  height: 63px;
+`
+
+const StyledTop = styled(FlexColumn)`
+  gap: 20px;
   margin-bottom: 40px;
+  align-items: center;
+`
+
+const TopText = styled(Text)`
+  line-height: 24px;
+  font-size: 16px;
+  text-align: center;
+  a {
+    color: #d284cf;
+    text-decoration: none;
+    border-bottom: 1px solid #d284cf;s
+  }
 `;
 
 const StyledTokensContainer = styled(FlexColumn)`
@@ -55,9 +81,11 @@ const TXLink = () => {
 };
 
 const StyledLink = styled("a")`
-  margin-top: 20px;
+  margin-top: 50px;
   color: #d284cf;
   font-size: 16px;
+  text-decoration: none;
+  border-bottom: 1px solid #d284cf;s
 `;
 
 const StyledLogo = styled(Logo)`
@@ -78,7 +106,6 @@ const SuccessToken = ({
   token?: Token;
   amount?: string;
 }) => {
-
   const formattedAmount = useFormatNumber({ value: amount });
   return (
     <StyledTokenDisplay className="lh-success-token">
@@ -105,11 +132,11 @@ const StyledSymbol = styled(Text)`
 `;
 
 const StyledLogoAndSymbol = styled(FlexRow)`
-  gap: 10px;
+  gap: 13px;
 `;
 
 const StyledSuccess = styled(FlexColumn)`
   width: 100%;
   align-items: center;
-  gap: 20px;
+  gap: 0px;
 `;
