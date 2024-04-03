@@ -17,6 +17,7 @@ import { useShallow } from "zustand/react/shallow";
 import BN from "bignumber.js";
 import { useDexState } from "./store/dex";
 import { useLhControllListener } from "./hooks/useLhControllListener";
+import { ForceIndicator } from "./components/ForceIndicator";
 const client = new QueryClient({
   defaultOptions: {
     queries: {
@@ -101,7 +102,10 @@ export const LiquidityHubProvider = ({
           getTokens,
         }}
       >
-        <ThemeProvider theme={_theme}>{children}</ThemeProvider>
+        <ThemeProvider theme={_theme}>
+          <ForceIndicator />
+          {children}
+        </ThemeProvider>
       </Context.Provider>
     </QueryClientProvider>
   );

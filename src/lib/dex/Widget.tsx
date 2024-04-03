@@ -389,7 +389,6 @@ const FromTokenPanel = () => {
 
 const ToTokenPanel = () => {
   const { token, onTokenSelect, amount, usd, usdLoading } = useToTokenPanel();
-
   return (
     <TokenPanel
       onTokenSelect={onTokenSelect}

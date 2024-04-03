@@ -2,9 +2,9 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useAllowance } from "./useAllowance";
 import { useQuote } from "./useQuote";
 import BN from "bignumber.js";
-import { useSwapState } from "../store/main";
-import { UseLiquidityHubArgs } from "../type";
-import { amountBN } from "../util";
+import { useLiquidityHubPersistedStore, useSwapState } from "../store/main";
+import { LH_CONTROL, UseLiquidityHubArgs } from "../type";
+import { amountBN, Logger } from "../util";
 import { useShallow } from "zustand/react/shallow";
 import _ from "lodash";
 import useAnalytics from "./useAnalytics";
@@ -17,6 +17,7 @@ const useQuoteDelay = (
   quoteDelayMillis?: number
 ) => {
   const quoteTimeoutRef = useRef<any>(null);
+  const lhControl = useLiquidityHubPersistedStore((s) => s.lhControl);
   const { updateState, quoteEnabled } = useSwapState(
     useShallow((store) => ({
       updateState: store.updateState,
@@ -24,29 +25,36 @@ const useQuoteDelay = (
     }))
   );
   useEffect(() => {
+    Logger({
+      quoteEnabled,
+      fromAmount,
+      dexExpectedAmountOut,
+      quoteDelayMillis,
+    });
+    clearTimeout(quoteTimeoutRef.current);
     if (quoteEnabled || BN(fromAmount).isZero()) return;
-    if (!quoteDelayMillis) {
+    if (!quoteDelayMillis || lhControl === LH_CONTROL.FORCE) {
       updateState({ quoteEnabled: true });
       return;
     }
 
-    if (dexExpectedAmountOut) {
-      console.log("got price from dex, enabling quote ");
+    if (BN(dexExpectedAmountOut || "0").gt(0)) {
+      Logger("got price from dex, enabling quote ");
       updateState({ quoteEnabled: true });
       clearTimeout(quoteTimeoutRef.current);
       return;
     }
-    console.log(" starting timeout to enable quote");
+    Logger("starting timeout to enable quote");
     quoteTimeoutRef.current = setTimeout(() => {
       updateState({ quoteEnabled: true });
     }, quoteDelayMillis);
   }, [
     dexExpectedAmountOut,
-    fromAmount,
     quoteDelayMillis,
     quoteEnabled,
     updateState,
     fromAmount,
+    lhControl
   ]);
 };
 
@@ -123,7 +131,6 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     args.toToken?.address,
     args.disabled,
     showConfirmation,
-
   ]);
 
   const quote = useQuote();

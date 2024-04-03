@@ -108,6 +108,8 @@ export const useSwapState = create<SwapState>((set, get) => ({
 }));
 
 interface LHControlStore {
+  debug: boolean;
+  setDebug: (value: boolean) => void;
   lhControl?: LH_CONTROL;
   setLHControl: (lhControl?: LH_CONTROL) => void;
   liquidityHubEnabled: boolean;
@@ -121,6 +123,8 @@ interface LHControlStore {
 export const useLiquidityHubPersistedStore = create(
   persist<LHControlStore>(
     (set, get) => ({
+      debug: false,
+      setDebug: (value) => set({ debug: value }),
       password: undefined,
       setPassword: (password) => set({ password }),
       lhControl: undefined,

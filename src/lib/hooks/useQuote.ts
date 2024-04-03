@@ -15,6 +15,7 @@ import {
   counter,
   eqIgnoreCase,
   isNativeAddress,
+  Logger,
   shouldReturnZeroOutAmount,
 } from "../util";
 import { useApiUrl } from "./useApiUrl";
@@ -120,34 +121,56 @@ export const useQuote = () => {
         );
 
         const inAmountUsd = BN(quote.inTokenUsd || "")
-        .times(amountUi(store.fromToken?.decimals, BN(store.fromAmount || "0")))
-        .toString()
-            const outAmountUsd = BN(quote.outTokenUsd || "")
-            .times(outAmountUI)
-            .toString()
-        return {
-          ...quote,
-          minAmountOut,
-          gasCostOutputToken,
-          ui: {
-            priceImpact: BN(outAmountUsd || "0")
+          .times(
+            amountUi(store.fromToken?.decimals, BN(store.fromAmount || "0"))
+          )
+          .toString();
+        const outAmountUsd = BN(quote.outTokenUsd || "")
+          .times(outAmountUI)
+          .toString();
+
+        
+
+        const ui = {
+          priceImpact: BN(outAmountUsd || "0")
             .div(inAmountUsd || "0")
             .minus(1)
             .times(100)
             .toString(),
-            inAmountUsd,
-            outAmountUsd,
-            outAmount: outAmountUI,
-            minAmountOut: amountUi(
-              store.toToken?.decimals,
-              BN(minAmountOut || 0)
-            ),
-            gasCostOutputToken: amountUi(
-              store.toToken?.decimals,
-              BN(gasCostOutputToken)
-            ),
-            gasCostUsd: amountUi(store.toToken?.decimals, BN(gasCostOutputToken).multipliedBy(quote.outTokenUsd || '0'))
-          },
+          inAmountUsd,
+          outAmountUsd,
+          outAmount: outAmountUI,
+          minAmountOut: amountUi(
+            store.toToken?.decimals,
+            BN(minAmountOut || 0)
+          ),
+          gasCostOutputToken: amountUi(
+            store.toToken?.decimals,
+            BN(gasCostOutputToken)
+          ),
+          gasCostUsd: amountUi(
+            store.toToken?.decimals,
+            BN(gasCostOutputToken).multipliedBy(quote.outTokenUsd || "0")
+          ),
+        };
+
+        Logger({
+          fromAmount: store.fromAmount,
+          fromAddress,
+          toAddress,  
+          dexMinAmountOut: store.dexMinAmountOut,
+          quote,
+          minAmountOut,
+          gasCostOutputToken,
+          ui,
+          refetchInterval:  context.quoteInterval
+        });
+
+        return {
+          ...quote,
+          minAmountOut,
+          gasCostOutputToken,
+          ui,
         } as QuoteResponse;
       } catch (error: any) {
         swapAnalytics.onQuoteFailed(error.message, count(), quote);

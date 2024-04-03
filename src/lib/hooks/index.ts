@@ -13,3 +13,5 @@ export * from "./useUnwrap";
 export * from "./useSteps"
 export * from './useRate'
 export * from './useSwapOwner'
+export * from './useSettings'
+export * from './useQuote'

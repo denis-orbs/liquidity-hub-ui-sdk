@@ -15,6 +15,9 @@ export enum QUERY_KEYS {
   TOKENS_LIST = "TOKENS_LIST",
 }
 
+export const LH_CONTROL_PARAM = 'lh-control'
+export const DEBUG_PARAM = 'lh-debug'
+
 export const DEFAULT_SLIPPAGE = 0.3;
 
 export const zeroAddress = "0x0000000000000000000000000000000000000000";

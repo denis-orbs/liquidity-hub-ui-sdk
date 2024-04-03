@@ -8,7 +8,7 @@ import { useChainConfig } from "./useChainConfig";
 import { useSwapX } from "./useSwapX";
 import { useSign } from "./useSign";
 import { useWrap } from "./useWrap";
-import { amountUi, isNativeAddress } from "../util";
+import { amountUi, isNativeAddress, Logger } from "../util";
 import BN from "bignumber.js";
 import { zeroAddress } from "../config/consts";
 import { useOrders } from "./useOrders";
@@ -76,19 +76,22 @@ export const useSubmitSwap = (onWrapSuccess?: () => void) => {
 
         let inTokenAddress = isNativeIn ? zeroAddress : fromToken.address;
         const outTokenAddress = isNativeOut ? zeroAddress : toToken.address;
-
+        Logger({ inTokenAddress, outTokenAddress });
+        Logger({ quote });
         if (isNativeIn) {
           await wrap(fromAmount);
           inTokenAddress = wTokenAddress;
           isWrapped = true;
         }
         if (!approved) {
+          Logger("Approval required");
           await approve(inTokenAddress, fromAmount);
         } else {
           swapAnalytics.onApprovedBeforeTheTrade();
         }
-
+        Logger("Signing...");
         const signature = await sign(quote.permitData);
+        Logger(signature);
         const txHash = await requestSwap({
           signature,
           inTokenAddress,
@@ -96,6 +99,7 @@ export const useSubmitSwap = (onWrapSuccess?: () => void) => {
           fromAmount,
           quote,
         });
+        Logger(txHash);
         onSwapSuccess(quote);
         addOrder({
           fromToken: fromToken,
@@ -109,7 +113,7 @@ export const useSubmitSwap = (onWrapSuccess?: () => void) => {
         });
         setSessionId(undefined);
         await props?.onSuccess?.();
-
+        Logger("Swap success");
         return txHash;
       } catch (error: any) {
         onSwapError(error.message, isWrapped);
@@ -121,6 +125,7 @@ export const useSubmitSwap = (onWrapSuccess?: () => void) => {
         if (props?.hasFallback) {
           onCloseSwap();
         }
+        Logger(`Swap error: ${error.message}`);
         throw error;
       } finally {
         if (isWrapped) {

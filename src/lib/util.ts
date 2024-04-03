@@ -3,14 +3,19 @@ import Web3 from "web3";
 import { Network, Token } from "./type";
 import _ from "lodash";
 import { supportedChains } from "./config/supportedChains";
-import { nativeTokenAddresses, QUOTE_ERRORS, zero } from "./config/consts";
+import {
+  nativeTokenAddresses,
+  QUOTE_ERRORS,
+  zero,
+} from "./config/consts";
 import { networks } from "./networks";
 import {
   TypedDataDomain,
   TypedDataField,
 } from "@ethersproject/abstract-signer";
 import { _TypedDataEncoder } from "@ethersproject/hash";
-import {numericFormatter} from "react-number-format"
+import { numericFormatter } from "react-number-format";
+import { useLiquidityHubPersistedStore } from "./store/main";
 
 export declare type PermitData = {
   domain: TypedDataDomain;
@@ -442,10 +447,6 @@ export const getBaseAssets = (chainId: number) => {
   }
 };
 
-
-
-
-
 export const findTokenInList = (tokens: Token[], addressOrSymbol: string) => {
   const res = tokens.find(
     (t) =>
@@ -467,19 +468,22 @@ export const filterTokens = (list?: Token[], filterValue?: string): Token[] => {
   });
 };
 
-
-export function fetchWithTimeout(func: () => Promise<Response>, timeout: number){
+export function fetchWithTimeout(
+  func: () => Promise<Response>,
+  timeout: number
+) {
   return Promise.race([
     func(),
     new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Request timed out')), timeout)
-    )
+      setTimeout(() => reject(new Error("Request timed out")), timeout)
+    ),
   ]);
 }
 
-
-
-export const formatNumberDecimals = (decimalScale = 3, value?: string | number) => {
+export const formatNumberDecimals = (
+  decimalScale = 3,
+  value?: string | number
+) => {
   const maxZero = 5;
 
   if (!value) return 0;
@@ -495,16 +499,30 @@ export const formatNumberDecimals = (decimalScale = 3, value?: string | number) 
       break;
     }
   }
-  if(count > maxZero) return 0;
+  if (count > maxZero) return 0;
   return !count ? decimalScale : count + decimalScale;
-}
+};
 
-
-export const formatNumber = (value?: string | number, decimalScale?: number) => {
-  return numericFormatter(value?.toString() || '', {
+export const formatNumber = (
+  value?: string | number,
+  decimalScale?: number
+) => {
+  return numericFormatter(value?.toString() || "", {
     decimalScale: formatNumberDecimals(decimalScale, value),
     allowLeadingZeros: true,
     thousandSeparator: ",",
     displayType: "text",
-  })
-}
+  });
+};
+
+export const Logger = (value: string | object | any[] | number) => {
+  const debug = useLiquidityHubPersistedStore.getState().debug;
+  
+  if (debug) {
+   try {
+    console.log('LH-> ', value);
+   } catch (error) {
+   
+   }
+  }
+};

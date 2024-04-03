@@ -1,18 +1,22 @@
 import { useEffect } from "react";
+import { DEBUG_PARAM, LH_CONTROL_PARAM } from "../config/consts";
 import { useLiquidityHubPersistedStore } from "../store/main";
 import { LH_CONTROL } from "../type";
 
 export function useLhControllListener() {
-  const search = new URLSearchParams(window.location.search);
-  const setLHControl = useLiquidityHubPersistedStore((s) => s.setLHControl);
+  const { setLHControl, setDebug } = useLiquidityHubPersistedStore((s) => ({
+    setLHControl: s.setLHControl,
+    setDebug: s.setDebug,
+  }));
 
   useEffect(() => {
-    const lhControl = search.get("lh-control");
-
-    if (!lhControl) return;
-
-    if (lhControl in LH_CONTROL) {
+    const search = new URLSearchParams(window.location.search);
+    const lhControl = search.get(LH_CONTROL_PARAM);
+    if (lhControl) {
       setLHControl(lhControl as LH_CONTROL);
     }
-  }, [search, setLHControl]);
+    if (search.get(DEBUG_PARAM)) {
+      setDebug(true);
+    }
+  }, [setDebug, setLHControl]);
 }
