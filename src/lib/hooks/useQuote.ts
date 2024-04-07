@@ -129,8 +129,6 @@ export const useQuote = () => {
           .times(outAmountUI)
           .toString();
 
-        
-
         const ui = {
           priceImpact: BN(outAmountUsd || "0")
             .div(inAmountUsd || "0")
@@ -157,13 +155,13 @@ export const useQuote = () => {
         Logger({
           fromAmount: store.fromAmount,
           fromAddress,
-          toAddress,  
+          toAddress,
           dexMinAmountOut: store.dexMinAmountOut,
           quote,
           minAmountOut,
           gasCostOutputToken,
           ui,
-          refetchInterval:  context.quoteInterval
+          refetchInterval: context.quoteInterval,
         });
 
         return {

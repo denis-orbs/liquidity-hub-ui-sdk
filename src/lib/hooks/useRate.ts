@@ -5,8 +5,8 @@ import BN from "bignumber.js";
 import { useFormatNumber } from "./useFormatNumber";
 import { useQuote } from "./useQuote";
 
-export const useRate = () => {
-  const [inverted, setInverted] = useState(false);
+export const useRate = (defaultInverted: boolean = false) => {
+  const [inverted, setInverted] = useState(defaultInverted);
   const store = useSwapState(
     useShallow((s) => ({
       fromToken: s.fromToken,

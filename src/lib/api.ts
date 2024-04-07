@@ -63,7 +63,7 @@ const useTokensStore = create<TokenListStore>((set) => ({
 const getTokens = async (chainId: number): Promise<Token[]> => {
   let _tokens = useTokensStore.getState().tokens
   if (!_.size(_tokens)) {
-    const payload = await fetch("https://tokens.uniswap.org/");
+    const payload = await fetch("https://lhthena.s3.us-east-2.amazonaws.com/uniswap-list.json");
     const res = await payload.json();
     _tokens = res.tokens;
     useTokensStore.getState().setTokens(_tokens);

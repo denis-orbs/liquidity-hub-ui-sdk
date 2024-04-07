@@ -23,7 +23,6 @@ import {
   StyledTop,
 } from "../styles";
 import { ArrowDown } from "react-feather";
-
 import styled, { ThemeProvider } from "styled-components";
 import { Spinner } from "../components/Spinner";
 
@@ -34,6 +33,7 @@ import { LoadingText } from "../components/LoadingText";
 import { TokenSearchInput } from "../components/SearchInput";
 import { useShallow } from "zustand/react/shallow";
 import {
+  useAcceptedAmountOut,
   useChainConfig,
   useFormatNumber,
   useSwapButton,
@@ -217,6 +217,10 @@ const SwapModal = () => {
   const updateStore = useDexState(useShallow((s) => s.updateStore));
   const rate = useRate();
   const wToken = useChainConfig()?.wToken;
+  const quote = useQuote().data;
+
+  const { accept, acceptedAmountOut, shouldAccept, amountToAccept } =
+    useAcceptedAmountOut(quote?.outAmount, quote?.minAmountOut);
 
   const onWrapSuccess = useCallback(() => {
     updateStore({ fromToken: wToken });
@@ -227,7 +231,6 @@ const SwapModal = () => {
     value: priceImpact,
     decimalScale: 2,
   });
-  const quote = useQuote().data;
   const minAmountOut = useFormatNumber({ value: quote?.ui.minAmountOut });
   const onSuccess = useOnSwapSuccessCallback();
   const gas = useFormatNumber({ value: gasCostUsd, decimalScale: 2 });
@@ -250,46 +253,82 @@ const SwapModal = () => {
 
   return (
     <WidgetModal title={title} open={isOpen} onClose={onClose}>
-      <SwapConfirmation outAmount={quote?.ui.outAmount}>
-        {swapStatus === "failed" ? (
-          <TryAgainButton />
-        ) : (
-          !swapStatus && (
-            <>
-              <StyledSwapDetails>
-                <SwapModalInfoRow label="Rate" onClick={rate.invert}>
-                  <StyledRateUsd>
-                    {`1 ${rate.leftToken} = ${rate.rightToken} ${rate.value}`}{" "}
-                    <small>{`(${rateUsd})`}</small>
-                  </StyledRateUsd>
-                </SwapModalInfoRow>
-                <SwapModalInfoRow label="Gas cost">
-                  <StyledRateUsd>{`$${gas}`}</StyledRateUsd>
-                </SwapModalInfoRow>
-                <SwapModalInfoRow label="Min amount out">
-                  <StyledRateUsd>{`${minAmountOut} ${toToken?.symbol}`}</StyledRateUsd>
-                </SwapModalInfoRow>
-                <SwapModalInfoRow label="Price impact">
-                  <StyledRateUsd>{`${
-                    priceImpact ? `${priceImpactF}%` : "-"
-                  }`}</StyledRateUsd>
-                </SwapModalInfoRow>
-              </StyledSwapDetails>
+      {shouldAccept ? (
+        <AcceptAmountOut amountToAccept={amountToAccept} accept={accept} />
+      ) : (
+        <SwapConfirmation outAmount={acceptedAmountOut}>
+          {swapStatus === "failed" ? (
+            <TryAgainButton />
+          ) : (
+            !swapStatus && (
+              <>
+                <StyledSwapDetails>
+                  <SwapModalInfoRow label="Rate" onClick={rate.invert}>
+                    <StyledRateUsd>
+                      {`1 ${rate.leftToken} = ${rate.rightToken} ${rate.value}`}{" "}
+                      <small>{`(${rateUsd})`}</small>
+                    </StyledRateUsd>
+                  </SwapModalInfoRow>
+                  <SwapModalInfoRow label="Gas cost">
+                    <StyledRateUsd>{`$${gas}`}</StyledRateUsd>
+                  </SwapModalInfoRow>
+                  <SwapModalInfoRow label="Min amount out">
+                    <StyledRateUsd>{`${minAmountOut} ${toToken?.symbol}`}</StyledRateUsd>
+                  </SwapModalInfoRow>
+                  <SwapModalInfoRow label="Price impact">
+                    <StyledRateUsd>{`${
+                      priceImpact ? `${priceImpactF}%` : "-"
+                    }`}</StyledRateUsd>
+                  </SwapModalInfoRow>
+                </StyledSwapDetails>
 
-              <StyledSubmitButton
-                onClick={onClick}
-                isLoading={swapButton.isPending}
-              >
-                {swapButton.text}
-              </StyledSubmitButton>
-            </>
-          )
-        )}
-      </SwapConfirmation>
+                <StyledSubmitButton
+                  onClick={onClick}
+                  isLoading={swapButton.isPending}
+                >
+                  {swapButton.text}
+                </StyledSubmitButton>
+              </>
+            )
+          )}
+        </SwapConfirmation>
+      )}
       <ConfirmationPoweredBy />
     </WidgetModal>
   );
 };
+
+const AcceptAmountOut = ({
+  amountToAccept,
+  accept,
+}: {
+  amountToAccept?: string;
+  accept: () => void;
+}) => {
+  const amount = useFormatNumber({
+    value: amountToAccept,
+  });
+
+  return (
+    <StyledAcceptAmountOut>
+      <Text>Price updated</Text>
+      <Text>new amount out is {amount}</Text>
+      <Button onClick={accept}>Accept</Button>
+    </StyledAcceptAmountOut>
+  );
+};
+
+const StyledAcceptAmountOut = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  button {
+    width: 100%;
+  }
+`;
 
 const StyledPoweredByOrbs = styled(PoweredByOrbs)`
   margin-top: 30px;

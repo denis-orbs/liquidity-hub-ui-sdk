@@ -22,7 +22,9 @@ export const useTokenListBalances = () => {
     ],
     queryFn: async () => {      
       if (!account || !chainId || !list || invalidChain || !web3) return {};            
-      return getBalances(list!, web3, account);
+      const balances = await getBalances(list!, web3, account);
+      
+      return balances;
     },
     refetchInterval: 30_000,
     staleTime: Infinity,
