@@ -16,6 +16,9 @@ export function useAcceptedAmountOut(
       toToken: s.toToken,
     }))
   );
+
+  console.log({toToken});
+  
   const accept = useCallback(() => {
     setIsUpdated(false);
     setAcceptedAmountOut(outAmount);

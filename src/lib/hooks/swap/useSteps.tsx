@@ -11,13 +11,12 @@ import { useShallow } from "zustand/react/shallow";
 import { useChainConfig } from "../useChainConfig";
 
 export const useSteps = () => {
-  const { fromToken, currentStep, status, isSigned, txHash } = useSwapState(
+  const { fromToken, currentStep, status, isSigned } = useSwapState(
     useShallow((store) => ({
       fromToken: store.fromToken,
       currentStep: store.currentStep,
       status: store.swapStatus,
       isSigned: store.isSigned,
-      txHash: store.txHash,
     }))
   );
 
@@ -43,18 +42,7 @@ export const useSteps = () => {
 
     const sendTx: Step = {
       id: STEPS.SEND_TX,
-      title: txHash ? (
-        <>
-          Swap pending...{" "}
-          <a href={`${explorer}/tx/${txHash}`} target="_blank">
-           {` (View on explorer)`}
-          </a>
-        </>
-      ) : isSigned ? (
-        "Swap pending..."
-      ) : (
-        "Sign and Confirm swap"
-      ),
+      title: isSigned ? "Swap pending..." : "Sign and Confirm swap",
       image: SwapImg,
     };
 
@@ -74,7 +62,6 @@ export const useSteps = () => {
     allowanceQueryLoading,
     isSigned,
     currentStep,
-    txHash,
     explorer,
   ]);
 

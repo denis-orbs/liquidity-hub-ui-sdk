@@ -1,5 +1,4 @@
 import { FlexColumn, FlexRow } from "../../base-styles";
-import { useChainConfig } from "../../hooks/useChainConfig";
 import { useSwapState } from "../../store/main";
 import { Token } from "../../type";
 import styled from "styled-components";
@@ -10,6 +9,7 @@ import { useFormatNumber } from "../../hooks";
 import SuccessImg from "../../assets/okay.png";
 import { useShallow } from "zustand/react/shallow";
 import { useAmountUI } from "../../hooks/useAmountUI";
+import { ExplorerLink } from "../ExplorerLink";
 
 export const SwapSuccess = ({ outAmount }: { outAmount?: string }) => {
   const { fromToken, toToken, fromAmount } = useSwapState(
@@ -40,7 +40,7 @@ export const SwapSuccess = ({ outAmount }: { outAmount?: string }) => {
         <Separator />
         <SuccessToken token={toToken} amount={outAmount} />
       </StyledTokensContainer>
-      <TXLink />
+      <ExplorerLink styles={{marginTop: 50}} />
     </StyledSuccess>
   );
 };
@@ -63,7 +63,7 @@ const TopText = styled(Text)`
   a {
     color: #d284cf;
     text-decoration: none;
-    border-bottom: 1px solid #d284cf;s
+    border-bottom: 1px solid #d284cf;
   }
 `;
 
@@ -73,28 +73,8 @@ const StyledTokensContainer = styled(FlexColumn)`
   gap: 30px;
 `;
 
-const TXLink = () => {
-  const txHash = useSwapState((store) => store.txHash);
-  const explorerUrl = useChainConfig()?.explorerUrl;
 
-  return (
-    <StyledLink
-      className="lh-success-link"
-      target="_blank"
-      href={`${explorerUrl}/tx/${txHash}`}
-    >
-      View on explorer
-    </StyledLink>
-  );
-};
 
-const StyledLink = styled("a")`
-  margin-top: 50px;
-  color: #d284cf;
-  font-size: 16px;
-  text-decoration: none;
-  border-bottom: 1px solid #d284cf;s
-`;
 
 const StyledLogo = styled(Logo)`
   width: 40px;

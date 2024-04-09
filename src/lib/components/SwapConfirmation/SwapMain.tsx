@@ -4,6 +4,7 @@ import { SwapDetails } from "./Details";
 import { useSteps } from "../../hooks/swap/useSteps";
 import { FlexColumn } from "../../base-styles";
 import { ReactNode } from "react";
+import { ExplorerLink } from "../ExplorerLink";
 
 interface Props {
   style?: CSSObject;
@@ -11,19 +12,17 @@ interface Props {
   outAmount?: string;
 }
 
-export const SwapMain = ({
-  style = {},
-  children,
-  outAmount,
-}: Props) => {
+export const SwapMain = ({ style = {}, children, outAmount }: Props) => {
   return (
     <Container style={style}>
       <SwapDetails outAmount={outAmount} />
       <StepsComponent />
       {children}
+      <ExplorerLink styles={{marginTop: 10}} />
     </Container>
   );
 };
+
 
 const StepsComponent = () => {
   const { steps, status } = useSteps();
