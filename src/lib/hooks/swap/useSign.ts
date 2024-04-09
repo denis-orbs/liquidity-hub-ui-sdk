@@ -29,12 +29,14 @@ export const useSign = () => {
         return signature;
       } catch (error) {
         swapAnalytics.onSignatureFailed((error as any).message, count());
-        throw error
+        throw error;
       }
     },
     [updateState, account, web3]
   );
 };
+
+
 
 export function useSignEIP712() {
   const { account: signer, web3 } = useMainContext();
@@ -50,20 +52,36 @@ export function useSignEIP712() {
         async (name: string) => (await web3.eth.ens.getAddress(name)).toString()
       );
 
-    
-      const message = JSON.stringify(_TypedDataEncoder.getPayload(populated.domain, permitData.types, populated.value))
+      const message = JSON.stringify(
+        _TypedDataEncoder.getPayload(
+          populated.domain,
+          permitData.types,
+          populated.value
+        )
+      );
 
       try {
         return await signAsync("eth_signTypedData_v4", message);
       } catch (e: any) {
-       try {
-        return await signAsync("eth_signTypedData", message);
-       } catch (error) {
-        throw error;
-       }
+        try {
+          return await signAsync("eth_signTypedData", message);
+        } catch (error: any) {
+          if (
+            typeof error.message === "string" &&
+            (error.message.match(/not (found|implemented)/i) ||
+              error.message.match(/TrustWalletConnect.WCError error 1/) ||
+              error.message.match(/Missing or invalid/))
+          ) {
+            console.log(
+              "signTypedData: wallet does not implement EIP-712, falling back to eth_sign",
+              error.message
+            );
+            throw new Error("Wallet does not support EIP-712");
+          }
+        }
       }
     },
-    [signer, web3]
+    [signer, web3, signAsync]
   );
 }
 
@@ -80,7 +98,7 @@ export function useSignAsync() {
           method,
           params: [signer, message],
         });
-      } catch (error) {        
+      } catch (error) {
         throw error;
       }
     },

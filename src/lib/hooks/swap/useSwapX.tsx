@@ -21,7 +21,7 @@ export const useSwapX = () => {
   const apiUrl = useApiUrl();
   const sessionId = useGlobalStore((s) => s.sessionId);
   return useCallback(
-    async (args:Args) => {
+    async (args: Args) => {
       if (
         !account ||
         !web3 ||
@@ -58,7 +58,9 @@ export const useSwapX = () => {
         if (!swap.txHash) {
           throw new Error("Missing txHash");
         }
-        
+        updateState({
+          txHash: swap.txHash,
+        });
 
         swapAnalytics.onSwapSuccess(swap.txHash, count());
         txDetails = await waitForTxReceipt(web3, swap.txHash);
@@ -66,7 +68,6 @@ export const useSwapX = () => {
           swapAnalytics.onClobOnChainSwapSuccess();
           updateState({
             swapStatus: "success",
-            txHash: swap.txHash,
           });
 
           return swap.txHash as string;
@@ -76,7 +77,7 @@ export const useSwapX = () => {
       } catch (error: any) {
         const msg = error.message.error || error.message;
         swapAnalytics.onSwapFailed(msg, count(), !!txDetails?.revertMessage);
-        throw new Error('Something went wrong');
+        throw new Error("Something went wrong");
       }
     },
     [web3, account, chainId, updateState, sessionId, apiUrl]

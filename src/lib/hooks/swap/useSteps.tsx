@@ -8,16 +8,20 @@ import { useSwapState } from "../../store/main";
 import { Step, STEPS } from "../../type";
 import { isNativeAddress } from "../../util";
 import { useShallow } from "zustand/react/shallow";
+import { useChainConfig } from "../useChainConfig";
 
 export const useSteps = () => {
-  const { fromToken, currentStep, status, isSigned } = useSwapState(
+  const { fromToken, currentStep, status, isSigned, txHash } = useSwapState(
     useShallow((store) => ({
       fromToken: store.fromToken,
       currentStep: store.currentStep,
       status: store.swapStatus,
       isSigned: store.isSigned,
+      txHash: store.txHash,
     }))
   );
+
+  const explorer = useChainConfig()?.explorerUrl;
 
   const { isLoading: allowanceQueryLoading, data: isApproved } = useAllowance();
   const steps = useMemo(() => {
@@ -39,7 +43,18 @@ export const useSteps = () => {
 
     const sendTx: Step = {
       id: STEPS.SEND_TX,
-      title: isSigned ? "Swap pending..." : "Sign and Confirm swap",
+      title: txHash ? (
+        <>
+          Swap pending...{" "}
+          <a href={`${explorer}/tx/${txHash}`} target="_blank">
+           {` (View on explorer)`}
+          </a>
+        </>
+      ) : isSigned ? (
+        "Swap pending..."
+      ) : (
+        "Sign and Confirm swap"
+      ),
       image: SwapImg,
     };
 
@@ -59,6 +74,8 @@ export const useSteps = () => {
     allowanceQueryLoading,
     isSigned,
     currentStep,
+    txHash,
+    explorer,
   ]);
 
   return {

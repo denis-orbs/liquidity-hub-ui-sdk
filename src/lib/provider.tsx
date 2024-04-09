@@ -72,9 +72,6 @@ export const LiquidityHubProvider = ({
     [provider]
   );
 
-  console.log(web3);
-
-
   useEffect(() => {
     if (chainId && partner) {
       swapAnalytics.setChainId(chainId);

@@ -4,6 +4,7 @@ import {
   TypedDataField,
 } from "@ethersproject/abstract-signer";
 import { CSSObject } from "styled-components";
+import { ReactNode } from "react";
 
 export interface TokenPanelProps {
   inputValue?: string;
@@ -156,7 +157,7 @@ export type ActionStatus =
   | undefined;
 
 export interface Step {
-  title: string;
+  title: ReactNode;
   link?: { href: string; text: string };
   image?: string;
   hidden?: boolean;
@@ -183,7 +184,6 @@ export type UseLiquidityHubArgs = {
   debounceFromAmountMillis?: number;
   quoteDelayMillis?: number;
   outAmount?: string;
-  outAmountUsd?: string;
 };
 
 

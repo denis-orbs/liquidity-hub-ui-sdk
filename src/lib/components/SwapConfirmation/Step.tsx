@@ -6,16 +6,17 @@ import { useSwapState } from "../../store/main";
 import { FlexColumn, FlexRow } from "../../base-styles";
 import { Spinner } from "../Spinner";
 import _ from "lodash";
+import { useShallow } from "zustand/react/shallow";
 
 interface Props {
   step: Step;
 }
 
 export function StepComponent({ step }: Props) {
-  const { currentStep, swapStatus } = useSwapState((store) => ({
+  const { currentStep, swapStatus } = useSwapState(useShallow((store) => ({
     currentStep: store.currentStep,
     swapStatus: store.swapStatus,
-  }));
+  })));
 
   const status = useMemo((): ActionStatus => {
     if (_.isUndefined(currentStep)) return;
@@ -112,6 +113,10 @@ const StyledStepTitle = styled.p<{ $selected: boolean }>`
   opacity: ${({ $selected }) => ($selected ? 1 : 0.5)};
   color: ${({ $selected, theme }) =>
     $selected ? theme.colors.textMain : theme.colors.textSecondary};
+    a {
+      color: #da88de;
+      text-decoration: none;
+    }
 `;
 const StyledStepLink = styled("a")<{ $selected: boolean }>`
   color: #da88de;

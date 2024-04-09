@@ -8,7 +8,6 @@ import { networks } from "./networks";
 import { numericFormatter } from "react-number-format";
 import { useLiquidityHubPersistedStore } from "./store/main";
 
-
 export const amountBN = (decimals?: number, amount?: string) =>
   parsebn(amount || "")
     .times(new BN(10).pow(decimals || 0))
@@ -314,8 +313,6 @@ export async function timeout<T>(fn: () => Promise<T>, ms = 1000): Promise<T> {
   else throw new Error("timeout");
 }
 
-
-
 export function parsebn(n: BN.Value, defaultValue?: BN, fmt?: BN.Format): BN {
   if (typeof n !== "string") return bn(n);
 
@@ -444,6 +441,3 @@ export const Logger = (value: string | object | any[] | number) => {
     } catch (error) {}
   }
 };
-
-
-
