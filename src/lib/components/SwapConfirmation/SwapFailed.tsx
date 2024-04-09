@@ -8,10 +8,11 @@ import { useChainConfig } from "../../hooks";
 import { ReactNode } from "react";
 
 export const SwapFailed = ({children}:{children?: ReactNode}) => {
-  const { swapStaus, isWrapped } = useSwapState(
+  const { swapStaus, isWrapped, swapError } = useSwapState(
     useShallow((s) => ({
       isWrapped: s.isWrapped,
       swapStaus: s.swapStatus,
+      swapError: s.swapError
     }))
   );
 
@@ -21,7 +22,7 @@ export const SwapFailed = ({children}:{children?: ReactNode}) => {
       <MainLogo className="lh-failed-img">
         <AlertCircle />
       </MainLogo>
-      <Title className="lh-failed-title">Swap failed on Liquidity Hub</Title>
+      <Title className="lh-failed-title">{swapError || 'Swap failed on Liquidity Hub'}</Title>
       {swapStaus === "failed" && isWrapped && (
         <Message>{chainConfig?.native.symbol} has been wrapped to {chainConfig?.wToken?.symbol}</Message>
       )}

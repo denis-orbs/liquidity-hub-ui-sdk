@@ -1,8 +1,8 @@
 import _ from "lodash";
 import { useMemo } from "react";
-import { useMainContext } from "../provider";
-import { getChainConfig } from "../util";
-import { useChainConfig } from "./useChainConfig";
+import { useMainContext } from "../../provider";
+import { getChainConfig } from "../../util";
+import { useChainConfig } from "../useChainConfig";
 
 export function useApiUrl() {
   const context = useMainContext();

@@ -2,14 +2,14 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useAllowance } from "./useAllowance";
 import { useQuote } from "./useQuote";
 import BN from "bignumber.js";
-import { useLiquidityHubPersistedStore, useSwapState } from "../store/main";
-import { LH_CONTROL, UseLiquidityHubArgs } from "../type";
-import { amountBN, Logger } from "../util";
+import { useLiquidityHubPersistedStore, useSwapState } from "../../store/main";
+import { LH_CONTROL, UseLiquidityHubArgs } from "../../type";
+import { amountBN, Logger } from "../../util";
 import { useShallow } from "zustand/react/shallow";
 import _ from "lodash";
-import useAnalytics from "./useAnalytics";
-import { useAmountBN } from "./useAmountBN";
-import { useDebounce } from "./useDebounce";
+import useAnalytics from "../useAnalytics";
+import { useAmountBN } from "../useAmountBN";
+import { useDebounce } from "../useDebounce";
 
 const useQuoteDelay = (
   fromAmount: string,

@@ -1,12 +1,12 @@
-import { useSwapState } from "../store/main";
-import { STEPS, Token } from "../type";
+import { useSwapState } from "../../store/main";
+import { STEPS, Token } from "../../type";
 import { useCallback } from "react";
-import { useMainContext } from "../provider";
-import { useContractCallback } from "./useContractCallback";
+import { useMainContext } from "../../provider";
+import { useContractCallback } from "../useContractCallback";
 import { useShallow } from "zustand/react/shallow";
-import { useEstimateGasPrice } from "./useEstimateGasPrice";
-import { swapAnalytics } from "../analytics";
-import { counter, sendAndWaitForConfirmations } from "../util";
+import { useEstimateGasPrice } from "../useEstimateGasPrice";
+import { swapAnalytics } from "../../analytics";
+import { counter, sendAndWaitForConfirmations } from "../../util";
 
 export const useWrap = (fromToken?: Token) => {
   const { account, chainId, web3 } = useMainContext();

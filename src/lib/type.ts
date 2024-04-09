@@ -1,5 +1,8 @@
 import { AbiItem } from "web3-utils";
-
+import {
+  TypedDataDomain,
+  TypedDataField,
+} from "@ethersproject/abstract-signer";
 import { CSSObject } from "styled-components";
 
 export interface TokenPanelProps {
@@ -224,3 +227,11 @@ export interface Network {
 
 export type Abi = AbiItem[];
 export type Balances = { [key: string]: string };
+
+
+export declare type PermitData = {
+  domain: TypedDataDomain;
+  types: Record<string, TypedDataField[]>;
+  values: any;
+};
+

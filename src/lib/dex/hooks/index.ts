@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { useQuote } from "../../hooks/useQuote";
+import { useQuote } from "../../hooks/swap/useQuote";
 import { useDexState } from "../../store/dex";
 import { useDexLH } from "./useDexLH";
 import { useTokenListBalance } from "./useTokenListBalance";

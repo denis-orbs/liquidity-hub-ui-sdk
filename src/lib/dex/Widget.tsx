@@ -61,7 +61,7 @@ import { useOnSwapSuccessCallback } from "./hooks/useOnSwapSuccessCallback";
 import { useInitialTokens } from "./hooks/useInitialTokens";
 import { useRate } from "../hooks/useRate";
 import { ConfirmationPoweredBy } from "../components/SwapConfirmation/ConfirmationPoweredBy";
-import { useQuote } from "../hooks/useQuote";
+import { useQuote } from "../hooks/swap/useQuote";
 
 export const theme = {
   colors: {

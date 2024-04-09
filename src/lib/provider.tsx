@@ -65,10 +65,15 @@ export const LiquidityHubProvider = ({
     return darkTheme;
   }, [theme]);
 
+  
+
   const web3 = useMemo(
     () => (provider ? new Web3(provider) : undefined),
     [provider]
   );
+
+  console.log(web3);
+
 
   useEffect(() => {
     if (chainId && partner) {

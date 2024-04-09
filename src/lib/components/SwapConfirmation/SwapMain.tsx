@@ -1,7 +1,7 @@
 import styled, { CSSObject } from "styled-components";
 import { StepComponent } from "./Step";
 import { SwapDetails } from "./Details";
-import { useSteps } from "../../hooks/useSteps";
+import { useSteps } from "../../hooks/swap/useSteps";
 import { FlexColumn } from "../../base-styles";
 import { ReactNode } from "react";
 

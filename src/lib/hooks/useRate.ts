@@ -3,7 +3,7 @@ import { useShallow } from "zustand/react/shallow";
 import { useSwapState } from "../store/main";
 import BN from "bignumber.js";
 import { useFormatNumber } from "./useFormatNumber";
-import { useQuote } from "./useQuote";
+import { useQuote } from "./swap/useQuote";
 
 export const useRate = (defaultInverted: boolean = false) => {
   const [inverted, setInverted] = useState(defaultInverted);

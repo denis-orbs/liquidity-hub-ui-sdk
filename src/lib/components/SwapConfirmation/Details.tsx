@@ -5,9 +5,9 @@ import { useFormatNumber } from "../../hooks/useFormatNumber";
 import { Logo } from "../Logo";
 import { Token } from "../../type";
 import { Text } from "../Text";
-import { useSwapConfirmation } from "../../hooks/useSwapConfirmation";
+import { useSwapConfirmation } from "../../hooks/swap/useSwapConfirmation";
 import { Separator } from "./Components";
-import { useQuote } from "../../hooks/useQuote";
+import { useQuote } from "../../hooks/swap/useQuote";
 import { useMemo } from "react";
 const StyledSwapDetails = styled(FlexColumn)`
   width: 100%;

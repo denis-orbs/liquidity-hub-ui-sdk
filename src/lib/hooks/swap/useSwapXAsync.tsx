@@ -1,11 +1,11 @@
-import { useGlobalStore, useSwapState } from "../store/main";
+import { useGlobalStore, useSwapState } from "../../store/main";
 import { useCallback } from "react";
-import { useMainContext } from "../provider";
-import { swapAnalytics } from "../analytics";
-import { counter, delay, waitForTxReceipt } from "../util";
+import { useMainContext } from "../../provider";
+import { swapAnalytics } from "../../analytics";
+import { counter, delay, waitForTxReceipt } from "../../util";
 import { useApiUrl } from "./useApiUrl";
 import { useShallow } from "zustand/react/shallow";
-import { QuoteResponse } from "../type";
+import { QuoteResponse } from "../../type";
 
 export const useSwapXAsync = () => {
   const { account, chainId, web3 } = useMainContext();

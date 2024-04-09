@@ -1,15 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
-import { useMainContext } from "../provider";
-import { QuoteResponse } from "../type";
-import { useGlobalStore, useSwapState } from "../store/main";
+import { useMainContext } from "../../provider";
+import { QuoteResponse } from "../../type";
+import { useGlobalStore, useSwapState } from "../../store/main";
 import {
   EMPTY_QUOTE_RESPONSE,
   QUERY_KEYS,
   QUOTE_ERRORS,
   zeroAddress,
-} from "../config/consts";
-import { useChainConfig } from "./useChainConfig";
-import { useIsDisabled } from "./useIsDisabled";
+} from "../../config/consts";
+import { useChainConfig } from "../useChainConfig";
+import { useIsDisabled } from "../useIsDisabled";
 import {
   amountUi,
   counter,
@@ -17,12 +17,12 @@ import {
   isNativeAddress,
   Logger,
   shouldReturnZeroOutAmount,
-} from "../util";
+} from "../../util";
 import { useApiUrl } from "./useApiUrl";
-import { swapAnalytics } from "../analytics";
+import { swapAnalytics } from "../../analytics";
 import BN from "bignumber.js";
 import _ from "lodash";
-import { useHandleTokenAddresses } from "./useHandleTokenAddresses";
+import { useHandleTokenAddresses } from "../useHandleTokenAddresses";
 
 export const useQuote = () => {
   const store = useSwapState();

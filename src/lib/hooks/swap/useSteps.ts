@@ -1,12 +1,12 @@
 import { useMemo } from "react";
 
 import { useAllowance } from "./useAllowance";
-import SwapImg from "../assets/swap.svg";
-import ApproveImg from "../assets/approve.svg";
+import SwapImg from "../../assets/swap.svg";
+import ApproveImg from "../../assets/approve.svg";
 
-import { useSwapState } from "../store/main";
-import { Step, STEPS } from "../type";
-import { isNativeAddress } from "../util";
+import { useSwapState } from "../../store/main";
+import { Step, STEPS } from "../../type";
+import { isNativeAddress } from "../../util";
 import { useShallow } from "zustand/react/shallow";
 
 export const useSteps = () => {

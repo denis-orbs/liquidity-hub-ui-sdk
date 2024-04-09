@@ -1,17 +1,17 @@
-import { useGlobalStore, useSwapState } from "../store/main";
+import { useGlobalStore, useSwapState } from "../../store/main";
 import { useCallback } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { swapAnalytics } from "../analytics";
+import { swapAnalytics } from "../../analytics";
 import { useAllowance } from "./useAllowance";
 import { useApprove } from "./useApprove";
-import { useChainConfig } from "./useChainConfig";
+import { useChainConfig } from "../useChainConfig";
 import { useSwapX } from "./useSwapX";
 import { useSign } from "./useSign";
 import { useWrap } from "./useWrap";
-import { amountUi, isNativeAddress, Logger } from "../util";
+import { amountUi, isNativeAddress, Logger } from "../../util";
 import BN from "bignumber.js";
-import { zeroAddress } from "../config/consts";
-import { useOrders } from "./useOrders";
+import { zeroAddress } from "../../config/consts";
+import { useOrders } from "../useOrders";
 import { useQuote } from "./useQuote";
 
 export const useSubmitSwap = (onWrapSuccess?: () => void) => {

@@ -1,12 +1,12 @@
-import { useSwapState } from "../store/main";
-import { STEPS } from "../type";
+import { useSwapState } from "../../store/main";
+import { STEPS } from "../../type";
 import { useCallback } from "react";
-import { useMainContext } from "../provider";
-import { useContractCallback } from "./useContractCallback";
+import { useMainContext } from "../../provider";
+import { useContractCallback } from "../useContractCallback";
 import { useShallow } from "zustand/react/shallow";
-import { counter, sendAndWaitForConfirmations } from "../util";
-import { swapAnalytics } from "../analytics";
-import { maxUint256, permit2Address } from "../config/consts";
+import { counter, sendAndWaitForConfirmations } from "../../util";
+import { swapAnalytics } from "../../analytics";
+import { maxUint256, permit2Address } from "../../config/consts";
 
 export const useApprove = () => {
   const { account, web3, chainId } = useMainContext();

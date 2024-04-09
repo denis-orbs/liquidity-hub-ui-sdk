@@ -3,25 +3,11 @@ import Web3 from "web3";
 import { Network, Token } from "./type";
 import _ from "lodash";
 import { supportedChains } from "./config/supportedChains";
-import {
-  nativeTokenAddresses,
-  QUOTE_ERRORS,
-  zero,
-} from "./config/consts";
+import { nativeTokenAddresses, QUOTE_ERRORS, zero } from "./config/consts";
 import { networks } from "./networks";
-import {
-  TypedDataDomain,
-  TypedDataField,
-} from "@ethersproject/abstract-signer";
-import { _TypedDataEncoder } from "@ethersproject/hash";
 import { numericFormatter } from "react-number-format";
 import { useLiquidityHubPersistedStore } from "./store/main";
 
-export declare type PermitData = {
-  domain: TypedDataDomain;
-  types: Record<string, TypedDataField[]>;
-  values: any;
-};
 
 export const amountBN = (decimals?: number, amount?: string) =>
   parsebn(amount || "")
@@ -328,73 +314,7 @@ export async function timeout<T>(fn: () => Promise<T>, ms = 1000): Promise<T> {
   else throw new Error("timeout");
 }
 
-export async function signEIP712(web3: Web3, signer: string, data: PermitData) {
-  // Populate any ENS names (in-place)
-  const populated = await _TypedDataEncoder.resolveNames(
-    data.domain,
-    data.types,
-    data.values,
-    async (name: string) => (await web3.eth.ens.getAddress(name)).toString()
-  );
-  const typedDataMessage = _TypedDataEncoder.getPayload(
-    populated.domain,
-    data.types,
-    populated.value
-  );
 
-  try {
-    return await signAsync(
-      web3,
-      "eth_signTypedData_v4",
-      signer,
-      typedDataMessage
-    );
-  } catch (e: any) {
-    try {
-      return await signAsync(
-        web3,
-        "eth_signTypedData",
-        signer,
-        typedDataMessage
-      );
-    } catch (e: any) {
-      return await signAsync(
-        web3,
-        "eth_sign",
-        signer,
-        _TypedDataEncoder.hash(populated.domain, data.types, populated.value)
-      );
-    }
-  }
-}
-
-export async function signAsync(
-  web3: Web3,
-  method: "eth_signTypedData_v4" | "eth_signTypedData" | "eth_sign",
-  signer: string,
-  payload: string | PermitData
-) {
-  const provider: any = (web3.currentProvider as any).send
-    ? web3.currentProvider
-    : (web3 as any)._provider;
-  return await new Promise<string>((resolve, reject) => {
-    provider.send(
-      {
-        id: 1,
-        method,
-        params: [
-          signer,
-          typeof payload === "string" ? payload : JSON.stringify(payload),
-        ],
-        from: signer,
-      },
-      (e: any, r: any) => {
-        if (e || !r?.result) return reject(e);
-        return resolve(r.result);
-      }
-    );
-  });
-}
 
 export function parsebn(n: BN.Value, defaultValue?: BN, fmt?: BN.Format): BN {
   if (typeof n !== "string") return bn(n);
@@ -517,12 +437,13 @@ export const formatNumber = (
 
 export const Logger = (value: string | object | any[] | number) => {
   const debug = useLiquidityHubPersistedStore.getState().debug;
-  
+
   if (debug) {
-   try {
-    console.log('LH-> ', value);
-   } catch (error) {
-   
-   }
+    try {
+      console.log("LH-> ", value);
+    } catch (error) {}
   }
 };
+
+
+

@@ -3,7 +3,7 @@ import { useShallow } from "zustand/react/shallow";
 import { swapAnalytics } from "../analytics";
 import { useMainContext } from "../provider";
 import { useSwapState } from "../store/main";
-import { useQuote } from "./useQuote";
+import { useQuote } from "./swap/useQuote";
 
 function useAnalytics() {
   const slippage = useMainContext().slippage;

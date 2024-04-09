@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { useSwapState } from "../store/main";
-import { useAmountUI } from "./useAmountUI";
+import { useSwapState } from "../../store/main";
+import { useAmountUI } from "../useAmountUI";
 import { useQuote } from "./useQuote";
 
 export const useSwapConfirmation = () => {

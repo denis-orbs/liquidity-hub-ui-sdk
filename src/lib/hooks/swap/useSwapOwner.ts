@@ -1,8 +1,8 @@
 import BN from "bignumber.js";
-import { useLiquidityHubPersistedStore } from "../store/main";
-import { LH_CONTROL, TradeOwner } from "../type";
+import { useLiquidityHubPersistedStore } from "../../store/main";
+import { LH_CONTROL, TradeOwner } from "../../type";
 import { useMemo } from "react";
-import { useIsDisabled } from "./useIsDisabled";
+import { useIsDisabled } from "../useIsDisabled";
 export const useSwapOwner = (
   lhAmountOut?: string,
   dexAmountOut?: string,

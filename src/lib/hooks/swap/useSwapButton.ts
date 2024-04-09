@@ -1,9 +1,9 @@
-import { useSwapState } from "../store/main";
+import { useSwapState } from "../../store/main";
 import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useAllowance } from "./useAllowance";
 import { useSubmitSwap } from "./useSubmitSwap";
-import { isNativeAddress } from "../util";
+import { isNativeAddress } from "../../util";
 
 export const useSwapButton = (onWrapSuccess?: () => void) => {
   const { fromToken, swapStatus } = useSwapState(

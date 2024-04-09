@@ -14,7 +14,7 @@ export const useProvider = () => {
 
   const [provider, setProvider] = useState<any>(undefined);
 
-  const setProviderFromConnector = useCallback(async () => {
+  const setProviderFromConnector = useCallback(async () => {    
     const res = await connector?.getProvider();
     setProvider(res);
   }, [setProvider, connector]);
@@ -28,13 +28,15 @@ export const useProvider = () => {
     }
   }, [address, setProviderFromConnector, data]);
 
-  return provider
+  return provider;
 };
 
+
+
 function Wrapped() {
-  const {address} = useAccount();
+  const { address } = useAccount();
   const provider = useProvider();
-    
+  
   const connectedChainId = useNetwork().chain?.id;
   const { openConnectModal } = useConnectModal();
   return (
