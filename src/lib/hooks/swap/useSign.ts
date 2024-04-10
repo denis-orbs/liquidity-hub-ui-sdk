@@ -63,9 +63,15 @@ export function useSignEIP712() {
       try {
         return await signAsync("eth_signTypedData_v4", message);
       } catch (e: any) {
+        console.log(e);
+        
+        if(e.message?.toLowerCase()?.includes('denied' || 'rejected'))  {
+          throw new Error('User denied signature');
+        }
         try {
           return await signAsync("eth_signTypedData", message);
         } catch (error: any) {
+          console.log(error);
           if (
             typeof error.message === "string" &&
             (error.message.match(/not (found|implemented)/i) ||

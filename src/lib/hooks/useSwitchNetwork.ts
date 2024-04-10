@@ -4,11 +4,9 @@ import { useMainContext } from "../provider";
 import { network } from "../util";
 
 export const useSwitchNetwork = () => {
-  const { web3 } = useMainContext();
+  const { provider } = useMainContext();
   return useMutation({
     mutationFn: async (chainId: number) => {
-      if (!web3) return;
-      const provider = (web3 as any).provider || web3.currentProvider;
       if (!provider) throw new Error(`no provider`);
 
       try {
@@ -17,6 +15,7 @@ export const useSwitchNetwork = () => {
           params: [{ chainId: Web3.utils.toHex(chainId) }],
         });
       } catch (error: any) {
+        alert(error.message);
         // if unknown chain, add chain
         if (error.code === 4902) {
           const info = network(chainId);

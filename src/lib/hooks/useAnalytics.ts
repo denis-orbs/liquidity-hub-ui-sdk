@@ -24,6 +24,7 @@ function useAnalytics() {
   );
 
   const { data: quote } = useQuote();
+  const {provider} = useMainContext()
 
   const quoteAmountOut = quote?.minAmountOut;
   const fromTokenUsd = quote?.inTokenUsd;
@@ -40,6 +41,7 @@ function useAnalytics() {
       tradeType: "BEST_TRADE",
       quoteAmountOut,
       dexExpectedAmountOut,
+      provider
     });
   }, [
     fromTokenUsd,
@@ -51,6 +53,7 @@ function useAnalytics() {
     slippage,
     quoteAmountOut,
     dexExpectedAmountOut,
+    provider
   ]);
 
   return {

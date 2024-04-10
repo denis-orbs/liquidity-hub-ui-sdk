@@ -219,9 +219,9 @@ const SwapModal = () => {
   const wToken = useChainConfig()?.wToken;
   const quote = useQuote().data;
 
-  const { accept, acceptedAmountOut, shouldAccept, amountToAccept } =
+  const { accept, shouldAccept, amountToAccept } =
     useAcceptedAmountOut(quote?.outAmount, quote?.minAmountOut);
-
+  
   const onWrapSuccess = useCallback(() => {
     updateStore({ fromToken: wToken });
   }, [updateStore, wToken]);
@@ -256,7 +256,7 @@ const SwapModal = () => {
       {shouldAccept ? (
         <AcceptAmountOut amountToAccept={amountToAccept} accept={accept} />
       ) : (
-        <SwapConfirmation outAmount={acceptedAmountOut}>
+        <SwapConfirmation outAmount={quote?.ui.outAmount}>
           {swapStatus === "failed" ? (
             <TryAgainButton />
           ) : (

@@ -5,7 +5,7 @@ import { QuoteResponse } from "../type";
 import { amountUi, waitForTxReceipt } from "../util";
 
 import { AnalyticsData, InitDexTrade, InitTrade } from "./types";
-const ANALYTICS_VERSION = 0.4;
+const ANALYTICS_VERSION = 0.5;
 const BI_ENDPOINT = `https://bi.orbs.network/putes/liquidity-hub-ui-${ANALYTICS_VERSION}`;
 const DEX_PRICE_BETTER_ERROR = "Dex trade is better than Clob trade";
 
@@ -17,6 +17,36 @@ const initialData: Partial<AnalyticsData> = {
   isDexTrade: false,
   version: ANALYTICS_VERSION,
 };
+
+
+const onWallet = (provider: any): Partial<AnalyticsData | undefined> => {
+  try {
+    const walletConnectName = (provider as any)?.session?.peer.metadata.name;
+
+    if (provider.isRabby) {
+      return { walletConnectName, isRabby: true };
+    }
+    if (provider.isWalletConnect) {
+      return { walletConnectName, isWalletConnect: true };
+    }
+    if (provider.isCoinbaseWallet) {
+      return { walletConnectName, isCoinbaseWallet: true };
+    }
+    if (provider.isOkxWallet) {
+      return { walletConnectName, isOkxWallet: true };
+    }
+    if (provider.isTrustWallet) {
+      return { walletConnectName, isTrustWallet: true };
+    }
+    if (provider.isMetaMask) {
+      return { walletConnectName, isMetaMask: true };
+    }
+  } catch (error) {
+    console.log("Error on wallet", error);
+  }
+};
+
+
 
 const initSwap = (args: InitTrade): Partial<AnalyticsData> | undefined => {
   const srcToken = args.fromToken;
@@ -36,7 +66,10 @@ const initSwap = (args: InitTrade): Partial<AnalyticsData> | undefined => {
     console.log(error);
   }
 
-  let srcTokenUsdValue = amountUi(args.fromToken?.decimals, BN(args.srcAmount || "0").multipliedBy(BN(args.fromTokenUsd || "0")))
+  let srcTokenUsdValue = amountUi(
+    args.fromToken?.decimals,
+    BN(args.srcAmount || "0").multipliedBy(BN(args.fromTokenUsd || "0"))
+  );
 
   const clobDexPriceDiffPercent = !args.dexMinAmountOut
     ? "0"
@@ -46,13 +79,21 @@ const initSwap = (args: InitTrade): Partial<AnalyticsData> | undefined => {
         .multipliedBy(100)
         .toFixed(2);
 
-       let  quoteAmountOutUI =  amountUi(dstToken.decimals, new BN(args.quoteAmountOut || '0'))
-      const quoteAmountOutUsd =  BN(quoteAmountOutUI || "0").multipliedBy(BN(args.toTokenUsd || "0")).toNumber()
-
+  let quoteAmountOutUI = amountUi(
+    dstToken.decimals,
+    new BN(args.quoteAmountOut || "0")
+  );
+  const quoteAmountOutUsd = BN(quoteAmountOutUI || "0")
+    .multipliedBy(BN(args.toTokenUsd || "0"))
+    .toNumber();
+    const wallet = onWallet(args.provider) || {}
   return {
     clobDexPriceDiffPercent,
     dexMinAmountOut: args.dexMinAmountOut || "0",
-    dexMinAmountOutUI: amountUi(dstToken.decimals, new BN(args.dexMinAmountOut || "0")),
+    dexMinAmountOutUI: amountUi(
+      dstToken.decimals,
+      new BN(args.dexMinAmountOut || "0")
+    ),
     dexExpectedAmountOut: args.dexExpectedAmountOut || "0",
     dexExpectedAmountOutUI: amountUi(
       dstToken.decimals,
@@ -75,7 +116,8 @@ const initSwap = (args: InitTrade): Partial<AnalyticsData> | undefined => {
     tradeType: args.tradeType,
     quoteAmountOut: args.quoteAmountOut,
     quoteAmountOutUI,
-    quoteAmountOutUsd
+    quoteAmountOutUsd,
+    ...wallet
   };
 };
 
@@ -114,7 +156,11 @@ export class Analytics {
       console.error("Missng chain or partner");
       return;
     }
-    this.data = { ...this.data, ...values, sessionId: useGlobalStore.getState().sessionId };
+    this.data = {
+      ...this.data,
+      ...values,
+      sessionId: useGlobalStore.getState().sessionId,
+    };
     clearTimeout(this.timeout);
     this.timeout = setTimeout(() => {
       sendBI(this.data);
@@ -266,15 +312,15 @@ export class Analytics {
   }
 
   clearState() {
-   setTimeout(() => {
-    this.data = {
-      ...initialData,
-      partner: this.data.partner,
-      chainId: this.data.chainId,
-      _id: crypto.randomUUID(),
-      firstFailureSessionId: this.firstFailureSessionId,
-    };
-   }, 1_000);
+    setTimeout(() => {
+      this.data = {
+        ...initialData,
+        partner: this.data.partner,
+        chainId: this.data.chainId,
+        _id: crypto.randomUUID(),
+        firstFailureSessionId: this.firstFailureSessionId,
+      };
+    }, 1_000);
   }
 
   async onClobOnChainSwapSuccess() {

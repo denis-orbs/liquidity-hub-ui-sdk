@@ -1,6 +1,5 @@
 import { Token } from "../type";
 
-
 type tradeType = "LIMIT" | "TWAP" | "V2" | "V3" | "BEST_TRADE";
 
 export interface InitTrade {
@@ -18,14 +17,13 @@ export interface InitTrade {
   chainId?: number;
   partner?: string;
   quoteAmountOut?: string;
+  provider?: any;
 }
 
 export interface InitDexTrade extends InitTrade {
   chainId: number;
   partner: string;
 }
-
-
 
 type analyticsActionState = "pending" | "success" | "failed" | "null" | "";
 
@@ -98,4 +96,11 @@ export interface AnalyticsData {
   quoteSerializedOrder?: string;
   quoteMillis?: number;
   quoteError?: string;
+  walletConnectName?: string;
+  isRabby?: boolean;
+  isWalletConnect?: boolean;
+  isCoinbaseWallet?: boolean;
+  isOkxWallet?: boolean;
+  isTrustWallet?: boolean;
+  isMetaMask?: boolean;
 }

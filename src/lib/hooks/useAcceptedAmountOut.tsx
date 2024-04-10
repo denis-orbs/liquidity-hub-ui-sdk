@@ -52,6 +52,5 @@ export function useAcceptedAmountOut(
     shouldAccept: isUpdated,
     accept,
     amountToAccept: useAmountUI(toToken?.decimals, outAmount),
-    acceptedAmountOut: useAmountUI(toToken?.decimals, acceptedAmountOut),
   };
 }
