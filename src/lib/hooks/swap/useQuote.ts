@@ -23,11 +23,13 @@ import { swapAnalytics } from "../../analytics";
 import BN from "bignumber.js";
 import _ from "lodash";
 import { useHandleTokenAddresses } from "../useHandleTokenAddresses";
+import { useSlippage } from "./useSlippage";
 
 export const useQuote = () => {
   const store = useSwapState();
   const wTokenAddress = useChainConfig()?.wToken?.address;
   const context = useMainContext();
+  const slippage = useSlippage()
   const apiUrl = useApiUrl();
   const disabled = useIsDisabled();
   const { sessionId, setSessionId } = useGlobalStore();
@@ -61,7 +63,7 @@ export const useQuote = () => {
       fromAddress,
       toAddress,
       store.fromAmount,
-      context.slippage,
+      slippage,
       apiUrl,
       chainId,
     ],
@@ -82,7 +84,7 @@ export const useQuote = () => {
               ? store.dexMinAmountOut
               : "0",
             user: context.account || zeroAddress,
-            slippage: context.slippage,
+            slippage,
             qs: encodeURIComponent(
               window.location.hash || window.location.search
             ),

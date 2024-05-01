@@ -55,6 +55,7 @@ import {
   useShowConfirmationButton,
   useFromTokenPanel,
   useToTokenPanel,
+  useDexLH,
 } from "./hooks";
 import _ from "lodash";
 import { useOnSwapSuccessCallback } from "./hooks/useOnSwapSuccessCallback";
@@ -552,6 +553,7 @@ export interface Props extends ProviderArgs {
 
 export const Widget = (props: Props) => {
   const { UIconfig, ...rest } = props;
+ 
   return (
     <LiquidityHubProvider {...rest}>
       <ThemeProvider theme={theme}>
@@ -573,7 +575,6 @@ export const Widget = (props: Props) => {
 
 const Watcher = (props: Props) => {
   useInitialTokens(props.initialFromToken, props.initialToToken);
-
   return null;
 };
 

@@ -46,7 +46,6 @@ function Wrapped() {
       chainId={connectedChainId}
       partner="playground"
       account={address}
-      slippage={"0.5"}
       initialFromToken="USDT"
       supportedChains={_.map(supportedChains, "chainId")}
       UIconfig={{

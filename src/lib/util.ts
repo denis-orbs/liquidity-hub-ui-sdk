@@ -109,14 +109,6 @@ export const counter = () => {
   };
 };
 
-export const addSlippage = (amount?: string, slippage?: number) => {
-  if (!amount) return "";
-  if (!slippage) return amount;
-  return new BigNumber(amount)
-    .times(100 + slippage)
-    .div(100)
-    .toString();
-};
 
 export const shouldReturnZeroOutAmount = (error: string) => {
   return Object.values(QUOTE_ERRORS).includes(error);

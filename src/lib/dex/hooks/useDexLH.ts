@@ -11,5 +11,6 @@ export const useDexLH = () => {
     toToken: store.toToken,
     fromAmount: store.fromAmount,
     debounceFromAmountMillis: 300,
+    slippage: 0.5
   });
 };

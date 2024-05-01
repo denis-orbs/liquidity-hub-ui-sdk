@@ -64,7 +64,7 @@ type TokenUsd = string | number | undefined;
 
 export interface ProviderArgs {
   supportedChains: number[];
-  slippage?: any;
+  slippage?: number;
   provider?: any;
   account?: string;
   chainId?: number;

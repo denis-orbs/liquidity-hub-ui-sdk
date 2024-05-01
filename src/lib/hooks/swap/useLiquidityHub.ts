@@ -54,7 +54,7 @@ const useQuoteDelay = (
     quoteEnabled,
     updateState,
     fromAmount,
-    lhControl
+    lhControl,
   ]);
 };
 
@@ -108,13 +108,14 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
   const dexMinAmountOut = useDexMinAmountOutWei(args);
   const dexExpectedAmountOut = useDexExpectedAmountOutWei(args);
   useQuoteDelay(fromAmount, dexExpectedAmountOut, args.quoteDelayMillis);
+
   useEffect(() => {
     updateState({
       dexMinAmountOut,
       dexExpectedAmountOut,
       disabledByDex: args.disabled,
+      slippage: args.slippage,
     });
-    // we dont want the dex to reset after success
     if (!showConfirmation) {
       updateState({
         fromAmount,
@@ -124,13 +125,14 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     }
   }, [
     updateState,
-    fromAmount,
     dexMinAmountOut,
     dexExpectedAmountOut,
+    args.disabled,
+    args.slippage,
+    showConfirmation,
+    fromAmount,
     args.fromToken?.address,
     args.toToken?.address,
-    args.disabled,
-    showConfirmation,
   ]);
 
   const quote = useQuote();

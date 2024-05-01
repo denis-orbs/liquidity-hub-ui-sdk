@@ -4,9 +4,10 @@ import { swapAnalytics } from "../analytics";
 import { useMainContext } from "../provider";
 import { useSwapState } from "../store/main";
 import { useQuote } from "./swap/useQuote";
+import { useSlippage } from "./swap/useSlippage";
 
 function useAnalytics() {
-  const slippage = useMainContext().slippage;
+  const slippage = useSlippage();
   const {
     fromToken,
     toToken,

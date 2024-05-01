@@ -14,7 +14,6 @@ import Web3 from "web3";
 import { swapAnalytics } from "./analytics";
 import { useSwapState } from "./store/main";
 import { useShallow } from "zustand/react/shallow";
-import BN from "bignumber.js";
 import { useDexState } from "./store/dex";
 import { useLhControllListener } from "./hooks/useLhControllListener";
 import { ForceIndicator } from "./components/ForceIndicator";
@@ -46,15 +45,12 @@ export const LiquidityHubProvider = ({
   apiUrl,
   supportedChains,
   theme,
-  slippage: _slippage,
+  slippage,
   maxFailures,
   connectWallet,
   getTokens,
 }: Props) => {
-  const slippage = useMemo(() => {
-    if (!_slippage) return 0;
-    return BN(_slippage).isNaN() ? 0 : Number(_slippage);
-  }, [_slippage]);
+
 
   const reset = useSwapState(useShallow((s) => s.reset));
   const resetDex = useDexState(useShallow((s) => s.reset));
@@ -64,8 +60,6 @@ export const LiquidityHubProvider = ({
     }
     return darkTheme;
   }, [theme]);
-
-  
 
   const web3 = useMemo(
     () => (provider ? new Web3(provider) : undefined),
