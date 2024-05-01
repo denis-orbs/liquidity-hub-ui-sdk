@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useAllowance } from "./useAllowance";
 import { useQuote } from "./useQuote";
 import BN from "bignumber.js";
 import { useLiquidityHubPersistedStore, useSwapState } from "../../store/main";
 import { LH_CONTROL, UseLiquidityHubArgs } from "../../type";
-import { amountBN, Logger } from "../../util";
+import { Logger } from "../../util";
 import { useShallow } from "zustand/react/shallow";
 import _ from "lodash";
 import useAnalytics from "../useAnalytics";
@@ -58,35 +58,6 @@ const useQuoteDelay = (
   ]);
 };
 
-const useDexMinAmountOutWei = (args: UseLiquidityHubArgs) => {
-  return useMemo(() => {
-    if ((!args.minAmountOut && !args.minAmountOutUI) || !args.toToken) {
-      return undefined;
-    }
-    const value = args.minAmountOut
-      ? args.minAmountOut
-      : amountBN(args.toToken.decimals, args.minAmountOutUI || "0").toString();
-    return BN(value).decimalPlaces(0).toString();
-  }, [args.minAmountOutUI, args.minAmountOutUI, args.toToken]);
-};
-
-const useDexExpectedAmountOutWei = (args: UseLiquidityHubArgs) => {
-  return useMemo(() => {
-    if (
-      (!args.expectedAmountOut && !args.expectedAmountOutUI) ||
-      !args.toToken
-    ) {
-      return undefined;
-    }
-    const value = args.expectedAmountOut
-      ? args.expectedAmountOut
-      : amountBN(
-          args.toToken.decimals,
-          args.expectedAmountOutUI || "0"
-        ).toString();
-    return BN(value).decimalPlaces(0).toString();
-  }, [args.expectedAmountOutUI, args.expectedAmountOutUI, args.toToken]);
-};
 
 export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
   const { swapStatus, swapError, updateState, showConfirmation } = useSwapState(
@@ -102,17 +73,15 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
   const fromAmount = useDebounce(
     _fromAmount,
     _.isUndefined(args.debounceFromAmountMillis)
-      ? 3_00
+      ? 2_00
       : args.debounceFromAmountMillis
   );
-  const dexMinAmountOut = useDexMinAmountOutWei(args);
-  const dexExpectedAmountOut = useDexExpectedAmountOutWei(args);
-  useQuoteDelay(fromAmount, dexExpectedAmountOut, args.quoteDelayMillis);
+  useQuoteDelay(fromAmount, args.expectedAmountOut, args.quoteDelayMillis);
 
   useEffect(() => {
     updateState({
-      dexMinAmountOut,
-      dexExpectedAmountOut,
+      dexMinAmountOut: args.minAmountOut,
+      dexExpectedAmountOut:args.expectedAmountOut,
       disabledByDex: args.disabled,
       slippage: args.slippage,
     });
@@ -125,8 +94,8 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     }
   }, [
     updateState,
-    dexMinAmountOut,
-    dexExpectedAmountOut,
+    args.minAmountOut,
+    args.expectedAmountOut,
     args.disabled,
     args.slippage,
     showConfirmation,

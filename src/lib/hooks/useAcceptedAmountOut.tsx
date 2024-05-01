@@ -17,8 +17,6 @@ export function useAcceptedAmountOut(
     }))
   );
 
-  console.log({toToken});
-  
   const accept = useCallback(() => {
     setIsUpdated(false);
     setAcceptedAmountOut(outAmount);
@@ -33,10 +31,10 @@ export function useAcceptedAmountOut(
     if (BN(outAmount).gte(BN(acceptedAmountOut))) {
       return;
     }
-    const amountOutIsLowerThanMinAmountOut = BN(outAmount).isLessThan(
-      BN(minAmountOut)
-    );
-    if (amountOutIsLowerThanMinAmountOut) {
+
+    // price changed, and outAmount minus slippage is less than minAmountOut
+
+    if (BN(outAmount).isLessThan(BN(minAmountOut))) {
       setIsUpdated(true);
     }
   }, [

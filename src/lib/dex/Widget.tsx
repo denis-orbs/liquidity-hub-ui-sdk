@@ -55,7 +55,6 @@ import {
   useShowConfirmationButton,
   useFromTokenPanel,
   useToTokenPanel,
-  useDexLH,
 } from "./hooks";
 import _ from "lodash";
 import { useOnSwapSuccessCallback } from "./hooks/useOnSwapSuccessCallback";

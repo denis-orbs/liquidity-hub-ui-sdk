@@ -3,7 +3,7 @@ import { useLiquidityHubPersistedStore } from "../../store/main";
 import { LH_CONTROL, TradeOwner } from "../../type";
 import { useMemo } from "react";
 import { useIsDisabled } from "../useIsDisabled";
-export const useSwapOwner = (
+export const useSwapRoute = (
   lhAmountOut?: string,
   dexAmountOut?: string,
 ): TradeOwner | undefined => {

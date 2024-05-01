@@ -116,16 +116,17 @@ export const useSubmitSwap = (onWrapSuccess?: () => void) => {
         Logger("Swap success");
         return txHash;
       } catch (error: any) {
-        onSwapError(error.message, isWrapped);
-        swapAnalytics.onClobFailure();
+        let message = "";
 
-        if (isWrapped) {
-          // handle error happened after wrap
-        }
+        swapAnalytics.onClobFailure();
         if (props?.hasFallback) {
           onCloseSwap();
         }
         Logger(`Swap error: ${error.message}`);
+        if (isWrapped) {
+          message = `${chainConfig?.native.symbol} has been wrapped to ${chainConfig?.wToken?.symbol}`;
+        }
+        onSwapError(message);
         throw error;
       } finally {
         if (isWrapped) {

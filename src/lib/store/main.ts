@@ -27,7 +27,6 @@ interface SwapStateValues {
   isSigned?: boolean;
   disabledByDex?: boolean;
   quoteEnabled?: boolean;
-  isWrapped?: boolean;
   swapConfirmationOutAmount?: string;
   swapConfirmationOutAmountUsd?: string;
   slippage?: number;
@@ -35,7 +34,7 @@ interface SwapStateValues {
 
 interface SwapState extends SwapStateValues {
   updateState: (state: Partial<SwapState>) => void;
-  onSwapError: (error: string, isWrapped: boolean) => void;
+  onSwapError: (error: string) => void;
   onSwapSuccess: (quote?: QuoteResponse) => void;
   onSwapStart: () => void;
   onCloseSwap: () => void;
@@ -59,16 +58,13 @@ const initialSwapState: SwapStateValues = {
   isSigned: false,
   disabledByDex: false,
   quoteEnabled: false,
-  isWrapped: false,
   slippage: undefined,
 };
 
 export const useSwapState = create<SwapState>((set, get) => ({
   ...initialSwapState,
   onSwapStart: () => set({ swapStatus: "loading" }),
-  updateState: (state) => {
-    console.log({state});
-    
+  updateState: (state) => {    
     set({ ...state })
   },
 
@@ -78,14 +74,13 @@ export const useSwapState = create<SwapState>((set, get) => ({
       swapStatus: "success",
     });
   },
-  onSwapError: (swapError, isWrapped) =>
+  onSwapError: (swapError) =>
     set((s) => {
       const failures = (s.failures || 0) + 1;
       return {
         failures,
         swapError,
         swapStatus: "failed",
-        isWrapped,
       };
     }),
   onCloseSwap: () => {
@@ -99,15 +94,14 @@ export const useSwapState = create<SwapState>((set, get) => ({
           swapStatus: undefined,
           swapError: undefined,
           currentStep: undefined,
-          isWrapped: false,
         });
-      }, 200);
+      }, 3_00);
     }
 
     if (get().swapStatus === "success") {
       setTimeout(() => {
         get().reset();
-      }, 200);
+      }, 3_00);
     }
   },
   reset: () => set({ ...initialSwapState }),

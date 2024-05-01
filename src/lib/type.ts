@@ -176,9 +176,7 @@ export type UseLiquidityHubArgs = {
   toToken?: Token;
   fromAmount?: string;
   minAmountOut?: string;
-  minAmountOutUI?: string;
   expectedAmountOut?: string;
-  expectedAmountOutUI?: string;
   slippage?: number;
   disabled?: boolean;
   debounceFromAmountMillis?: number;

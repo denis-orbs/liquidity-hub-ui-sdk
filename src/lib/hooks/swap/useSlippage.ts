@@ -6,9 +6,7 @@ import BN from "bignumber.js";
 
 export function useSlippage() {
   const contextSlippage = useMainContext().slippage;
-  const storeSlippage = useSwapState(useShallow((s) => s.slippage));
-    console.log({storeSlippage});
-    
+  const storeSlippage = useSwapState(useShallow((s) => s.slippage));    
   const slippage = storeSlippage || contextSlippage
     
   return useMemo(() => {

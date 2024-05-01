@@ -28,6 +28,8 @@ export const useSign = () => {
         updateState({ isSigned: true });
         return signature;
       } catch (error) {
+        console.log(error, 'hello');
+        
         swapAnalytics.onSignatureFailed((error as any).message, count());
         throw error;
       }

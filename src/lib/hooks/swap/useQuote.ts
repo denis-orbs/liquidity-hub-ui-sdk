@@ -117,6 +117,7 @@ export const useQuote = () => {
           quote?.permitData.values.witness.outputs[1].endAmount.hex,
           16
         );
+        
         const gasCostOutputToken = parseInt(
           quote?.permitData.values.witness.outputs[0].startAmount.hex,
           16
