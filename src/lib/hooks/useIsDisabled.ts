@@ -3,16 +3,15 @@ import { useMainContext } from "../provider";
 import { useLiquidityHubPersistedStore, useSwapState } from "../store/main";
 import { useIsInvalidChain } from "./useIsInvalidChain";
 
-export function useIsDisabled() {
+export function useIsDisabled(disabledByDex?: boolean) {
   const maxFailures = useMainContext().maxFailures;
   const invalidChain = useIsInvalidChain();
   const liquidityHubEnabled = useLiquidityHubPersistedStore(
     (s) => s.liquidityHubEnabled
   );
-  const { failures, disabledByDex } = useSwapState(
+  const { failures } = useSwapState(
     useShallow((s) => ({
       failures: s.failures,
-      disabledByDex: s.disabledByDex,
     }))
   );
 

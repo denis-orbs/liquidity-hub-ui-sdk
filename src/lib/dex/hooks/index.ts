@@ -1,9 +1,10 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useQuote } from "../../hooks/swap/useQuote";
-import { useUsdAmounts } from "../../hooks/useSwapDetails";
+import { useInTokenUsdAmount, useTokenUsdAmount, useUsdAmounts } from "../../hooks/useSwapDetails";
 import { useDexState } from "../../store/dex";
 import { useDexLH } from "./useDexLH";
+import { usePriceUsd } from "./usePriceUsd";
 import { useTokenListBalance } from "./useTokenListBalance";
 import { useTokenListBalances } from "./useTokenListBalances";
 
@@ -74,8 +75,10 @@ export function useFromTokenPanel() {
   }));
 
   const { balance } = useTokenListBalance(token?.address);
-  const {isLoading } = useQuote();
-  const usd = useUsdAmounts().inTokenUsdAmount
+  const usd = usePriceUsd({address: token?.address}).data
+  const usdAmount = useMemo(() => {
+    return  BN(amount || "0").multipliedBy(usd || "0")
+  }, [second])
   return {
     token,
     amount,
@@ -83,7 +86,7 @@ export function useFromTokenPanel() {
     onChange,
     balance,
     usd,
-    usdLoading: isLoading,
+    usdLoading: false,
   };
 }
 

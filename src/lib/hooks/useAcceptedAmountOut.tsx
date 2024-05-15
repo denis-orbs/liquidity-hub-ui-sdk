@@ -3,17 +3,18 @@ import BN from "bignumber.js";
 import { useSwapState } from "../store/main";
 import { useShallow } from "zustand/react/shallow";
 import { useAmountUI } from "./useAmountUI";
+import { Token } from "../type";
 
 export function useAcceptedAmountOut(
   outAmount?: string,
-  minAmountOut?: string
+  minAmountOut?: string,
+  toToken?: Token
 ) {
   const [isUpdated, setIsUpdated] = useState(false);
   const [acceptedAmountOut, setAcceptedAmountOut] = useState(outAmount);
-  const { showConfirmation, toToken } = useSwapState(
+  const { showConfirmation } = useSwapState(
     useShallow((s) => ({
       showConfirmation: s.showConfirmation,
-      toToken: s.toToken,
     }))
   );
 

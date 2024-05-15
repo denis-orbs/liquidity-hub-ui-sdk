@@ -5,30 +5,30 @@ import { SwapSuccess } from "./SwapSuccess";
 import { SwapFailed } from "./SwapFailed";
 import { SwapMain } from "./SwapMain";
 import { ReactNode} from "react";
+import { SwapConfirmationProps } from "../../type";
 
-interface Props {
+interface Props extends SwapConfirmationProps {
   className?: string;
   style?: CSSObject;
   children?: ReactNode;
-  outAmount?: string;
 }
 
 export const SwapConfirmation = ({
   className = "",
   style = {},
   children,
-  outAmount: _outAmount,
+  ...rest
 }: Props) => {
   const swapStatus = useSwapState(useShallow((s) => s.swapStatus));
 
   return (
     <Container className={`${className} lh-summary`} $style={style}>
       {swapStatus === "success" ? (
-        <SwapSuccess  />
+        <SwapSuccess {...rest} />
       ) : swapStatus === "failed" ? (
         <SwapFailed children={children} />
       ) : (
-        <SwapMain  children={children} />
+        <SwapMain {...rest} children={children} />
       )}
     </Container>
   );

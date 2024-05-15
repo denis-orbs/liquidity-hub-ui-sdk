@@ -1,16 +1,19 @@
 import { FlexColumn, FlexRow } from "../../base-styles";
-import { Token } from "../../type";
+import { SwapConfirmationProps, Token } from "../../type";
 import styled from "styled-components";
 import { Logo } from "../Logo";
 import { Text } from "../Text";
 import { Separator } from "./Components";
-import { useFormatNumber, useSwapConfirmation } from "../../hooks";
+import { useFormatNumber } from "../../hooks";
 import SuccessImg from "../../assets/okay.png";
 import { ExplorerLink } from "../ExplorerLink";
 
-export const SwapSuccess = () => {
-  const { fromToken, toToken, fromAmount, outAmount } = useSwapConfirmation()
-
+export const SwapSuccess = ({
+  fromToken,
+  toToken,
+  fromAmount,
+  outAmount,
+}: SwapConfirmationProps) => {
   return (
     <StyledSuccess className="lh-success">
       <StyledTop>
@@ -28,7 +31,7 @@ export const SwapSuccess = () => {
         <Separator />
         <SuccessToken token={toToken} amount={outAmount} />
       </StyledTokensContainer>
-      <ExplorerLink styles={{marginTop: 50}} />
+      <ExplorerLink styles={{ marginTop: 50 }} />
     </StyledSuccess>
   );
 };
@@ -60,9 +63,6 @@ const StyledTokensContainer = styled(FlexColumn)`
   align-items: center;
   gap: 30px;
 `;
-
-
-
 
 const StyledLogo = styled(Logo)`
   width: 40px;

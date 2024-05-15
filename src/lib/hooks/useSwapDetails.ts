@@ -2,27 +2,48 @@ import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useSwapState } from "../store/main";
 import { amountUi, estimateGasPrice } from "../util";
-import { useQuote } from "./swap";
 import BN from "bignumber.js";
 import { QUERY_KEYS } from "../config/consts";
 import { useMainContext } from "../provider";
 import { useQuery } from "@tanstack/react-query";
-import { useAmountUI } from "./useAmountUI";
+import { Token } from "../type";
 
-export function useUsdAmounts() {
-  const outAmount = useQuote().data?.outAmount;
 
-  const { fromToken, fromAmount, inTokenUsd, toToken, outTokenUsd } =
-    useSwapState(
-      useShallow((s) => ({
-        fromToken: s.fromToken,
-        fromAmount: s.fromAmount,
-        inTokenUsd: s.inTokenUsd,
-        toToken: s.toToken,
-        outTokenUsd: s.outTokenUsd,
-      }))
-    );
+export function useTokenUsdAmount({
+    token,
+    amount,
+    usd,
 
+  }: {
+    token?: Token;
+    amount?: string;
+    usd?: string | number;
+
+  }) {
+    return useMemo(() => {
+      return amountUi(
+        token?.decimals,
+        BN(amount || "0").multipliedBy(usd || "0")
+      )
+    }, [token, amount, usd]);
+  }
+
+
+export function useUsdAmounts({
+  fromToken,
+  fromAmount,
+  inTokenUsd,
+  toToken,
+  outTokenUsd,
+  outAmount,
+}: {
+  fromToken?: Token;
+  fromAmount?: string;
+  inTokenUsd?: string;
+  toToken?: Token;
+  outTokenUsd?: string;
+  outAmount?: string;
+}) {
   return useMemo(() => {
     return {
       inTokenUsdAmount: amountUi(
@@ -37,11 +58,17 @@ export function useUsdAmounts() {
   }, [fromToken, fromAmount, inTokenUsd, toToken, outAmount, outTokenUsd]);
 }
 
-export function usePriceImpact() {
-  const { inTokenUsdAmount, outTokenUsdAmount } = useUsdAmounts();
-
+export function usePriceImpact({
+  inTokenUsdAmount,
+  outTokenUsdAmount,
+}: {
+  inTokenUsdAmount?: string;
+  outTokenUsdAmount?: string;
+}) {
   return useMemo(() => {
     if (
+      !outTokenUsdAmount ||
+      !inTokenUsdAmount ||
       BN(outTokenUsdAmount || "0").isZero() ||
       BN(inTokenUsdAmount || "0").isZero()
     )
@@ -54,10 +81,7 @@ export function usePriceImpact() {
   }, [inTokenUsdAmount, outTokenUsdAmount]);
 }
 
-export function useGasCostUsd() {
-  const outTokenUsd = useSwapState(useShallow((s) => s.outTokenUsd));
-  const gasCostOutputToken = useQuote().data?.gasCostOutputToken;
-  const toToken = useSwapState(useShallow((s) => s.toToken));
+export function useGasCostUsd({outTokenUsd, toToken, gasCostOutputToken}:{outTokenUsd?: string, toToken?: Token, gasCostOutputToken?: string}) {
   return useMemo(() => {
     if (!gasCostOutputToken || !outTokenUsd) return;
     return amountUi(
@@ -101,13 +125,10 @@ export function useSlippage() {
 export const useSwapConfirmation = () => {
   const store = useSwapState(
     useShallow((s) => ({
-      fromToken: s.fromToken,
-      toToken: s.toToken,
       txHash: s.txHash,
       swapStatus: s.swapStatus,
       swapError: s.swapError,
       showConfirmation: s.showConfirmation,
-      fromAmount: s.fromAmount,
       disableLh: s.disableLh,
       onCloseSwap: s.onCloseSwap,
     }))
@@ -122,22 +143,14 @@ export const useSwapConfirmation = () => {
     }
     return "Review Swap";
   }, [store.swapStatus]);
-  const fromAmountUI = useAmountUI(store.fromToken?.decimals, store.fromAmount);
-  const outAmount = useAmountUI(
-    store.toToken?.decimals,
-    useQuote().data?.outAmount
-  );
+
 
   return {
-    fromToken: store.fromToken,
-    toToken: store.toToken,
-    fromAmount: fromAmountUI,
     txHash: store.txHash,
     swapStatus: store.swapStatus,
     swapError: store.swapError,
     isOpen: !!store.showConfirmation,
     onClose: store.onCloseSwap,
     title,
-    outAmount,
   };
 };

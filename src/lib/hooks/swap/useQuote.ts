@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMainContext } from "../../provider";
-import { QuoteResponse } from "../../type";
+import { QuoteResponse, Token } from "../../type";
 import { useGlobalStore, useSwapState } from "../../store/main";
 import {
   EMPTY_QUOTE_RESPONSE,
@@ -25,22 +25,34 @@ import _ from "lodash";
 import { useHandleTokenAddresses } from "../useHandleTokenAddresses";
 import { useSlippage } from "..";
 
-export const useQuote = () => {
+export const useQuote = ({
+  fromToken,
+  toToken,
+  fromAmount,
+  dexMinAmountOut,
+  disabledByDex
+}: {
+  fromToken?: Token;
+  toToken?: Token;
+  fromAmount?: string;
+  dexMinAmountOut?: string;
+  disabledByDex?: boolean;
+}) => {
   const store = useSwapState();
   const wTokenAddress = useChainConfig()?.wToken?.address;
   const context = useMainContext();
   const slippage = useSlippage()
   const apiUrl = useApiUrl();
-  const disabled = useIsDisabled();
+  const disabled = useIsDisabled(disabledByDex);
   const { sessionId, setSessionId } = useGlobalStore();
   const { fromAddress, toAddress } = useHandleTokenAddresses(
-    store.fromToken,
-    store.toToken
+    fromToken,
+    toToken
   );
 
   const isUnwrap =
-    eqIgnoreCase(wTokenAddress || "", store.fromToken?.address || "") &&
-    isNativeAddress(store.toToken?.address || "");
+    eqIgnoreCase(wTokenAddress || "", fromToken?.address || "") &&
+    isNativeAddress(toToken?.address || "");
 
   const chainId = context.chainId || _.first(context.supportedChains);
 
@@ -48,11 +60,11 @@ export const useQuote = () => {
     !isUnwrap &&
     !!context.partner &&
     !!chainId &&
-    !!store.fromToken &&
-    !!store.toToken &&
-    !!store.fromAmount &&
-    BN(store.fromAmount || "0").gt(0) &&
-    store.fromAmount !== "0" &&
+    !!fromToken &&
+    !!toToken &&
+    !!fromAmount &&
+    BN(fromAmount || "0").gt(0) &&
+    fromAmount !== "0" &&
     !!apiUrl &&
     !disabled &&
     store.quoteEnabled;
@@ -60,7 +72,7 @@ export const useQuote = () => {
       QUERY_KEYS.QUOTE,
       fromAddress,
       toAddress,
-      store.fromAmount,
+      fromAmount,
       slippage,
       apiUrl,
       chainId,
@@ -78,11 +90,11 @@ export const useQuote = () => {
           body: JSON.stringify({
             inToken: fromAddress,
             outToken: toAddress,
-            inAmount: store.fromAmount,
-            outAmount: !store.dexMinAmountOut || BN(store.dexMinAmountOut || '0').isZero() 
+            inAmount: fromAmount,
+            outAmount: !dexMinAmountOut || BN(dexMinAmountOut || '0').isZero() 
               ? "-1"
-              : new BN(store.dexMinAmountOut).gt(0)
-              ? store.dexMinAmountOut
+              : new BN(dexMinAmountOut).gt(0)
+              ? dexMinAmountOut
               : "0",
             user: context.account || zeroAddress,
             slippage,
@@ -110,7 +122,7 @@ export const useQuote = () => {
         swapAnalytics.onQuoteSuccess(count(), quote);
 
         const outAmountUI = amountUi(
-          store.toToken?.decimals,
+          toToken?.decimals,
           new BN(quote.outAmount)
         );
 
@@ -128,20 +140,20 @@ export const useQuote = () => {
         const ui = {
           outAmount: outAmountUI,
           minAmountOut: amountUi(
-            store.toToken?.decimals,
+            toToken?.decimals,
             BN(minAmountOut || 0)
           ),
           gasCostOutputToken: amountUi(
-            store.toToken?.decimals,
+            toToken?.decimals,
             BN(gasCostOutputToken)
           ),
         };
 
         Logger({
-          fromAmount: store.fromAmount,
+          fromAmount: fromAmount,
           fromAddress,
           toAddress,
-          dexMinAmountOut: store.dexMinAmountOut,
+          dexMinAmountOut: dexMinAmountOut,
           quote,
           minAmountOut,
           gasCostOutputToken,

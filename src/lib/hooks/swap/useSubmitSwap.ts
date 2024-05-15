@@ -2,7 +2,6 @@ import { useGlobalStore, useSwapState } from "../../store/main";
 import { useCallback } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { swapAnalytics } from "../../analytics";
-import { useAllowance } from "./useAllowance";
 import { useApprove } from "./useApprove";
 import { useChainConfig } from "../useChainConfig";
 import { useSwapX } from "./useSwapX";
@@ -11,31 +10,40 @@ import { useWrap } from "./useWrap";
 import { amountUi, isNativeAddress, Logger } from "../../util";
 import BN from "bignumber.js";
 import { zeroAddress } from "../../config/consts";
-import { useOrders } from "../useOrders";
-import { useQuote } from "./useQuote";
+import { AddOrderArgs, QuoteResponse, Token } from "../../type";
 
-export const useSubmitSwap = (onWrapSuccess?: () => void) => {
+export const useSubmitSwap = ({
+  onWrapSuccess,
+  fromAmount,
+  fromToken,
+  toToken,
+  quote,
+  approved,
+  addOrder
+}:{
+  onWrapSuccess?: () => void,
+  fromAmount?: string
+  fromToken?: Token
+  toToken?: Token,
+  quote?: QuoteResponse,
+  approved?: boolean,
+  addOrder: (args: AddOrderArgs) =>  void
+}) => {
   const {
     onSwapSuccess,
     onSwapError,
     onSwapStart,
     onCloseSwap,
-    fromAmount,
-    fromToken,
-    toToken,
   } = useSwapState(
     useShallow((store) => ({
       onSwapSuccess: store.onSwapSuccess,
       onSwapError: store.onSwapError,
       onSwapStart: store.onSwapStart,
       onCloseSwap: store.onCloseSwap,
-      fromAmount: store.fromAmount,
-      fromToken: store.fromToken,
-      toToken: store.toToken,
+
     }))
   );
 
-  const { data: quote } = useQuote();
   const approve = useApprove();
   const wrap = useWrap(fromToken);
   const sign = useSign();
@@ -43,10 +51,7 @@ export const useSubmitSwap = (onWrapSuccess?: () => void) => {
   const chainConfig = useChainConfig();
   const wTokenAddress = chainConfig?.wToken?.address;
   const explorerUrl = chainConfig?.explorerUrl;
-  const addOrder = useOrders().addOrder;
   const setSessionId = useGlobalStore().setSessionId;
-
-  const { data: approved } = useAllowance();
 
   return useCallback(
     async (props?: {

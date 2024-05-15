@@ -3,19 +3,22 @@ import BN from "bignumber.js";
 import { FlexColumn, FlexRow } from "../../base-styles";
 import { useFormatNumber } from "../../hooks/useFormatNumber";
 import { Logo } from "../Logo";
-import { Token } from "../../type";
+import { SwapConfirmationProps, Token } from "../../type";
 import { Text } from "../Text";
 import { Separator } from "./Components";
-import { useSwapConfirmation, useUsdAmounts } from "../../hooks/useSwapDetails";
 const StyledSwapDetails = styled(FlexColumn)`
   width: 100%;
   gap: 15px;
 `;
 
-export function SwapDetails() {
-  const { fromToken, fromAmount, toToken, outAmount } = useSwapConfirmation();
-  const {inTokenUsdAmount, outTokenUsdAmount} = useUsdAmounts()
-
+export function SwapDetails({
+  fromToken,
+  fromAmount,
+  toToken,
+  outAmount,
+  inTokenUsdAmount,
+  outTokenUsdAmount,
+}: SwapConfirmationProps) {
   return (
     <StyledSwapDetails className="lh-details">
       <TokenDisplay

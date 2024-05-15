@@ -178,7 +178,6 @@ export type UseLiquidityHubArgs = {
   outTokenUsd?: string | number;
 };
 
-
 export type TradeOwner = "dex" | "lh";
 
 export type AddOrderArgs = {
@@ -218,10 +217,17 @@ export interface Network {
 export type Abi = AbiItem[];
 export type Balances = { [key: string]: string };
 
-
 export declare type PermitData = {
   domain: TypedDataDomain;
   types: Record<string, TypedDataField[]>;
   values: any;
 };
 
+export interface SwapConfirmationProps {
+  fromToken?: Token;
+  fromAmount?: string;
+  toToken?: Token;
+  outAmount?: string;
+  inTokenUsdAmount?: string;
+  outTokenUsdAmount?: string;
+}

@@ -2,13 +2,14 @@ import { useCallback, useMemo } from "react";
 import { useMainContext } from "../provider";
 import { useOrdersStore } from "../store/main";
 import { AddOrderArgs, Order } from "../type";
-import { useUsdAmounts } from "./useSwapDetails";
 
-export const useOrders = () => {
+export const useOrders = ({inTokenUsdAmount, outTokenUsdAmount}: {
+  inTokenUsdAmount?: string;
+  outTokenUsdAmount?: string;
+}) => {
   const { account, chainId } = useMainContext();
   const store = useOrdersStore();
   const orders = account && chainId ? store.orders?.[account]?.[chainId] : []
-  const {inTokenUsdAmount, outTokenUsdAmount} = useUsdAmounts()
 
 
   const addOrder = useCallback(

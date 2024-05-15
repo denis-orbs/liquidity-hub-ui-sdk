@@ -5,7 +5,6 @@ import {
   Orders,
   QuoteResponse,
   STEPS,
-  Token,
 } from "../type";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -13,24 +12,16 @@ import { persist } from "zustand/middleware";
 interface SwapStateValues {
   currentStep?: STEPS;
   showConfirmation?: boolean;
-  fromToken?: Token;
-  toToken?: Token;
-  fromAmount?: string;
   failures?: number;
   txHash?: string;
   swapStatus: ActionStatus;
   swapError?: string;
-  dexMinAmountOut?: string;
   disableLh?: boolean;
   quoteOutdated?: boolean;
   isSigned?: boolean;
   disabledByDex?: boolean;
   quoteEnabled?: boolean;
-  swapConfirmationOutAmount?: string;
-  swapConfirmationOutAmountUsd?: string;
   slippage?: number;
-  outTokenUsd?: string | number;
-  inTokenUsd?: string | number;
 }
 
 interface SwapState extends SwapStateValues {
@@ -44,15 +35,11 @@ interface SwapState extends SwapStateValues {
 
 const initialSwapState: SwapStateValues = {
   currentStep: undefined,
-  fromToken: undefined,
-  toToken: undefined,
-  fromAmount: undefined,
   showConfirmation: false,
   failures: 0,
   txHash: undefined,
   swapStatus: undefined,
   swapError: undefined,
-  dexMinAmountOut: undefined,
   disableLh: false,
   quoteOutdated: undefined,
   isSigned: false,

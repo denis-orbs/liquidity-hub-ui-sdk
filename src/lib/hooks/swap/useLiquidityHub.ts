@@ -7,7 +7,7 @@ import { LH_CONTROL, UseLiquidityHubArgs } from "../../type";
 import { Logger } from "../../util";
 import { useShallow } from "zustand/react/shallow";
 import _ from "lodash";
-import {useAnalytics} from "../useAnalytics";
+import { useAnalytics } from "../useAnalytics";
 import { useDebounce } from "../useDebounce";
 
 const useQuoteDelay = (
@@ -57,7 +57,6 @@ const useQuoteDelay = (
   ]);
 };
 
-
 export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
   const { swapStatus, swapError, updateState, showConfirmation } = useSwapState(
     useShallow((store) => ({
@@ -74,23 +73,17 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
       ? 2_00
       : args.debounceFromAmountMillis
   );
-  useQuoteDelay(args.fromAmount || '0', args.minAmountOut, args.quoteDelayMillis);
+  useQuoteDelay(
+    args.fromAmount || "0",
+    args.minAmountOut,
+    args.quoteDelayMillis
+  );
 
   useEffect(() => {
     updateState({
-      dexMinAmountOut: args.minAmountOut,
       disabledByDex: args.disabled,
       slippage: args.slippage,
-      inTokenUsd: args.inTokenUsd,
-      outTokenUsd: args.outTokenUsd,
     });
-    if (!showConfirmation) {
-      updateState({
-        fromAmount,
-        fromToken: args.fromToken,
-        toToken: args.toToken,
-      });
-    }
   }, [
     updateState,
     args.minAmountOut,
@@ -104,9 +97,19 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     args.outTokenUsd,
   ]);
 
-  const quote = useQuote();
-  const isApproved = useAllowance().data;
-  const analyticsInit = useAnalytics().initTrade;
+  const quote = useQuote({
+    fromAmount,
+    fromToken: args.fromToken,
+    toToken: args.toToken,
+    disabledByDex: args.disabled,
+    dexMinAmountOut: args.minAmountOut,
+  });
+  const isApproved = useAllowance({fromAmount, fromToken: args.fromToken, toToken: args.toToken}).data;
+  const analyticsInit = useAnalytics({
+    fromAmount,
+    fromToken: args.fromToken,
+    toToken: args.toToken,
+  }).initTrade;
 
   const confirmSwap = useCallback(() => {
     updateState({ showConfirmation: true });
