@@ -23,7 +23,7 @@ import { swapAnalytics } from "../../analytics";
 import BN from "bignumber.js";
 import _ from "lodash";
 import { useHandleTokenAddresses } from "../useHandleTokenAddresses";
-import { useSlippage } from "./useSlippage";
+import { useSlippage } from "..";
 
 export const useQuote = () => {
   const store = useSwapState();
@@ -78,7 +78,7 @@ export const useQuote = () => {
             inToken: fromAddress,
             outToken: toAddress,
             inAmount: store.fromAmount,
-            outAmount: !store.dexMinAmountOut
+            outAmount: !store.dexMinAmountOut || BN(store.dexMinAmountOut || '0').isZero() 
               ? "-1"
               : new BN(store.dexMinAmountOut).gt(0)
               ? store.dexMinAmountOut
@@ -123,23 +123,8 @@ export const useQuote = () => {
           16
         );
 
-        const inAmountUsd = BN(quote.inTokenUsd || "")
-          .times(
-            amountUi(store.fromToken?.decimals, BN(store.fromAmount || "0"))
-          )
-          .toString();
-        const outAmountUsd = BN(quote.outTokenUsd || "")
-          .times(outAmountUI)
-          .toString();
-
+  
         const ui = {
-          priceImpact: BN(outAmountUsd || "0")
-            .div(inAmountUsd || "0")
-            .minus(1)
-            .times(100)
-            .toString(),
-          inAmountUsd,
-          outAmountUsd,
           outAmount: outAmountUI,
           minAmountOut: amountUi(
             store.toToken?.decimals,
@@ -148,10 +133,6 @@ export const useQuote = () => {
           gasCostOutputToken: amountUi(
             store.toToken?.decimals,
             BN(gasCostOutputToken)
-          ),
-          gasCostUsd: amountUi(
-            store.toToken?.decimals,
-            BN(gasCostOutputToken).multipliedBy(quote.outTokenUsd || "0")
           ),
         };
 

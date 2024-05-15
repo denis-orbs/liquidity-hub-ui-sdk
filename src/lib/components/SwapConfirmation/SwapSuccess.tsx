@@ -1,27 +1,15 @@
 import { FlexColumn, FlexRow } from "../../base-styles";
-import { useSwapState } from "../../store/main";
 import { Token } from "../../type";
 import styled from "styled-components";
 import { Logo } from "../Logo";
 import { Text } from "../Text";
 import { Separator } from "./Components";
-import { useFormatNumber } from "../../hooks";
+import { useFormatNumber, useSwapConfirmation } from "../../hooks";
 import SuccessImg from "../../assets/okay.png";
-import { useShallow } from "zustand/react/shallow";
-import { useAmountUI } from "../../hooks/useAmountUI";
 import { ExplorerLink } from "../ExplorerLink";
 
-export const SwapSuccess = ({ outAmount }: { outAmount?: string }) => {
-  const { fromToken, toToken, fromAmount } = useSwapState(
-    useShallow((s) => ({
-      fromToken: s.fromToken,
-      toToken: s.toToken,
-      fromAmount: s.fromAmount,
-    }))
-  );
-
-
-  const fromAmountUI = useAmountUI(fromToken?.decimals, fromAmount);
+export const SwapSuccess = () => {
+  const { fromToken, toToken, fromAmount, outAmount } = useSwapConfirmation()
 
   return (
     <StyledSuccess className="lh-success">
@@ -36,7 +24,7 @@ export const SwapSuccess = ({ outAmount }: { outAmount?: string }) => {
       </StyledTop>
 
       <StyledTokensContainer>
-        <SuccessToken token={fromToken} amount={fromAmountUI} />
+        <SuccessToken token={fromToken} amount={fromAmount} />
         <Separator />
         <SuccessToken token={toToken} amount={outAmount} />
       </StyledTokensContainer>

@@ -3,10 +3,10 @@ import { useCallback } from "react";
 import { useMainContext } from "../provider";
 import { useContractCallback } from "./useContractCallback";
 import { useShallow } from "zustand/react/shallow";
-import { useEstimateGasPrice } from "./useEstimateGasPrice";
 import BN from "bignumber.js";
 import { sendAndWaitForConfirmations } from "../util";
 import { zeroAddress } from "../config/consts";
+import { useEstimateGasPrice } from "./useSwapDetails";
 
 export const useUnwrap = () => {
   const { account, web3, chainId } = useMainContext();

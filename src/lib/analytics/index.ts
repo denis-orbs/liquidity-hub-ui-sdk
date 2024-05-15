@@ -55,21 +55,9 @@ const initSwap = (args: InitTrade): Partial<AnalyticsData> | undefined => {
     return;
   }
 
-  const outAmount = args.dexMinAmountOut || args.quoteAmountOut;
-  let dstTokenUsdValue = 0;
-  try {
-    dstTokenUsdValue = new BN(outAmount || "0")
-      .multipliedBy(BN(args.toTokenUsd || "0"))
-      .dividedBy(new BN(10).pow(new BN(dstToken?.decimals || 0)))
-      .toNumber();
-  } catch (error) {
-    console.log(error);
-  }
 
-  let srcTokenUsdValue = amountUi(
-    args.fromToken?.decimals,
-    BN(args.srcAmount || "0").multipliedBy(BN(args.fromTokenUsd || "0"))
-  );
+  let dstTokenUsdValue = args.toTokenUsdAmount || 0
+  let srcTokenUsdValue = args.fromTokenUsdAmount || 0
 
   const clobDexPriceDiffPercent = !args.dexMinAmountOut
     ? "0"
@@ -83,9 +71,7 @@ const initSwap = (args: InitTrade): Partial<AnalyticsData> | undefined => {
     dstToken.decimals,
     new BN(args.quoteAmountOut || "0")
   );
-  const quoteAmountOutUsd = BN(quoteAmountOutUI || "0")
-    .multipliedBy(BN(args.toTokenUsd || "0"))
-    .toNumber();
+
     const wallet = onWallet(args.provider) || {}
   return {
     clobDexPriceDiffPercent,
@@ -94,12 +80,6 @@ const initSwap = (args: InitTrade): Partial<AnalyticsData> | undefined => {
       dstToken.decimals,
       new BN(args.dexMinAmountOut || "0")
     ),
-    dexExpectedAmountOut: args.dexExpectedAmountOut || "0",
-    dexExpectedAmountOutUI: amountUi(
-      dstToken.decimals,
-      new BN(args.dexExpectedAmountOut || "0")
-    ),
-
     dexAmountOut: args.dexMinAmountOut || "0",
     srcTokenUsdValue: srcTokenUsdValue ? Number(srcTokenUsdValue) : 0,
     dstTokenUsdValue,
@@ -116,7 +96,6 @@ const initSwap = (args: InitTrade): Partial<AnalyticsData> | undefined => {
     tradeType: args.tradeType,
     quoteAmountOut: args.quoteAmountOut,
     quoteAmountOutUI,
-    quoteAmountOutUsd,
     ...wallet
   };
 };

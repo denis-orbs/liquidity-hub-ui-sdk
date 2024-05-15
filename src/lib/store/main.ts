@@ -21,7 +21,6 @@ interface SwapStateValues {
   swapStatus: ActionStatus;
   swapError?: string;
   dexMinAmountOut?: string;
-  dexExpectedAmountOut?: string;
   disableLh?: boolean;
   quoteOutdated?: boolean;
   isSigned?: boolean;
@@ -30,6 +29,8 @@ interface SwapStateValues {
   swapConfirmationOutAmount?: string;
   swapConfirmationOutAmountUsd?: string;
   slippage?: number;
+  outTokenUsd?: string | number;
+  inTokenUsd?: string | number;
 }
 
 interface SwapState extends SwapStateValues {
@@ -52,7 +53,6 @@ const initialSwapState: SwapStateValues = {
   swapStatus: undefined,
   swapError: undefined,
   dexMinAmountOut: undefined,
-  dexExpectedAmountOut: undefined,
   disableLh: false,
   quoteOutdated: undefined,
   isSigned: false,

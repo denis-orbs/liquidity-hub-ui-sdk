@@ -11,18 +11,20 @@ export const useRate = (defaultInverted: boolean = false) => {
     useShallow((s) => ({
       fromToken: s.fromToken,
       toToken: s.toToken,
+      inTokenUsd: s.inTokenUsd,
+      outTokenUsd: s.outTokenUsd,
     }))
   );
 
   const quote = useQuote().data;
 
   const value = useMemo(() => {
-    if (!quote || !quote?.inTokenUsd || !quote.outTokenUsd) return "";
+    if (!quote || !store?.inTokenUsd || !store.outTokenUsd) return "";
 
     if (!inverted) {
-      return BN(quote?.inTokenUsd).dividedBy(quote.outTokenUsd).toString();
+      return BN(store?.inTokenUsd).dividedBy(store.outTokenUsd).toString();
     }
-    return BN(quote.outTokenUsd).dividedBy(quote?.inTokenUsd).toString();
+    return BN(store.outTokenUsd).dividedBy(store?.inTokenUsd).toString();
   }, [quote, inverted]);
 
   const formattedRate = useFormatNumber({ value });
@@ -31,16 +33,16 @@ export const useRate = (defaultInverted: boolean = false) => {
   const rightToken = inverted ? store.fromToken?.symbol : store.toToken?.symbol;
 
   const usd = useFormatNumber({
-    value: BN((inverted ? quote?.inTokenUsd : quote?.outTokenUsd) || 0)
+    value: BN((inverted ? store?.inTokenUsd : store?.outTokenUsd) || 0)
       .multipliedBy(value)
       .toString(),
   });
 
   return {
-    leftToken: leftToken || '',
-    rightToken: rightToken || '',
-    usd: usd || '',
-    value: formattedRate || '',
+    leftToken,
+    rightToken,
+    usd,
+    value: formattedRate,
     invert: () => setInverted(!inverted),
   };
 };

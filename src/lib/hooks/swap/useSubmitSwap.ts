@@ -106,8 +106,6 @@ export const useSubmitSwap = (onWrapSuccess?: () => void) => {
           toToken: toToken,
           fromAmount: amountUi(fromToken.decimals, new BN(fromAmount)),
           toAmount: quote.ui.outAmount || "",
-          fromUsd: quote.inTokenUsd,
-          toUsd: quote.outTokenUsd,
           txHash,
           explorerLink: `${explorerUrl}/tx/${txHash}`,
         });

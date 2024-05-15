@@ -4,8 +4,7 @@ import { useShallow } from "zustand/react/shallow";
 import { SwapSuccess } from "./SwapSuccess";
 import { SwapFailed } from "./SwapFailed";
 import { SwapMain } from "./SwapMain";
-import { ReactNode, useEffect, useState } from "react";
-import BN from "bignumber.js";
+import { ReactNode} from "react";
 
 interface Props {
   className?: string;
@@ -20,23 +19,16 @@ export const SwapConfirmation = ({
   children,
   outAmount: _outAmount,
 }: Props) => {
-  const [outAmount, setOutAmount] = useState(_outAmount);
   const swapStatus = useSwapState(useShallow((s) => s.swapStatus));
-
-  useEffect(() => {
-    if (BN(_outAmount || '0').gt(0)) {
-      setOutAmount(_outAmount);
-    }
-  }, [_outAmount]);
 
   return (
     <Container className={`${className} lh-summary`} $style={style}>
       {swapStatus === "success" ? (
-        <SwapSuccess outAmount={outAmount} />
+        <SwapSuccess  />
       ) : swapStatus === "failed" ? (
         <SwapFailed children={children} />
       ) : (
-        <SwapMain outAmount={outAmount} children={children} />
+        <SwapMain  children={children} />
       )}
     </Container>
   );

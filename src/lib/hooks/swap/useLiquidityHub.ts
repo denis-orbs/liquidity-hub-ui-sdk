@@ -7,13 +7,12 @@ import { LH_CONTROL, UseLiquidityHubArgs } from "../../type";
 import { Logger } from "../../util";
 import { useShallow } from "zustand/react/shallow";
 import _ from "lodash";
-import useAnalytics from "../useAnalytics";
-import { useAmountBN } from "../useAmountBN";
+import {useAnalytics} from "../useAnalytics";
 import { useDebounce } from "../useDebounce";
 
 const useQuoteDelay = (
   fromAmount: string,
-  dexExpectedAmountOut?: string,
+  dexMinAmountOut?: string,
   quoteDelayMillis?: number
 ) => {
   const quoteTimeoutRef = useRef<any>(null);
@@ -28,7 +27,7 @@ const useQuoteDelay = (
     Logger({
       quoteEnabled,
       fromAmount,
-      dexExpectedAmountOut,
+      dexMinAmountOut,
       quoteDelayMillis,
     });
     clearTimeout(quoteTimeoutRef.current);
@@ -38,7 +37,7 @@ const useQuoteDelay = (
       return;
     }
 
-    if (BN(dexExpectedAmountOut || "0").gt(0)) {
+    if (BN(dexMinAmountOut || "0").gt(0)) {
       Logger("got price from dex, enabling quote ");
       updateState({ quoteEnabled: true });
       clearTimeout(quoteTimeoutRef.current);
@@ -49,7 +48,7 @@ const useQuoteDelay = (
       updateState({ quoteEnabled: true });
     }, quoteDelayMillis);
   }, [
-    dexExpectedAmountOut,
+    dexMinAmountOut,
     quoteDelayMillis,
     quoteEnabled,
     updateState,
@@ -69,21 +68,21 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     }))
   );
 
-  const _fromAmount = useAmountBN(args.fromToken?.decimals, args.fromAmount);
   const fromAmount = useDebounce(
-    _fromAmount,
+    args.fromAmount,
     _.isUndefined(args.debounceFromAmountMillis)
       ? 2_00
       : args.debounceFromAmountMillis
   );
-  useQuoteDelay(fromAmount, args.expectedAmountOut, args.quoteDelayMillis);
+  useQuoteDelay(args.fromAmount || '0', args.minAmountOut, args.quoteDelayMillis);
 
   useEffect(() => {
     updateState({
       dexMinAmountOut: args.minAmountOut,
-      dexExpectedAmountOut:args.expectedAmountOut,
       disabledByDex: args.disabled,
       slippage: args.slippage,
+      inTokenUsd: args.inTokenUsd,
+      outTokenUsd: args.outTokenUsd,
     });
     if (!showConfirmation) {
       updateState({
@@ -95,13 +94,14 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
   }, [
     updateState,
     args.minAmountOut,
-    args.expectedAmountOut,
     args.disabled,
     args.slippage,
     showConfirmation,
     fromAmount,
     args.fromToken?.address,
     args.toToken?.address,
+    args.inTokenUsd,
+    args.outTokenUsd,
   ]);
 
   const quote = useQuote();

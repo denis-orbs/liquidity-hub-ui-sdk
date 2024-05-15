@@ -25,13 +25,13 @@ import {
 import { ArrowDown } from "react-feather";
 import styled, { ThemeProvider } from "styled-components";
 import { Spinner } from "../components/Spinner";
-
 import { TokenList } from "../components/TokenList";
 import { Modal } from "../components/Modal";
 import { Button } from "../components/Button";
 import { LoadingText } from "../components/LoadingText";
 import { TokenSearchInput } from "../components/SearchInput";
 import { useShallow } from "zustand/react/shallow";
+import BN from "bignumber.js";
 import {
   useAcceptedAmountOut,
   useChainConfig,
@@ -44,7 +44,6 @@ import { Logo } from "../components/Logo";
 import {
   PoweredByOrbs,
   SwapConfirmation,
-  SwapModalInfoRow,
 } from "../components";
 import { FlexRow, FlexColumn } from "../base-styles";
 import { useTokenListBalance } from "./hooks/useTokenListBalance";
@@ -62,6 +61,8 @@ import { useInitialTokens } from "./hooks/useInitialTokens";
 import { useRate } from "../hooks/useRate";
 import { ConfirmationPoweredBy } from "../components/SwapConfirmation/ConfirmationPoweredBy";
 import { useQuote } from "../hooks/swap/useQuote";
+import { useGasCostUsd, usePriceImpact } from "../hooks/useSwapDetails";
+import { useSwapState } from "../store/main";
 
 export const theme = {
   colors: {
@@ -205,40 +206,23 @@ const TokenSelect = ({
 };
 
 const SwapModal = () => {
-  const {
-    onClose,
-    swapStatus,
-    isOpen,
-    toToken,
-    title,
-    priceImpact,
-    gasCostUsd,
-  } = useSwapConfirmation();
+  const { onClose, swapStatus, isOpen, title } = useSwapConfirmation();
   const updateStore = useDexState(useShallow((s) => s.updateStore));
-  const rate = useRate();
   const wToken = useChainConfig()?.wToken;
   const quote = useQuote().data;
 
-  const { accept, shouldAccept, amountToAccept } =
-    useAcceptedAmountOut(quote?.outAmount, quote?.minAmountOut);
-  
+  const { accept, shouldAccept, amountToAccept } = useAcceptedAmountOut(
+    quote?.outAmount,
+    quote?.minAmountOut
+  );
+
   const onWrapSuccess = useCallback(() => {
     updateStore({ fromToken: wToken });
   }, [updateStore, wToken]);
 
   const swapButton = useSwapButton(onWrapSuccess);
-  const priceImpactF = useFormatNumber({
-    value: priceImpact,
-    decimalScale: 2,
-  });
-  const minAmountOut = useFormatNumber({ value: quote?.ui.minAmountOut });
+
   const onSuccess = useOnSwapSuccessCallback();
-  const gas = useFormatNumber({ value: gasCostUsd, decimalScale: 2 });
-  const rateUsd = useFormatNumber({
-    value: rate.usd,
-    decimalScale: 2,
-    prefix: "$",
-  });
 
   const TryAgainButton = () => {
     return <StyledSubmitButton onClick={onClose}>Try again</StyledSubmitButton>;
@@ -262,26 +246,7 @@ const SwapModal = () => {
           ) : (
             !swapStatus && (
               <>
-                <StyledSwapDetails>
-                  <SwapModalInfoRow label="Rate" onClick={rate.invert}>
-                    <StyledRateUsd>
-                      {`1 ${rate.leftToken} = ${rate.rightToken} ${rate.value}`}{" "}
-                      <small>{`(${rateUsd})`}</small>
-                    </StyledRateUsd>
-                  </SwapModalInfoRow>
-                  <SwapModalInfoRow label="Gas cost">
-                    <StyledRateUsd>{`$${gas}`}</StyledRateUsd>
-                  </SwapModalInfoRow>
-                  <SwapModalInfoRow label="Min amount out">
-                    <StyledRateUsd>{`${minAmountOut} ${toToken?.symbol}`}</StyledRateUsd>
-                  </SwapModalInfoRow>
-                  <SwapModalInfoRow label="Price impact">
-                    <StyledRateUsd>{`${
-                      priceImpact ? `${priceImpactF}%` : "-"
-                    }`}</StyledRateUsd>
-                  </SwapModalInfoRow>
-                </StyledSwapDetails>
-
+                <SwapDetails />
                 <StyledSubmitButton
                   onClick={onClick}
                   isLoading={swapButton.isPending}
@@ -334,18 +299,6 @@ const StyledPoweredByOrbs = styled(PoweredByOrbs)`
   margin-top: 30px;
 `;
 
-const StyledRateUsd = styled(Text)`
-  small {
-    opacity: 0.5;
-  }
-`;
-
-const StyledSwapDetails = styled(FlexColumn)`
-  gap: 10px;
-  margin-bottom: 20px;
-  margin-top: 20px;
-  width: 100%;
-`;
 
 export const SwapSubmitButton = () => {
   const { disabled, text, onClick, isLoading } = useShowConfirmationButton();
@@ -552,7 +505,7 @@ export interface Props extends ProviderArgs {
 
 export const Widget = (props: Props) => {
   const { UIconfig, ...rest } = props;
- 
+
   return (
     <LiquidityHubProvider {...rest}>
       <ThemeProvider theme={theme}>
@@ -562,6 +515,7 @@ export const Widget = (props: Props) => {
             <FromTokenPanel />
             <ChangeTokens />
             <ToTokenPanel />
+            <SwapDetails />
             <SwapSubmitButton />
             <SwapModal />
             <StyledPoweredByOrbs />
@@ -671,4 +625,83 @@ const StyledTokenListContainer = styled(FlexColumn)`
   max-height: 50vh;
   height: 500px;
   width: 100%;
+`;
+
+const SwapDetails = () => {
+  const priceImpactF = useFormatNumber({
+    value: usePriceImpact(),
+    decimalScale: 2,
+  });
+  const quote = useQuote().data;
+  const minAmountOut = useFormatNumber({ value: quote?.ui.minAmountOut });
+
+  const gasCostUsd = useGasCostUsd();
+  const gas = useFormatNumber({ value: gasCostUsd, decimalScale: 2 });
+  const rate = useRate();
+  const toToken = useSwapState(useShallow((s) => s.toToken));
+  const rateUsd = useFormatNumber({
+    value: rate.usd,
+    decimalScale: 2,
+    prefix: "$",
+  });
+
+  const fromAmount = useSwapState(useShallow((s) => s.fromAmount));
+
+  if(BN(fromAmount || '0').isZero() || BN(quote?.outAmount || '0').isZero()) return null
+
+  return (
+    <StyledSwapDetails>
+      <StyledDetailsRow onClick={rate.invert}>
+        <StyledDetailsRowLabel>Rate</StyledDetailsRowLabel>
+        <StyledDetailsRowValue>
+          {`1 ${rate.leftToken} = ${rate.rightToken} ${rate.value}`}{" "}
+          <small>{`(${rateUsd})`}</small>
+        </StyledDetailsRowValue>
+      </StyledDetailsRow>
+      <StyledDetailsRow>
+        <StyledDetailsRowLabel>Gas cost</StyledDetailsRowLabel>
+        <StyledDetailsRowValue>{`$${gas}`}</StyledDetailsRowValue>
+      </StyledDetailsRow>
+      <StyledDetailsRow>
+        <StyledDetailsRowLabel>Min amount out</StyledDetailsRowLabel>
+
+        <StyledDetailsRowValue>{`${minAmountOut} ${toToken?.symbol}`}</StyledDetailsRowValue>
+      </StyledDetailsRow>
+      <StyledDetailsRow>
+        <StyledDetailsRowLabel>Price impact</StyledDetailsRowLabel>
+
+        <StyledDetailsRowValue>{`${
+          priceImpactF ? `${priceImpactF}%` : "-"
+        }`}</StyledDetailsRowValue>
+      </StyledDetailsRow>
+    </StyledSwapDetails>
+  );
+};
+
+const StyledSwapDetails = styled(FlexColumn)`
+  gap: 12px;
+  margin-bottom: 20px;
+  margin-top: 20px;
+  width: 100%;
+`;
+
+
+
+const StyledDetailsRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+`;
+
+const StyledDetailsRowLabel = styled(Text)`
+font-size: 14px;
+font-weight: 500;
+`;
+
+const StyledDetailsRowValue = styled(Text)`
+font-size: 14px;
+  small {
+    opacity: 0.5;
+  }
 `;

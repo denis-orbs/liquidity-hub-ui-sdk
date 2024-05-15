@@ -5,36 +5,29 @@ import { useFormatNumber } from "../../hooks/useFormatNumber";
 import { Logo } from "../Logo";
 import { Token } from "../../type";
 import { Text } from "../Text";
-import { useSwapConfirmation } from "../../hooks/swap/useSwapConfirmation";
 import { Separator } from "./Components";
-import { useQuote } from "../../hooks/swap/useQuote";
-import { useMemo } from "react";
+import { useSwapConfirmation, useUsdAmounts } from "../../hooks/useSwapDetails";
 const StyledSwapDetails = styled(FlexColumn)`
   width: 100%;
   gap: 15px;
 `;
 
-export function SwapDetails({ outAmount }: { outAmount?: string }) {
-  const { fromToken, fromAmount, toToken, inAmountUsd } = useSwapConfirmation();
-  const outTokenUsd = useQuote().data?.outTokenUsd;
-  const outAmountUsd = useMemo(() => {
-    return BN(outTokenUsd || "")
-      .multipliedBy(outAmount || 0)
-      .toString();
-  }, [outTokenUsd, outAmount]);
+export function SwapDetails() {
+  const { fromToken, fromAmount, toToken, outAmount } = useSwapConfirmation();
+  const {inTokenUsdAmount, outTokenUsdAmount} = useUsdAmounts()
 
   return (
     <StyledSwapDetails className="lh-details">
       <TokenDisplay
         title="Swap from"
-        usd={inAmountUsd}
+        usd={inTokenUsdAmount}
         token={fromToken}
         amount={fromAmount}
       />
       <Separator />
       <TokenDisplay
         title="Swap to"
-        usd={outAmountUsd}
+        usd={outTokenUsdAmount}
         token={toToken}
         amount={outAmount}
       />

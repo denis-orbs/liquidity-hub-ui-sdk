@@ -9,10 +9,9 @@ export interface InitTrade {
   tradeType?: tradeType;
   fromToken?: Token;
   toToken?: Token;
-  fromTokenUsd?: string | number;
-  toTokenUsd?: string | number;
+  fromTokenUsdAmount?: number;
+  toTokenUsdAmount?: number;
   dexMinAmountOut?: string;
-  dexExpectedAmountOut?: string;
   slippage?: number;
   chainId?: number;
   partner?: string;
@@ -39,8 +38,6 @@ export interface AnalyticsData {
   dexMinAmountOutUI: string;
 
   dexAmountOut: string;
-  dexExpectedAmountOut: string;
-  dexExpectedAmountOutUI: string;
 
   isClobTrade: boolean;
   srcTokenAddress: string;

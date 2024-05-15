@@ -60,8 +60,6 @@ export interface Token {
   logoUrl?: string;
 }
 
-type TokenUsd = string | number | undefined;
-
 export interface ProviderArgs {
   supportedChains: number[];
   slippage?: number;
@@ -121,8 +119,6 @@ export interface QuoteResponse {
   callData: string;
   rawData: any;
   sessionId?: string;
-  inTokenUsd?: TokenUsd;
-  outTokenUsd?: TokenUsd;
   disableInterval?: boolean;
   gasCostOutputToken?: string;
   minAmountOut?: string;
@@ -130,10 +126,6 @@ export interface QuoteResponse {
     outAmount?: string;
     minAmountOut?: string;
     gasCostOutputToken?: string;
-    inAmountUsd?: string;
-    outAmountUsd?: string;
-    priceImpact?: string;
-    gasCostUsd?: string;
   };
 }
 
@@ -176,12 +168,13 @@ export type UseLiquidityHubArgs = {
   toToken?: Token;
   fromAmount?: string;
   minAmountOut?: string;
-  expectedAmountOut?: string;
   slippage?: number;
   disabled?: boolean;
   debounceFromAmountMillis?: number;
   quoteDelayMillis?: number;
   outAmount?: string;
+  inTokenUsd?: string | number;
+  outTokenUsd?: string | number;
 };
 
 
@@ -192,8 +185,6 @@ export type AddOrderArgs = {
   toToken: Token;
   fromAmount: string;
   toAmount: string;
-  fromUsd?: string | number;
-  toUsd?: string | number;
   txHash: string;
   explorerLink: string;
 };
