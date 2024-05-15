@@ -122,6 +122,7 @@ export interface QuoteResponse {
   disableInterval?: boolean;
   gasCostOutputToken?: string;
   minAmountOut?: string;
+  refetchCount?: number;
   ui: {
     outAmount?: string;
     minAmountOut?: string;

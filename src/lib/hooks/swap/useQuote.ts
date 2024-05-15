@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMainContext } from "../../provider";
 import { QuoteResponse } from "../../type";
 import { useGlobalStore, useSwapState } from "../../store/main";
@@ -56,9 +56,7 @@ export const useQuote = () => {
     !!apiUrl &&
     !disabled &&
     store.quoteEnabled;
-
-  return useQuery({
-    queryKey: [
+    const queryKey = [
       QUERY_KEYS.QUOTE,
       fromAddress,
       toAddress,
@@ -66,7 +64,10 @@ export const useQuote = () => {
       slippage,
       apiUrl,
       chainId,
-    ],
+    ]
+    const queryClient = useQueryClient();
+  return useQuery({
+    queryKey,
     queryFn: async ({ signal }) => {
       swapAnalytics.onQuoteRequest();
       let quote;
@@ -147,13 +148,15 @@ export const useQuote = () => {
           ui,
           refetchInterval: context.quoteInterval,
         });
-
-        return {
+        const res =  {
           ...quote,
           minAmountOut,
           gasCostOutputToken,
           ui,
         } as QuoteResponse;
+        res.refetchCount = ((queryClient.getQueryData(queryKey) as QuoteResponse)?.refetchCount || 0) + 1
+
+        return res;
       } catch (error: any) {
         swapAnalytics.onQuoteFailed(error.message, count(), quote);
 
@@ -168,12 +171,17 @@ export const useQuote = () => {
         }
       }
     },
-    refetchInterval: (q) =>
-      store.showConfirmation
-        ? undefined
-        : q.state.data?.disableInterval
-        ? undefined
-        : context.quoteInterval,
+    refetchInterval: ({ state }) => {
+      const quoteInterval = context.quoteInterval || 10_000
+      if(state.data?.disableInterval || store.swapStatus) {
+        return undefined
+      }
+      const refetchCount = state.data?.refetchCount || 0
+      if (refetchCount > 6) {
+        return refetchCount * quoteInterval / 2
+      }
+      return context.quoteInterval
+    },
     staleTime: Infinity,
     enabled,
     gcTime: 0,
