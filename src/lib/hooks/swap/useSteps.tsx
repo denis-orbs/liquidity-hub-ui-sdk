@@ -5,20 +5,14 @@ import { Step, STEPS, Token } from "../../type";
 import { isNativeAddress } from "../../util";
 import { useChainConfig } from "../useChainConfig";
 
-export const useSteps = ({
-  fromToken,
-  isSigned,
-  isApproved
-}: {
-  fromToken?: Token;
-  isSigned?: boolean;
-  isApproved?: boolean;
-}) => {
+export const useSteps = (
+  fromToken?: Token,
+  isSigned?: boolean,
+  isApproved?: boolean
+) => {
   const explorer = useChainConfig()?.explorerUrl;
 
   const steps = useMemo(() => {
-   
-
     const wrap: Step = {
       title: `Wrap ${fromToken?.symbol}`,
       image: SwapImg,
@@ -47,12 +41,7 @@ export const useSteps = ({
       steps.unshift(wrap);
     }
     return steps;
-  }, [
-    fromToken,
-    isApproved,
-    isSigned,
-    explorer,
-  ]);
+  }, [fromToken, isApproved, isSigned, explorer]);
 
-  return steps
+  return steps;
 };

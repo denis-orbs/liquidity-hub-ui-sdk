@@ -29,10 +29,7 @@ const useApproved = (address?: string) => {
   );
 };
 
-export const useAllowance = ({fromToken, fromAmount}:{
-  fromToken?: Token;
-  fromAmount?: string;
-}) => {
+export const useAllowance = ( fromToken?: Token,fromAmount?: string) => {
   const wToken = useChainConfig()?.wToken;
 
 

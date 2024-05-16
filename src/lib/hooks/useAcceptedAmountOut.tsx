@@ -1,22 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
 import BN from "bignumber.js";
-import { useSwapState } from "../store/main";
-import { useShallow } from "zustand/react/shallow";
 import { useAmountUI } from "./useAmountUI";
 import { Token } from "../type";
 
 export function useAcceptedAmountOut(
   outAmount?: string,
   minAmountOut?: string,
-  toToken?: Token
+  toToken?: Token,
+  enabled?: boolean
 ) {
   const [isUpdated, setIsUpdated] = useState(false);
   const [acceptedAmountOut, setAcceptedAmountOut] = useState(outAmount);
-  const { showConfirmation } = useSwapState(
-    useShallow((s) => ({
-      showConfirmation: s.showConfirmation,
-    }))
-  );
 
   const accept = useCallback(() => {
     setIsUpdated(false);
@@ -24,7 +18,7 @@ export function useAcceptedAmountOut(
   }, [setIsUpdated, setAcceptedAmountOut, outAmount]);
 
   useEffect(() => {
-    if (!outAmount || !minAmountOut || !showConfirmation) return;
+    if (!outAmount || !minAmountOut || !enabled) return;
     if (!acceptedAmountOut) {
       setAcceptedAmountOut(outAmount);
       return;
@@ -44,7 +38,7 @@ export function useAcceptedAmountOut(
     minAmountOut,
     acceptedAmountOut,
     setAcceptedAmountOut,
-    showConfirmation,
+    enabled,
   ]);
 
   return {

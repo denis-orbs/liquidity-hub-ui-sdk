@@ -1,6 +1,4 @@
 import styled, { CSSObject } from "styled-components";
-import { useSwapState } from "../../store/main";
-import { useShallow } from "zustand/react/shallow";
 import { SwapSuccess } from "./SwapSuccess";
 import { SwapFailed } from "./SwapFailed";
 import { SwapMain } from "./SwapMain";
@@ -22,9 +20,9 @@ export const SwapConfirmation = ({
   
   return (
     <Container className={`${className} lh-summary`} $style={style}>
-      {rest.swapStatus === "success" ? (
+      {rest.confirmation.swapStatus === "success" ? (
         <SwapSuccess {...rest} />
-      ) : rest.swapStatus === "failed" ? (
+      ) : rest.confirmation.swapStatus === "failed" ? (
         <SwapFailed {...rest} children={children} />
       ) : (
         <SwapMain {...rest} children={children} />

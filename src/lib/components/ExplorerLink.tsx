@@ -1,15 +1,9 @@
-import { useShallow } from "zustand/react/shallow";
 import { useChainConfig } from "../hooks";
-import { useSwapState } from "../store/main";
 import styled, { CSSObject } from "styled-components";
 import {ExternalLink} from 'react-feather'
 
-export const ExplorerLink = ({className = '', styles ={}}:{className?: string, styles?: CSSObject}) => {
-  const { txHash } = useSwapState(
-    useShallow((s) => ({
-      txHash: s.txHash,
-    }))
-  );
+export const ExplorerLink = ({className = '', styles ={}, txHash}:{className?: string, styles?: CSSObject, txHash?: string}) => {
+
 
   const explorerUrl = useChainConfig()?.explorerUrl;
   if (!txHash) return null;

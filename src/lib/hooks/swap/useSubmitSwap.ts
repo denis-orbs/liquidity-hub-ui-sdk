@@ -48,7 +48,7 @@ export const useSubmitSwap = ({
   const approve = useApprove();
   const wrap = useWrap(fromToken);
   const sign = useSign();
-  const requestSwap = useSwapX();
+  const requestSwap = useSwapX(setTxHash);
   const chainConfig = useChainConfig();
   const wTokenAddress = chainConfig?.wToken?.address;
   const explorerUrl = chainConfig?.explorerUrl;
@@ -112,7 +112,6 @@ export const useSubmitSwap = ({
           fromAmount,
           quote,
         });
-        setTxHash(txHash);
         addOrder({
           fromToken: fromToken,
           toToken: toToken,

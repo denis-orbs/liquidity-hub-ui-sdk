@@ -17,23 +17,23 @@ export const SwapMain = ({ style = {}, children, ...rest }: Props) => {
       <SwapDetails {...rest} />
       <StepsComponent {...rest} />
       {children}
-      <ExplorerLink styles={{marginTop: 10}} />
+      <ExplorerLink styles={{marginTop: 10}} txHash={rest.txHash} />
     </Container>
   );
 };
 
 
 const StepsComponent = (props: LiquidityHubPayload) => {
-  const { steps, isLoading } = props
-
-  if (isLoading) return null;
+  const { confirmation: {steps, isLoading, currentStep, swapStatus} } = props
+  
+  if (!isLoading) return null;
 
   return (
     <>
       <StyledSteps $gap={15} style={{ width: "100%" }} className="lh-steps">
         <Divider className="lh-steps-divider" />
         {steps.map((step) => {
-          return <StepComponent key={step.id} step={step} />;
+          return <StepComponent swapStatus={swapStatus} currentStep={currentStep} key={step.id} step={step} />;
         })}
       </StyledSteps>
     </>

@@ -6,27 +6,6 @@ import {
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-interface SwapStateValues {
-  slippage?: number;
-}
-
-interface SwapState extends SwapStateValues {
-  updateState: (state: Partial<SwapState>) => void;
-  reset: () => void;
-}
-
-const initialSwapState: SwapStateValues = {
-  slippage: undefined,
-};
-
-export const useSwapState = create<SwapState>((set, get) => ({
-  ...initialSwapState,
-  updateState: (state) => {    
-    set({ ...state })
-  },
-  reset: () => set({ ...initialSwapState }),
-}));
-
 interface LHControlStore {
   debug: boolean;
   setDebug: (value: boolean) => void;

@@ -1,8 +1,7 @@
-import { useSwapState } from "../store/main";
+
 import { useCallback } from "react";
 import { useMainContext } from "../provider";
 import { useContractCallback } from "./useContractCallback";
-import { useShallow } from "zustand/react/shallow";
 import BN from "bignumber.js";
 import { sendAndWaitForConfirmations } from "../util";
 import { zeroAddress } from "../config/consts";
@@ -10,7 +9,6 @@ import { useEstimateGasPrice } from "./useSwapDetails";
 
 export const useUnwrap = () => {
   const { account, web3, chainId } = useMainContext();
-  const updateState = useSwapState(useShallow((s) => s.updateState));
   const gas = useEstimateGasPrice().data;
 
   const getContract = useContractCallback();
@@ -36,6 +34,6 @@ export const useUnwrap = () => {
         throw new Error(error.message);
       }
     },
-    [account, updateState, getContract, gas]
+    [account, getContract, gas]
   );
 };

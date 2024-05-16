@@ -12,7 +12,6 @@ import { ThemeProvider } from "styled-components";
 import { DEFAULT_QUOTE_INTERVAL } from "./config/consts";
 import Web3 from "web3";
 import { swapAnalytics } from "./analytics";
-import { useSwapState } from "./store/main";
 import { useShallow } from "zustand/react/shallow";
 import { useDexState } from "./store/dex";
 import { useLhControllListener } from "./hooks/useLhControllListener";
@@ -51,8 +50,6 @@ export const LiquidityHubProvider = ({
   getTokens,
 }: Props) => {
 
-
-  const reset = useSwapState(useShallow((s) => s.reset));
   const resetDex = useDexState(useShallow((s) => s.reset));
   const _theme = useMemo(() => {
     if (theme === "light") {
@@ -74,7 +71,6 @@ export const LiquidityHubProvider = ({
   }, [chainId, partner]);
 
   useEffect(() => {
-    reset();
     resetDex();
   }, [chainId]);
 

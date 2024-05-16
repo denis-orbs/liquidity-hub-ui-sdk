@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMainContext } from "../../provider";
 import { ActionStatus, QuoteResponse, Token } from "../../type";
-import { useGlobalStore, useSwapState } from "../../store/main";
+import { useGlobalStore } from "../../store/main";
 import {
   EMPTY_QUOTE_RESPONSE,
   QUERY_KEYS,
@@ -22,7 +22,6 @@ import { swapAnalytics } from "../../analytics";
 import BN from "bignumber.js";
 import _ from "lodash";
 import { useHandleTokenAddresses } from "../useHandleTokenAddresses";
-import { useSlippage } from "..";
 
 export const useQuote = ({
   fromToken,
@@ -30,18 +29,19 @@ export const useQuote = ({
   fromAmount,
   dexMinAmountOut,
   disabled,
-  swapStatus
+  swapStatus,
+  slippage,
 }: {
   fromToken?: Token;
   toToken?: Token;
   fromAmount?: string;
   dexMinAmountOut?: string;
   disabled?: boolean;
-  swapStatus?: ActionStatus
+  swapStatus?: ActionStatus;
+  slippage: number;
 }) => {
   const wTokenAddress = useChainConfig()?.wToken?.address;
   const context = useMainContext();
-  const slippage = useSlippage()
   const apiUrl = useApiUrl();
   const { sessionId, setSessionId } = useGlobalStore();
   const { fromAddress, toAddress } = useHandleTokenAddresses(
@@ -65,18 +65,18 @@ export const useQuote = ({
     BN(fromAmount || "0").gt(0) &&
     fromAmount !== "0" &&
     !!apiUrl &&
-    !disabled
+    !disabled;
 
-    const queryKey = [
-      QUERY_KEYS.QUOTE,
-      fromAddress,
-      toAddress,
-      fromAmount,
-      slippage,
-      apiUrl,
-      chainId,
-    ]
-    const queryClient = useQueryClient();
+  const queryKey = [
+    QUERY_KEYS.QUOTE,
+    fromAddress,
+    toAddress,
+    fromAmount,
+    slippage,
+    apiUrl,
+    chainId,
+  ];
+  const queryClient = useQueryClient();
   return useQuery({
     queryKey,
     queryFn: async ({ signal }) => {
@@ -90,11 +90,12 @@ export const useQuote = ({
             inToken: fromAddress,
             outToken: toAddress,
             inAmount: fromAmount,
-            outAmount: !dexMinAmountOut || BN(dexMinAmountOut || '0').isZero() 
-              ? "-1"
-              : new BN(dexMinAmountOut).gt(0)
-              ? dexMinAmountOut
-              : "0",
+            outAmount:
+              !dexMinAmountOut || BN(dexMinAmountOut || "0").isZero()
+                ? "-1"
+                : new BN(dexMinAmountOut).gt(0)
+                ? dexMinAmountOut
+                : "0",
             user: context.account || zeroAddress,
             slippage,
             qs: encodeURIComponent(
@@ -129,19 +130,15 @@ export const useQuote = ({
           quote?.permitData.values.witness.outputs[1].endAmount.hex,
           16
         );
-        
+
         const gasCostOutputToken = parseInt(
           quote?.permitData.values.witness.outputs[0].startAmount.hex,
           16
         );
 
-  
         const ui = {
           outAmount: outAmountUI,
-          minAmountOut: amountUi(
-            toToken?.decimals,
-            BN(minAmountOut || 0)
-          ),
+          minAmountOut: amountUi(toToken?.decimals, BN(minAmountOut || 0)),
           gasCostOutputToken: amountUi(
             toToken?.decimals,
             BN(gasCostOutputToken)
@@ -159,13 +156,15 @@ export const useQuote = ({
           ui,
           refetchInterval: context.quoteInterval,
         });
-        const res =  {
+        const res = {
           ...quote,
           minAmountOut,
           gasCostOutputToken,
           ui,
         } as QuoteResponse;
-        res.refetchCount = ((queryClient.getQueryData(queryKey) as QuoteResponse)?.refetchCount || 0) + 1
+        res.refetchCount =
+          ((queryClient.getQueryData(queryKey) as QuoteResponse)
+            ?.refetchCount || 0) + 1;
 
         return res;
       } catch (error: any) {
@@ -183,15 +182,15 @@ export const useQuote = ({
       }
     },
     refetchInterval: ({ state }) => {
-      const quoteInterval = context.quoteInterval || 10_000
-      if(state.data?.disableInterval || swapStatus) {
-        return undefined
+      const quoteInterval = context.quoteInterval || 10_000;
+      if (state.data?.disableInterval || swapStatus) {
+        return undefined;
       }
-      const refetchCount = state.data?.refetchCount || 0
+      const refetchCount = state.data?.refetchCount || 0;
       if (refetchCount > 6) {
-        return refetchCount * quoteInterval / 2
+        return (refetchCount * quoteInterval) / 2;
       }
-      return context.quoteInterval
+      return context.quoteInterval;
     },
     staleTime: Infinity,
     enabled,

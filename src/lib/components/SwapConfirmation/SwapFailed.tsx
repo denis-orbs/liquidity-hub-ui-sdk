@@ -11,7 +11,7 @@ interface Props extends LiquidityHubPayload{
 
 export const SwapFailed = (props:Props) => {
   
-  const {swapError, children} = props
+  const {confirmation, children} = props
  
   return (
     <Container className="lh-failed">
@@ -19,7 +19,7 @@ export const SwapFailed = (props:Props) => {
         <AlertCircle />
       </MainLogo>
       <Title className="lh-failed-title">{'Swap failed on Liquidity Hub'}</Title>
-      {swapError && <Message>{swapError}</Message>}
+      {confirmation.swapError && <Message>{confirmation.swapError}</Message>}
       {children}
     </Container>
   );

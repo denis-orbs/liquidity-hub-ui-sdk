@@ -2,7 +2,7 @@ import BN from "bignumber.js";
 import { useLiquidityHubPersistedStore } from "../../store/main";
 import { LH_CONTROL, TradeOwner } from "../../type";
 import { useMemo } from "react";
-import { useIsDisabled } from "../useIsDisabled";
+
 export const useSwapRoute = (
   lhAmountOut?: string,
   dexAmountOut?: string,
