@@ -46,7 +46,8 @@ function Wrapped() {
       chainId={connectedChainId}
       partner="playground"
       account={address}
-      initialFromToken="USDT"
+      initialFromToken="WBNB"
+      initialToToken="USDC"
       supportedChains={_.map(supportedChains, "chainId")}
       UIconfig={{
         modalStyles: {

@@ -52,10 +52,22 @@ const base: Network = {
   explorerUrl: "https://basescan.org",
   apiUrl: "https://base.hub.orbs.network",
 };
+const linea: Network = {
+  native: networks.linea.native,
+  wToken: networks.linea.wToken,
+  chainId: networks.linea.id,
+  chainName: networks.linea.name,
+  explorerUrl: networks.linea.explorer,
+  apiUrl: "https://linea.hub.orbs.network",
+  getTokens: api.getLineaTokens,
+};
+
+
 export const supportedChains = {
   polygon,
   bsc,
   zkEvm,
   base,
-  fanton
+  fanton,
+  linea
 };

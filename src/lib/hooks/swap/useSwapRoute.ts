@@ -6,8 +6,8 @@ import { useIsDisabled } from "../useIsDisabled";
 export const useSwapRoute = (
   lhAmountOut?: string,
   dexAmountOut?: string,
+  disabled?: boolean
 ): TradeOwner | undefined => {
-  const disabled = useIsDisabled();
   const { liquidityHubEnabled, lhControl } = useLiquidityHubPersistedStore(
     (s) => ({
       liquidityHubEnabled: s.liquidityHubEnabled,

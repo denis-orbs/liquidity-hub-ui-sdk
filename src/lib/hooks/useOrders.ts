@@ -3,14 +3,13 @@ import { useMainContext } from "../provider";
 import { useOrdersStore } from "../store/main";
 import { AddOrderArgs, Order } from "../type";
 
-export const useOrders = ({inTokenUsdAmount, outTokenUsdAmount}: {
-  inTokenUsdAmount?: string;
-  outTokenUsdAmount?: string;
-}) => {
+export const useOrders = (
+  inTokenUsdAmount?: string,
+  outTokenUsdAmount?: string
+) => {
   const { account, chainId } = useMainContext();
   const store = useOrdersStore();
-  const orders = account && chainId ? store.orders?.[account]?.[chainId] : []
-
+  const orders = account && chainId ? store.orders?.[account]?.[chainId] : [];
 
   const addOrder = useCallback(
     (args: AddOrderArgs) => {
@@ -25,7 +24,14 @@ export const useOrders = ({inTokenUsdAmount, outTokenUsdAmount}: {
       };
       store.addOrder(account, chainId, _order);
     },
-    [store.addOrder, account, chainId, orders, inTokenUsdAmount, outTokenUsdAmount]
+    [
+      store.addOrder,
+      account,
+      chainId,
+      orders,
+      inTokenUsdAmount,
+      outTokenUsdAmount,
+    ]
   );
 
   return {

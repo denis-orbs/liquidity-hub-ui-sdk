@@ -2,18 +2,17 @@ import { FlexColumn, FlexRow } from "../../base-styles";
 import { AlertCircle } from "react-feather";
 import styled from "styled-components";
 import { Text } from "../Text";
-import { useSwapState } from "../../store/main";
-import { useShallow } from "zustand/react/shallow";
 import { ReactNode } from "react";
+import { LiquidityHubPayload } from "../..";
 
-export const SwapFailed = ({children}:{children?: ReactNode}) => {
-  const {swapError } = useSwapState(
-    useShallow((s) => ({
-      swapStaus: s.swapStatus,
-      swapError: s.swapError
-    }))
-  );
+interface Props extends LiquidityHubPayload{
+  children?: ReactNode
+}
 
+export const SwapFailed = (props:Props) => {
+  
+  const {swapError, children} = props
+ 
   return (
     <Container className="lh-failed">
       <MainLogo className="lh-failed-img">

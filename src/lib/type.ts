@@ -5,6 +5,7 @@ import {
 } from "@ethersproject/abstract-signer";
 import { CSSObject } from "styled-components";
 import { ReactNode } from "react";
+import { useLiquidityHub } from ".";
 
 export interface TokenPanelProps {
   inputValue?: string;
@@ -14,7 +15,6 @@ export interface TokenPanelProps {
   isSrc?: boolean;
   onTokenSelect: (token: Token) => void;
   usd?: string;
-  usdLoading?: boolean;
 }
 
 export interface ModalStyles {
@@ -176,6 +176,7 @@ export type UseLiquidityHubArgs = {
   outAmount?: string;
   inTokenUsd?: string | number;
   outTokenUsd?: string | number;
+  onWrapSuccess?: () => void;
 };
 
 export type TradeOwner = "dex" | "lh";
@@ -223,11 +224,6 @@ export declare type PermitData = {
   values: any;
 };
 
-export interface SwapConfirmationProps {
-  fromToken?: Token;
-  fromAmount?: string;
-  toToken?: Token;
-  outAmount?: string;
-  inTokenUsdAmount?: string;
-  outTokenUsdAmount?: string;
-}
+
+
+export type LiquidityHubPayload = ReturnType<typeof useLiquidityHub>

@@ -1,95 +1,28 @@
 import {
-  ActionStatus,
   LH_CONTROL,
   Order,
   Orders,
-  QuoteResponse,
-  STEPS,
 } from "../type";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 interface SwapStateValues {
-  currentStep?: STEPS;
-  showConfirmation?: boolean;
-  failures?: number;
-  txHash?: string;
-  swapStatus: ActionStatus;
-  swapError?: string;
-  disableLh?: boolean;
-  quoteOutdated?: boolean;
-  isSigned?: boolean;
-  disabledByDex?: boolean;
-  quoteEnabled?: boolean;
   slippage?: number;
 }
 
 interface SwapState extends SwapStateValues {
   updateState: (state: Partial<SwapState>) => void;
-  onSwapError: (error: string) => void;
-  onSwapSuccess: (quote?: QuoteResponse) => void;
-  onSwapStart: () => void;
-  onCloseSwap: () => void;
   reset: () => void;
 }
 
 const initialSwapState: SwapStateValues = {
-  currentStep: undefined,
-  showConfirmation: false,
-  failures: 0,
-  txHash: undefined,
-  swapStatus: undefined,
-  swapError: undefined,
-  disableLh: false,
-  quoteOutdated: undefined,
-  isSigned: false,
-  disabledByDex: false,
-  quoteEnabled: false,
   slippage: undefined,
 };
 
 export const useSwapState = create<SwapState>((set, get) => ({
   ...initialSwapState,
-  onSwapStart: () => set({ swapStatus: "loading" }),
   updateState: (state) => {    
     set({ ...state })
-  },
-
-  onSwapSuccess: () => {
-    set({
-      failures: 0,
-      swapStatus: "success",
-    });
-  },
-  onSwapError: (swapError) =>
-    set((s) => {
-      const failures = (s.failures || 0) + 1;
-      return {
-        failures,
-        swapError,
-        swapStatus: "failed",
-      };
-    }),
-  onCloseSwap: () => {
-    set({
-      showConfirmation: false,
-    });
-
-    if (get().swapStatus === "failed") {
-      setTimeout(() => {
-        set({
-          swapStatus: undefined,
-          swapError: undefined,
-          currentStep: undefined,
-        });
-      }, 3_00);
-    }
-
-    if (get().swapStatus === "success") {
-      setTimeout(() => {
-        get().reset();
-      }, 3_00);
-    }
   },
   reset: () => set({ ...initialSwapState }),
 }));

@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMainContext } from "../../provider";
-import { QuoteResponse, Token } from "../../type";
+import { ActionStatus, QuoteResponse, Token } from "../../type";
 import { useGlobalStore, useSwapState } from "../../store/main";
 import {
   EMPTY_QUOTE_RESPONSE,
@@ -9,7 +9,6 @@ import {
   zeroAddress,
 } from "../../config/consts";
 import { useChainConfig } from "../useChainConfig";
-import { useIsDisabled } from "../useIsDisabled";
 import {
   amountUi,
   counter,
@@ -30,20 +29,20 @@ export const useQuote = ({
   toToken,
   fromAmount,
   dexMinAmountOut,
-  disabledByDex
+  disabled,
+  swapStatus
 }: {
   fromToken?: Token;
   toToken?: Token;
   fromAmount?: string;
   dexMinAmountOut?: string;
-  disabledByDex?: boolean;
+  disabled?: boolean;
+  swapStatus?: ActionStatus
 }) => {
-  const store = useSwapState();
   const wTokenAddress = useChainConfig()?.wToken?.address;
   const context = useMainContext();
   const slippage = useSlippage()
   const apiUrl = useApiUrl();
-  const disabled = useIsDisabled(disabledByDex);
   const { sessionId, setSessionId } = useGlobalStore();
   const { fromAddress, toAddress } = useHandleTokenAddresses(
     fromToken,
@@ -66,8 +65,8 @@ export const useQuote = ({
     BN(fromAmount || "0").gt(0) &&
     fromAmount !== "0" &&
     !!apiUrl &&
-    !disabled &&
-    store.quoteEnabled;
+    !disabled
+
     const queryKey = [
       QUERY_KEYS.QUOTE,
       fromAddress,
@@ -185,7 +184,7 @@ export const useQuote = ({
     },
     refetchInterval: ({ state }) => {
       const quoteInterval = context.quoteInterval || 10_000
-      if(state.data?.disableInterval || store.swapStatus) {
+      if(state.data?.disableInterval || swapStatus) {
         return undefined
       }
       const refetchCount = state.data?.refetchCount || 0

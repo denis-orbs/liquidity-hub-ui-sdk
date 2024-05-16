@@ -1,5 +1,5 @@
-import { useSwapState } from "../../store/main";
-import { PermitData, STEPS } from "../../type";
+
+import { PermitData } from "../../type";
 import { useCallback } from "react";
 import { useMainContext } from "../../provider";
 import { counter } from "../../util";
@@ -8,11 +8,9 @@ import { _TypedDataEncoder } from "@ethersproject/hash";
 
 export const useSign = () => {
   const { account, web3 } = useMainContext();
-  const updateState = useSwapState((s) => s.updateState);
   const signEIP712 = useSignEIP712();
   return useCallback(
     async (permitData: any) => {
-      updateState({ swapStatus: "loading", currentStep: STEPS.SEND_TX });
       const count = counter();
       try {
         if (!account || !web3) {
@@ -25,16 +23,13 @@ export const useSign = () => {
           throw new Error("No signature");
         }
         swapAnalytics.onSignatureSuccess(signature, count());
-        updateState({ isSigned: true });
         return signature;
       } catch (error) {
-        console.log(error, 'hello');
-        
         swapAnalytics.onSignatureFailed((error as any).message, count());
         throw error;
       }
     },
-    [updateState, account, web3]
+    [account, web3]
   );
 };
 

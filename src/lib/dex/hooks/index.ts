@@ -1,10 +1,6 @@
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { useQuote } from "../../hooks/swap/useQuote";
-import { useInTokenUsdAmount, useTokenUsdAmount, useUsdAmounts } from "../../hooks/useSwapDetails";
 import { useDexState } from "../../store/dex";
-import { useDexLH } from "./useDexLH";
-import { usePriceUsd } from "./usePriceUsd";
 import { useTokenListBalance } from "./useTokenListBalance";
 import { useTokenListBalances } from "./useTokenListBalances";
 
@@ -33,6 +29,19 @@ export const useSetMaxBalance = () => {
   }, [balance, onFromAmountChange]);
 };
 
+export const useInputChange = () => {
+  const onFromAmountChange = useDexState(
+    useShallow((s) => s.onFromAmountChange)
+  );
+
+  return useCallback(
+    (value: string) => {
+      onFromAmountChange(value);
+    },
+    [onFromAmountChange]
+  );
+}
+
 export const useBalancesLoading = () => {
   const balances = useTokenListBalances().data;
   const loadingAfterTx = useDexState(
@@ -46,68 +55,20 @@ export const useFromToken = () => {
   return useDexState(useShallow((s) => s.fromToken));
 };
 
-export const useToToken = () => {
-  return useDexState(useShallow((s) => s.toToken));
-};
 
-export const useFromTokenBalance = () => {
-  return useTokenListBalance(useFromToken()?.address);
-};
-
-export const useToTokenBalance = () => {
-  return useTokenListBalance(useToToken()?.address);
-};
-
-export const useFromTokenAmount = () => {
-  return useDexState(useShallow((s) => s.fromAmount));
-};
-
-export const useToTokenAmount = () => {
-  return useDexLH().quote?.data?.ui.outAmount;
-};
-
-export function useFromTokenPanel() {
-  const { token, amount, onTokenSelect, onChange } = useDexState((s) => ({
-    token: s.fromToken,
-    amount: s.fromAmount,
-    onTokenSelect: s.onFromTokenChange,
-    onChange: s.onFromAmountChange,
-  }));
-
-  const { balance } = useTokenListBalance(token?.address);
-  const usd = usePriceUsd({address: token?.address}).data
-  const usdAmount = useMemo(() => {
-    return  BN(amount || "0").multipliedBy(usd || "0")
-  }, [second])
-  return {
-    token,
-    amount,
-    onTokenSelect,
-    onChange,
-    balance,
-    usd,
-    usdLoading: false,
-  };
+export function useTokenBalance(address?: string) {
+  return  useTokenListBalance(address).balance;
 }
 
-export function useToTokenPanel() {
-  const { token, onTokenSelect } = useDexState((s) => ({
-    token: s.toToken,
+export function useSelectToken(isSrc?: boolean) {
+  const {  onTokenSelect,onFromTokenSelect  } = useDexState((s) => ({
     onTokenSelect: s.onToTokenChange,
+    onFromTokenSelect: s.onFromTokenChange,
   }));
-  const usd = useUsdAmounts().outTokenUsdAmount
-  const balance = useTokenListBalance(token?.address).balance;
 
-  const { data, isLoading } = useQuote();
-  return {
-    token,
-    amount: data?.ui.outAmount,
-    onTokenSelect,
-    balance,
-    usd,
-    usdLoading: isLoading,
-  };
+  return isSrc ? onFromTokenSelect : onTokenSelect
 }
+
 
 export function useSwapTokens() {
   return useDexState((store) => store.onSwitchTokens);

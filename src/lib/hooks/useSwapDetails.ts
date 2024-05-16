@@ -39,18 +39,18 @@ export function useUsdAmounts({
 }: {
   fromToken?: Token;
   fromAmount?: string;
-  inTokenUsd?: string;
   toToken?: Token;
-  outTokenUsd?: string;
+  outTokenUsd?: string | number;
+  inTokenUsd?: string | number;
   outAmount?: string;
 }) {
   return useMemo(() => {
     return {
-      inTokenUsdAmount: amountUi(
+      inToken: amountUi(
         fromToken?.decimals,
         BN(fromAmount || "0").multipliedBy(inTokenUsd || "0")
       ),
-      outTokenUsdAmount: amountUi(
+      outToken: amountUi(
         toToken?.decimals,
         BN(outAmount || "0").multipliedBy(outTokenUsd || "0")
       ),
@@ -58,13 +58,7 @@ export function useUsdAmounts({
   }, [fromToken, fromAmount, inTokenUsd, toToken, outAmount, outTokenUsd]);
 }
 
-export function usePriceImpact({
-  inTokenUsdAmount,
-  outTokenUsdAmount,
-}: {
-  inTokenUsdAmount?: string;
-  outTokenUsdAmount?: string;
-}) {
+export function usePriceImpact( inTokenUsdAmount?: string,outTokenUsdAmount?: string) {
   return useMemo(() => {
     if (
       !outTokenUsdAmount ||
@@ -81,7 +75,7 @@ export function usePriceImpact({
   }, [inTokenUsdAmount, outTokenUsdAmount]);
 }
 
-export function useGasCostUsd({outTokenUsd, toToken, gasCostOutputToken}:{outTokenUsd?: string, toToken?: Token, gasCostOutputToken?: string}) {
+export function useGasCostUsd(outTokenUsd?: string | number, toToken?: Token, gasCostOutputToken?: string) {
   return useMemo(() => {
     if (!gasCostOutputToken || !outTokenUsd) return;
     return amountUi(

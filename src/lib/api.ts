@@ -61,9 +61,11 @@ const useTokensStore = create<TokenListStore>((set) => ({
 }));
 
 const getTokens = async (chainId: number): Promise<Token[]> => {
-  let _tokens = useTokensStore.getState().tokens
+  let _tokens = useTokensStore.getState().tokens;
   if (!_.size(_tokens)) {
-    const payload = await fetch("https://lhthena.s3.us-east-2.amazonaws.com/uniswap-list.json");
+    const payload = await fetch(
+      "https://lhthena.s3.us-east-2.amazonaws.com/uniswap-list.json"
+    );
     const res = await payload.json();
     _tokens = res.tokens;
     useTokensStore.getState().setTokens(_tokens);
@@ -117,9 +119,26 @@ const getPolygonZkEvmTokens = async (): Promise<Token[]> => {
   return [native, ...result];
 };
 
+const getLineaTokens = async (): Promise<Token[]> => {
+  let payload = await fetch("https://api.lynex.fi/api/v1/assets");
+  const res = await payload.json();
+
+  const result = res.data.map((it: any) => {
+    return {
+      address: it.address,
+      symbol: it.symbol,
+      decimals: it.decimals,
+      logoUrl: it.logoURI,
+    };
+  });
+
+  return [networks.linea.native, ...result];
+};
 
 const getFantomTokens = async (): Promise<Token[]> => {
-  const res = await fetch("https://raw.githubusercontent.com/viaprotocol/tokenlists/main/tokenlists/ftm.json");
+  const res = await fetch(
+    "https://raw.githubusercontent.com/viaprotocol/tokenlists/main/tokenlists/ftm.json"
+  );
   const data = await res.json();
   return data.map((token: any) => {
     return {
@@ -128,13 +147,14 @@ const getFantomTokens = async (): Promise<Token[]> => {
       decimals: token.decimals,
       logoUrl: token.logoURI,
       name: token.name,
-    }
-  })
-}
+    };
+  });
+};
 
 export const api = {
   getTokens,
   getPolygonZkEvmTokens,
   priceUsd: fetchPrice,
-  getFantomTokens
+  getFantomTokens,
+  getLineaTokens,
 };

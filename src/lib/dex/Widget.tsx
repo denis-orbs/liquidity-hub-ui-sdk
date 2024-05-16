@@ -11,6 +11,7 @@ import {
   TokenListItemProps,
   ProviderArgs,
   Token,
+  LiquidityHubPayload,
 } from "../type";
 import {
   StyledChangeTokens,
@@ -34,17 +35,12 @@ import { useShallow } from "zustand/react/shallow";
 import BN from "bignumber.js";
 import {
   useAcceptedAmountOut,
-  useChainConfig,
   useFormatNumber,
-  useSwapButton,
-  useSwapConfirmation,
+  useLiquidityHub,
 } from "../hooks";
 import { Text } from "../components/Text";
 import { Logo } from "../components/Logo";
-import {
-  PoweredByOrbs,
-  SwapConfirmation,
-} from "../components";
+import { PoweredByOrbs, SwapConfirmation } from "../components";
 import { FlexRow, FlexColumn } from "../base-styles";
 import { useTokenListBalance } from "./hooks/useTokenListBalance";
 import { LiquidityHubProvider, useMainContext } from "../provider";
@@ -52,17 +48,15 @@ import { useDexState } from "../store/dex";
 import {
   usePercentSelect,
   useShowConfirmationButton,
-  useFromTokenPanel,
-  useToTokenPanel,
+  useDexLH,
+  useSelectToken,
+  useInputChange,
 } from "./hooks";
 import _ from "lodash";
 import { useOnSwapSuccessCallback } from "./hooks/useOnSwapSuccessCallback";
 import { useInitialTokens } from "./hooks/useInitialTokens";
-import { useRate } from "../hooks/useRate";
 import { ConfirmationPoweredBy } from "../components/SwapConfirmation/ConfirmationPoweredBy";
-import { useQuote } from "../hooks/swap/useQuote";
 import { useGasCostUsd, usePriceImpact } from "../hooks/useSwapDetails";
-import { useSwapState } from "../store/main";
 
 export const theme = {
   colors: {
@@ -205,53 +199,60 @@ const TokenSelect = ({
   );
 };
 
-const SwapModal = () => {
-  const { onClose, swapStatus, isOpen, title } = useSwapConfirmation();
-  const updateStore = useDexState(useShallow((s) => s.updateStore));
-  const wToken = useChainConfig()?.wToken;
-  const quote = useQuote().data;
+const SwapModal = (props: ReturnType<typeof useLiquidityHub>) => {
+  const {
+    quote,
+    btnText,
+    swapCallback,
+    isLoading,
+    swapStatus,
+    onCloseConfirmation,
+    showConfirmation,
+    toToken,
+    title,
+  } = props;
 
   const { accept, shouldAccept, amountToAccept } = useAcceptedAmountOut(
     quote?.outAmount,
-    quote?.minAmountOut
+    quote?.minAmountOut,
+    toToken
   );
-
-  const onWrapSuccess = useCallback(() => {
-    updateStore({ fromToken: wToken });
-  }, [updateStore, wToken]);
-
-  const swapButton = useSwapButton(onWrapSuccess);
 
   const onSuccess = useOnSwapSuccessCallback();
 
   const TryAgainButton = () => {
-    return <StyledSubmitButton onClick={onClose}>Try again</StyledSubmitButton>;
+    return (
+      <StyledSubmitButton onClick={onCloseConfirmation}>
+        Try again
+      </StyledSubmitButton>
+    );
   };
 
   const onClick = useCallback(async () => {
     try {
-      await swapButton.swap();
+      await swapCallback();
       onSuccess();
     } catch (error) {}
-  }, [swapButton.swap, onSuccess]);
+  }, [swapCallback, onSuccess]);
 
   return (
-    <WidgetModal title={title} open={isOpen} onClose={onClose}>
+    <WidgetModal
+      title={title}
+      open={showConfirmation}
+      onClose={onCloseConfirmation}
+    >
       {shouldAccept ? (
         <AcceptAmountOut amountToAccept={amountToAccept} accept={accept} />
       ) : (
-        <SwapConfirmation outAmount={quote?.ui.outAmount}>
+        <SwapConfirmation {...props} >
           {swapStatus === "failed" ? (
             <TryAgainButton />
           ) : (
             !swapStatus && (
               <>
-                <SwapDetails />
-                <StyledSubmitButton
-                  onClick={onClick}
-                  isLoading={swapButton.isPending}
-                >
-                  {swapButton.text}
+                <SwapDetails {...props} />
+                <StyledSubmitButton onClick={onClick} isLoading={isLoading}>
+                  {btnText}
                 </StyledSubmitButton>
               </>
             )
@@ -299,9 +300,8 @@ const StyledPoweredByOrbs = styled(PoweredByOrbs)`
   margin-top: 30px;
 `;
 
-
-export const SwapSubmitButton = () => {
-  const { disabled, text, onClick, isLoading } = useShowConfirmationButton();
+export const SwapSubmitButton = (props: LiquidityHubPayload) => {
+  const { disabled, text, onClick, isLoading } = useShowConfirmationButton(props);
 
   return (
     <StyledSubmitButton
@@ -361,34 +361,34 @@ const ChangeTokens = () => {
   );
 };
 
-const FromTokenPanel = () => {
-  const { token, amount, onChange, onTokenSelect, usd, usdLoading } =
-    useFromTokenPanel();
-
+const FromTokenPanel = (props: LiquidityHubPayload) => {
+  const { fromToken, fromAmountUi, inTokenUsdAmount } = props;
+  
+  const select = useSelectToken(true);
+  const onChange = useInputChange()
   return (
     <TokenPanel
-      token={token}
-      inputValue={amount || ""}
+      token={fromToken}
+      inputValue={fromAmountUi || ""}
       onInputChange={onChange}
       label="From"
       isSrc={true}
-      onTokenSelect={onTokenSelect}
-      usd={usd}
-      usdLoading={usdLoading}
+      onTokenSelect={select}
+      usd={inTokenUsdAmount?.toString()}
     />
   );
 };
 
-const ToTokenPanel = () => {
-  const { token, onTokenSelect, amount, usd, usdLoading } = useToTokenPanel();
+const ToTokenPanel = (props: LiquidityHubPayload) => {
+  const { toToken, quote, outTokenUsdAmount } = props
+  const select = useSelectToken(false)
   return (
     <TokenPanel
-      onTokenSelect={onTokenSelect}
-      token={token}
-      inputValue={useFormatNumber({ value: amount })}
+      onTokenSelect={select}
+      token={toToken}
+      inputValue={quote?.ui.outAmount}
       label="To"
-      usd={usd}
-      usdLoading={usdLoading}
+      usd={outTokenUsdAmount}
     />
   );
 };
@@ -416,7 +416,6 @@ const TokenPanel = ({
   isSrc,
   onTokenSelect,
   usd: _usd,
-  usdLoading,
 }: TokenPanelProps) => {
   const UIconfig = useWidgetContext();
   const account = useMainContext().account;
@@ -439,7 +438,7 @@ const TokenPanel = ({
   const usd = useFormatNumber({ value: _usd });
 
   const header = <TokenPanelHeader isSrc={isSrc} label={label} />;
-
+    const usdLoading = BN(usd || '0').isZero() && BN(inputValue || '0').gt(0);
   return (
     <StyledTokenPanel
       $inputLeft={inputLeft}
@@ -511,18 +510,26 @@ export const Widget = (props: Props) => {
       <ThemeProvider theme={theme}>
         <ContextProvider UIconfig={props.UIconfig}>
           <Watcher {...props} />
-          <Container>
-            <FromTokenPanel />
-            <ChangeTokens />
-            <ToTokenPanel />
-            <SwapDetails />
-            <SwapSubmitButton />
-            <SwapModal />
-            <StyledPoweredByOrbs />
-          </Container>
+          <WidgetContent />
         </ContextProvider>
       </ThemeProvider>
     </LiquidityHubProvider>
+  );
+};
+
+const WidgetContent = () => {
+
+  const lh = useDexLH();
+  return (
+    <Container>
+      <FromTokenPanel {...lh} />
+      <ChangeTokens />
+      <ToTokenPanel {...lh} />
+      <SwapDetails {...lh}  />
+      <SwapSubmitButton {...lh} />
+      <SwapModal {...lh} />
+      <StyledPoweredByOrbs />
+    </Container>
   );
 };
 
@@ -627,37 +634,35 @@ const StyledTokenListContainer = styled(FlexColumn)`
   width: 100%;
 `;
 
-const SwapDetails = () => {
+const SwapDetails = (props: LiquidityHubPayload) => {
   const priceImpactF = useFormatNumber({
     value: usePriceImpact(),
     decimalScale: 2,
   });
-  const quote = useQuote().data;
+  const {quote, toToken, fromAmountUi: fromAmount} = props;
   const minAmountOut = useFormatNumber({ value: quote?.ui.minAmountOut });
 
   const gasCostUsd = useGasCostUsd();
   const gas = useFormatNumber({ value: gasCostUsd, decimalScale: 2 });
-  const rate = useRate();
-  const toToken = useSwapState(useShallow((s) => s.toToken));
-  const rateUsd = useFormatNumber({
-    value: rate.usd,
-    decimalScale: 2,
-    prefix: "$",
-  });
+  // const rateUsd = useFormatNumber({
+  //   value: rate.usd,
+  //   decimalScale: 2,
+  //   prefix: "$",
+  // });
 
-  const fromAmount = useSwapState(useShallow((s) => s.fromAmount));
 
-  if(BN(fromAmount || '0').isZero() || BN(quote?.outAmount || '0').isZero()) return null
+  if (BN(fromAmount || "0").isZero() || BN(quote?.outAmount || "0").isZero())
+    return null;
 
   return (
     <StyledSwapDetails>
-      <StyledDetailsRow onClick={rate.invert}>
+      {/* <StyledDetailsRow onClick={rate.invert}>
         <StyledDetailsRowLabel>Rate</StyledDetailsRowLabel>
         <StyledDetailsRowValue>
           {`1 ${rate.leftToken} = ${rate.rightToken} ${rate.value}`}{" "}
           <small>{`(${rateUsd})`}</small>
         </StyledDetailsRowValue>
-      </StyledDetailsRow>
+      </StyledDetailsRow> */}
       <StyledDetailsRow>
         <StyledDetailsRowLabel>Gas cost</StyledDetailsRowLabel>
         <StyledDetailsRowValue>{`$${gas}`}</StyledDetailsRowValue>
@@ -685,8 +690,6 @@ const StyledSwapDetails = styled(FlexColumn)`
   width: 100%;
 `;
 
-
-
 const StyledDetailsRow = styled.div`
   display: flex;
   justify-content: space-between;
@@ -695,12 +698,12 @@ const StyledDetailsRow = styled.div`
 `;
 
 const StyledDetailsRowLabel = styled(Text)`
-font-size: 14px;
-font-weight: 500;
+  font-size: 14px;
+  font-weight: 500;
 `;
 
 const StyledDetailsRowValue = styled(Text)`
-font-size: 14px;
+  font-size: 14px;
   small {
     opacity: 0.5;
   }

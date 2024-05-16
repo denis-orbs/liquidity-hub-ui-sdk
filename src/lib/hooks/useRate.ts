@@ -4,22 +4,20 @@ import { useFormatNumber } from "./useFormatNumber";
 import { Token } from "../type";
 
 export const useRate = ({
-  defaultInverted = false,
   fromToken,
   toToken,
   inTokenUsd,
   outTokenUsd,
-}:{
-  defaultInverted: boolean,
-  fromToken?: Token,
-  toToken?: Token,
-  inTokenUsd?: string,
-  outTokenUsd?: string,
+}: {
+  fromToken?: Token;
+  toToken?: Token;
+  inTokenUsd?: string | number;
+  outTokenUsd?: string | number;
 }) => {
-  const [inverted, setInverted] = useState(defaultInverted);
+  const [inverted, setInverted] = useState(false);
 
   const value = useMemo(() => {
-    if ( !inTokenUsd || !outTokenUsd) return "";
+    if (!inTokenUsd || !outTokenUsd) return "";
 
     if (!inverted) {
       return BN(inTokenUsd).dividedBy(outTokenUsd).toString();

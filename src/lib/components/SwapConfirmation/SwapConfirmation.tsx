@@ -5,9 +5,9 @@ import { SwapSuccess } from "./SwapSuccess";
 import { SwapFailed } from "./SwapFailed";
 import { SwapMain } from "./SwapMain";
 import { ReactNode} from "react";
-import { SwapConfirmationProps } from "../../type";
+import { LiquidityHubPayload } from "../../type";
 
-interface Props extends SwapConfirmationProps {
+interface Props extends LiquidityHubPayload {
   className?: string;
   style?: CSSObject;
   children?: ReactNode;
@@ -19,14 +19,13 @@ export const SwapConfirmation = ({
   children,
   ...rest
 }: Props) => {
-  const swapStatus = useSwapState(useShallow((s) => s.swapStatus));
-
+  
   return (
     <Container className={`${className} lh-summary`} $style={style}>
-      {swapStatus === "success" ? (
+      {rest.swapStatus === "success" ? (
         <SwapSuccess {...rest} />
-      ) : swapStatus === "failed" ? (
-        <SwapFailed children={children} />
+      ) : rest.swapStatus === "failed" ? (
+        <SwapFailed {...rest} children={children} />
       ) : (
         <SwapMain {...rest} children={children} />
       )}

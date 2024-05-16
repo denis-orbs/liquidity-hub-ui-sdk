@@ -6,7 +6,7 @@ export const useAmountBN = (
   value?: string,
 ) => {
   return useMemo(() => {
-    if (!decimals || !value) return "0";
+    if (!decimals || !value) return;
     return amountBN(decimals, value).toString();
   }, [decimals, value]);
 

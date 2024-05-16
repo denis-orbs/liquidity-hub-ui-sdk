@@ -1,5 +1,5 @@
 import { FlexColumn, FlexRow } from "../../base-styles";
-import { SwapConfirmationProps, Token } from "../../type";
+import { LiquidityHubPayload, Token } from "../../type";
 import styled from "styled-components";
 import { Logo } from "../Logo";
 import { Text } from "../Text";
@@ -12,8 +12,8 @@ export const SwapSuccess = ({
   fromToken,
   toToken,
   fromAmount,
-  outAmount,
-}: SwapConfirmationProps) => {
+  quote,
+}: LiquidityHubPayload) => {
   return (
     <StyledSuccess className="lh-success">
       <StyledTop>
@@ -29,7 +29,7 @@ export const SwapSuccess = ({
       <StyledTokensContainer>
         <SuccessToken token={fromToken} amount={fromAmount} />
         <Separator />
-        <SuccessToken token={toToken} amount={outAmount} />
+        <SuccessToken token={toToken} amount={quote?.ui.outAmount} />
       </StyledTokensContainer>
       <ExplorerLink styles={{ marginTop: 50 }} />
     </StyledSuccess>

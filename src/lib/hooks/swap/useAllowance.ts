@@ -6,8 +6,6 @@ import { useContractCallback } from "../useContractCallback";
 import { permit2Address, QUERY_KEYS } from "../../config/consts";
 import BN from "bignumber.js";
 import { isNativeAddress } from "../../util";
-import { useSwapState } from "../../store/main";
-import { useShallow } from "zustand/react/shallow";
 const useApproved = (address?: string) => {
   const { account } = useMainContext();
   const getContract = useContractCallback();
@@ -31,9 +29,8 @@ const useApproved = (address?: string) => {
   );
 };
 
-export const useAllowance = ({fromToken, toToken, fromAmount}:{
+export const useAllowance = ({fromToken, fromAmount}:{
   fromToken?: Token;
-  toToken?: Token,
   fromAmount?: string;
 }) => {
   const wToken = useChainConfig()?.wToken;

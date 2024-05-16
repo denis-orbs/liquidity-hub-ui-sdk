@@ -3,7 +3,7 @@ import BN from "bignumber.js";
 import { FlexColumn, FlexRow } from "../../base-styles";
 import { useFormatNumber } from "../../hooks/useFormatNumber";
 import { Logo } from "../Logo";
-import { SwapConfirmationProps, Token } from "../../type";
+import { LiquidityHubPayload, Token } from "../../type";
 import { Text } from "../Text";
 import { Separator } from "./Components";
 const StyledSwapDetails = styled(FlexColumn)`
@@ -11,28 +11,22 @@ const StyledSwapDetails = styled(FlexColumn)`
   gap: 15px;
 `;
 
-export function SwapDetails({
-  fromToken,
-  fromAmount,
-  toToken,
-  outAmount,
-  inTokenUsdAmount,
-  outTokenUsdAmount,
-}: SwapConfirmationProps) {
+export function SwapDetails(props: LiquidityHubPayload) {
+  const {inTokenUsdAmount, outTokenUsdAmount, fromToken, toToken, fromAmountUi, quote} = props
   return (
     <StyledSwapDetails className="lh-details">
       <TokenDisplay
         title="Swap from"
         usd={inTokenUsdAmount}
         token={fromToken}
-        amount={fromAmount}
+        amount={fromAmountUi}
       />
       <Separator />
       <TokenDisplay
         title="Swap to"
         usd={outTokenUsdAmount}
         token={toToken}
-        amount={outAmount}
+        amount={quote?.ui.outAmount}
       />
     </StyledSwapDetails>
   );

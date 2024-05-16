@@ -1,13 +1,10 @@
 import BN from "bignumber.js";
 import { useCallback, useMemo } from "react";
-
 import { useShallow } from "zustand/react/shallow";
 import { useMutation } from "@tanstack/react-query";
-
-import { useDexLH } from "./useDexLH";
 import { useTokenListBalance } from "./useTokenListBalance";
 import { useTokenListBalances } from "./useTokenListBalances";
-import { useSwitchNetwork, useUnwrap } from "../..";
+import { LiquidityHubPayload, useSwitchNetwork, useUnwrap } from "../..";
 import { useIsInvalidChain, useChainConfig } from "../../hooks";
 import { useMainContext } from "../../provider";
 import { useDexState } from "../../store/dex";
@@ -17,7 +14,6 @@ import {
   eqIgnoreCase,
   isNativeAddress,
 } from "../../util";
-import { useSwapState } from "../../store/main";
 import { useAmountBN } from "../../hooks/useAmountBN";
 
 export const useUnwrapMF = () => {
@@ -40,16 +36,12 @@ export const useUnwrapMF = () => {
   });
 };
 
-export const useShowConfirmationButton = () => {
-  const { fromToken, toToken, fromAmount } = useSwapState((s) => ({
-    fromToken: s.fromToken,
-    toToken: s.toToken,
-    fromAmount: s.fromAmount,
-  }));
+export const useShowConfirmationButton = (args: LiquidityHubPayload) => {
 
-  const { quote, confirmSwap, analyticsInit } =
-    useDexLH();
-  const toAmount = quote.data?.ui.outAmount;
+  const {onShowConfirmation, quote, fromAmount, fromToken, toToken, analyticsInit, quoteLoading, quoteError} = args
+
+
+  const toAmount = quote?.ui.outAmount;
   const { mutate: switchNetwork, isPending: switchNetworkLoading } =
     useSwitchNetwork();
   const wrongChain = useIsInvalidChain();
@@ -65,13 +57,13 @@ export const useShowConfirmationButton = () => {
 
   const _confirmSwap = useCallback(() => {
     analyticsInit();
-    confirmSwap();
-  }, [confirmSwap, analyticsInit]);
+    onShowConfirmation();
+  }, [onShowConfirmation, analyticsInit]);
 
-  const isLoading = quote.isLoading || switchNetworkLoading || unwrapLoading;
+  const isLoading = quoteLoading || switchNetworkLoading || unwrapLoading;
 
   return useMemo(() => {
-    if (quote.isLoading) {
+    if (quoteLoading) {
       return {
         disabled: false,
         text: "",
@@ -124,14 +116,14 @@ export const useShowConfirmationButton = () => {
       };
     }
 
-    if (fromAmountBN.gt(fromTokenBalanceBN)) {
+    if (fromAmountBN.gt(fromTokenBalanceBN || '0')) {
       return {
         disabled: true,
         text: "Insufficient balance",
       };
     }
 
-    if ( quote.error || BN(toAmount || "0").isZero()) {
+    if (quoteError || BN(toAmount || "0").isZero()) {
       return {
         disabled: true,
         text: "No liquidity",

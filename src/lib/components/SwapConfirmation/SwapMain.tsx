@@ -1,21 +1,21 @@
 import styled, { CSSObject } from "styled-components";
 import { StepComponent } from "./Step";
 import { SwapDetails } from "./Details";
-import { useSteps } from "../../hooks/swap/useSteps";
 import { FlexColumn } from "../../base-styles";
 import { ReactNode } from "react";
 import { ExplorerLink } from "../ExplorerLink";
+import { LiquidityHubPayload } from "../..";
 
-interface Props {
+interface Props extends LiquidityHubPayload {
   style?: CSSObject;
   children: ReactNode;
 }
 
-export const SwapMain = ({ style = {}, children }: Props) => {
+export const SwapMain = ({ style = {}, children, ...rest }: Props) => {
   return (
     <Container style={style}>
-      <SwapDetails />
-      <StepsComponent />
+      <SwapDetails {...rest} />
+      <StepsComponent {...rest} />
       {children}
       <ExplorerLink styles={{marginTop: 10}} />
     </Container>
@@ -23,10 +23,10 @@ export const SwapMain = ({ style = {}, children }: Props) => {
 };
 
 
-const StepsComponent = () => {
-  const { steps, status } = useSteps();
+const StepsComponent = (props: LiquidityHubPayload) => {
+  const { steps, isLoading } = props
 
-  if (status !== "loading") return null;
+  if (isLoading) return null;
 
   return (
     <>
