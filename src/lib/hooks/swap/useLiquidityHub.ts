@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useAllowance } from "./useAllowance";
 import { useQuote } from "./useQuote";
 import BN from "bignumber.js";
 import { useLiquidityHubPersistedStore, useSwapState } from "../../store/main";
 import { LH_CONTROL, UseLiquidityHubArgs } from "../../type";
-import { Logger } from "../../util";
+import { Logger, safeBN } from "../../util";
 import { useShallow } from "zustand/react/shallow";
 import _ from "lodash";
-import {useAnalytics} from "../useAnalytics";
+import { useAnalytics } from "../useAnalytics";
 import { useDebounce } from "../useDebounce";
 
 const useQuoteDelay = (
@@ -57,7 +57,6 @@ const useQuoteDelay = (
   ]);
 };
 
-
 export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
   const { swapStatus, swapError, updateState, showConfirmation } = useSwapState(
     useShallow((store) => ({
@@ -68,17 +67,27 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     }))
   );
 
-  const fromAmount = useDebounce(
+  const debouncedFromAmount = useDebounce(
     args.fromAmount,
     _.isUndefined(args.debounceFromAmountMillis)
       ? 2_00
       : args.debounceFromAmountMillis
   );
-  useQuoteDelay(args.fromAmount || '0', args.minAmountOut, args.quoteDelayMillis);
+
+  const fromAmount = useMemo(
+    () => safeBN(debouncedFromAmount),
+    [debouncedFromAmount]
+  );
+  const dexMinAmountOut = useMemo(
+    () => safeBN(args.minAmountOut),
+    [args.minAmountOut]
+  );
+
+  useQuoteDelay(fromAmount || "0", dexMinAmountOut, args.quoteDelayMillis);
 
   useEffect(() => {
     updateState({
-      dexMinAmountOut: args.minAmountOut,
+      dexMinAmountOut,
       disabledByDex: args.disabled,
       slippage: args.slippage,
       inTokenUsd: args.inTokenUsd,
@@ -93,7 +102,7 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     }
   }, [
     updateState,
-    args.minAmountOut,
+    dexMinAmountOut,
     args.disabled,
     args.slippage,
     showConfirmation,

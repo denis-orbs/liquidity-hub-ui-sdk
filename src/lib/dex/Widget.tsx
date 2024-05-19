@@ -206,11 +206,11 @@ const TokenSelect = ({
 };
 
 const SwapModal = () => {
-  const { onClose, swapStatus, isOpen, title } = useSwapConfirmation();
+  const { onClose, swapStatus, isOpen, title, warning } = useSwapConfirmation();
   const updateStore = useDexState(useShallow((s) => s.updateStore));
   const wToken = useChainConfig()?.wToken;
   const quote = useQuote().data;
-
+  
   const { accept, shouldAccept, amountToAccept } = useAcceptedAmountOut(
     quote?.outAmount,
     quote?.minAmountOut
@@ -240,7 +240,7 @@ const SwapModal = () => {
       {shouldAccept ? (
         <AcceptAmountOut amountToAccept={amountToAccept} accept={accept} />
       ) : (
-        <SwapConfirmation outAmount={quote?.ui.outAmount}>
+        <SwapConfirmation>
           {swapStatus === "failed" ? (
             <TryAgainButton />
           ) : (
@@ -249,9 +249,10 @@ const SwapModal = () => {
                 <SwapDetails />
                 <StyledSubmitButton
                   onClick={onClick}
-                  isLoading={swapButton.isPending}
+                  isLoading={swapButton.isPending || warning?.isLoading}
+                  $disabled={!!warning}
                 >
-                  {swapButton.text}
+                  {warning?.text || swapButton.text}
                 </StyledSubmitButton>
               </>
             )

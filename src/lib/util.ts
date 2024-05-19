@@ -433,3 +433,9 @@ export const Logger = (value: string | object | any[] | number) => {
     } catch (error) {}
   }
 };
+
+
+export const safeBN = (value?: string | number) => {
+  if (!value) return
+  return BN(value).decimalPlaces(0).toString()
+}

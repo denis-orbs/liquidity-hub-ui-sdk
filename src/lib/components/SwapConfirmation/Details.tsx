@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import BN from "bignumber.js";
+import BN from 'bignumber.js'
 import { FlexColumn, FlexRow } from "../../base-styles";
 import { useFormatNumber } from "../../hooks/useFormatNumber";
 import { Logo } from "../Logo";
@@ -16,6 +16,7 @@ export function SwapDetails() {
   const { fromToken, fromAmount, toToken, outAmount } = useSwapConfirmation();
   const {inTokenUsdAmount, outTokenUsdAmount} = useUsdAmounts()
 
+  
   return (
     <StyledSwapDetails className="lh-details">
       <TokenDisplay
@@ -49,6 +50,7 @@ const TokenDisplay = ({
   if (!token) return null;
 
   const totalUsd = useFormatNumber({ value: usd });
+
   const _amount = useFormatNumber({ value: amount });
 
   return (
@@ -62,7 +64,7 @@ const TokenDisplay = ({
         <StyledLeft $alignItems="flex-start" className="lh-token-left">
           <TokenAmount className="lh-token-amount">{_amount}</TokenAmount>
           <USD className="lh-token-usd">
-            {BN(totalUsd || 0).gt(0) ? `$${totalUsd}` : "-"}
+            {BN(usd || '0').gt(0) ? `$${totalUsd}` : "-"}
           </USD>
         </StyledLeft>
         <StyledLogoAndSymbol className="lh-token-right">

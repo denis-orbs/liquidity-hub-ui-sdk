@@ -2,10 +2,10 @@ import BN from "bignumber.js";
 import Web3 from "web3";
 import { useGlobalStore } from "../store/main";
 import { QuoteResponse } from "../type";
-import { amountUi, waitForTxReceipt } from "../util";
+import { amountUi, Logger, waitForTxReceipt } from "../util";
 
 import { AnalyticsData, InitDexTrade, InitTrade } from "./types";
-const ANALYTICS_VERSION = 0.5;
+const ANALYTICS_VERSION = 0.6;
 const BI_ENDPOINT = `https://bi.orbs.network/putes/liquidity-hub-ui-${ANALYTICS_VERSION}`;
 const DEX_PRICE_BETTER_ERROR = "Dex trade is better than Clob trade";
 
@@ -17,7 +17,6 @@ const initialData: Partial<AnalyticsData> = {
   isDexTrade: false,
   version: ANALYTICS_VERSION,
 };
-
 
 const onWallet = (provider: any): Partial<AnalyticsData | undefined> => {
   try {
@@ -46,8 +45,6 @@ const onWallet = (provider: any): Partial<AnalyticsData | undefined> => {
   }
 };
 
-
-
 const initSwap = (args: InitTrade): Partial<AnalyticsData> | undefined => {
   const srcToken = args.fromToken;
   const dstToken = args.toToken;
@@ -55,14 +52,17 @@ const initSwap = (args: InitTrade): Partial<AnalyticsData> | undefined => {
     return;
   }
 
+  let srcTokenUsdValue = args.fromTokenUsdAmount
+    ? parseFloat(args.fromTokenUsdAmount)
+    : 0;
+  let dstTokenUsdValue = args.toTokenUsdAmount
+    ? parseFloat(args.toTokenUsdAmount)
+    : 0;
 
-  let dstTokenUsdValue = args.toTokenUsdAmount || 0
-  let srcTokenUsdValue = args.fromTokenUsdAmount || 0
-
-  const clobDexPriceDiffPercent = !args.dexMinAmountOut
+  const clobDexPriceDiffPercent = !args.dexAmountOut
     ? "0"
     : new BN(args.quoteAmountOut || "0")
-        .dividedBy(new BN(args.dexMinAmountOut))
+        .dividedBy(new BN(args.dexAmountOut))
         .minus(1)
         .multipliedBy(100)
         .toFixed(2);
@@ -72,16 +72,20 @@ const initSwap = (args: InitTrade): Partial<AnalyticsData> | undefined => {
     new BN(args.quoteAmountOut || "0")
   );
 
-    const wallet = onWallet(args.provider) || {}
+  const wallet = onWallet(args.provider) || {};
   return {
     clobDexPriceDiffPercent,
-    dexMinAmountOut: args.dexMinAmountOut || "0",
-    dexMinAmountOutUI: amountUi(
+    dexOutAmountWS: args.dexOutAmountWS || "0",
+    dexOutAmountWSUi: amountUi(
       dstToken.decimals,
-      new BN(args.dexMinAmountOut || "0")
+      new BN(args.dexOutAmountWS || "0")
     ),
-    dexAmountOut: args.dexMinAmountOut || "0",
-    srcTokenUsdValue: srcTokenUsdValue ? Number(srcTokenUsdValue) : 0,
+    dexAmountOut: args.dexAmountOut || "0",
+    dexAmountOutUi: amountUi(
+      dstToken.decimals,
+      new BN(args.dexAmountOut || "0")
+    ),
+    srcTokenUsdValue,
     dstTokenUsdValue,
     srcTokenAddress: srcToken?.address,
     srcTokenSymbol: srcToken?.symbol,
@@ -96,12 +100,13 @@ const initSwap = (args: InitTrade): Partial<AnalyticsData> | undefined => {
     tradeType: args.tradeType,
     quoteAmountOut: args.quoteAmountOut,
     quoteAmountOutUI,
-    ...wallet
+    ...wallet,
   };
 };
 
 const sendBI = async (data: Partial<AnalyticsData>) => {
   try {
+    Logger(data)
     await fetch(BI_ENDPOINT, {
       method: "POST",
       headers: {

@@ -9,14 +9,15 @@ export interface InitTrade {
   tradeType?: tradeType;
   fromToken?: Token;
   toToken?: Token;
-  fromTokenUsdAmount?: number;
-  toTokenUsdAmount?: number;
-  dexMinAmountOut?: string;
+  fromTokenUsdAmount?: string;
+  toTokenUsdAmount?: string;
   slippage?: number;
   chainId?: number;
   partner?: string;
   quoteAmountOut?: string;
   provider?: any;
+  dexAmountOut?: string;
+  dexOutAmountWS?: string;
 }
 
 export interface InitDexTrade extends InitTrade {
@@ -34,10 +35,12 @@ export interface AnalyticsData {
   firstFailureSessionId?: string;
   sessionId?: string;
   walletAddress: string;
-  dexMinAmountOut: string;
-  dexMinAmountOutUI: string;
 
   dexAmountOut: string;
+  dexAmountOutUi: string;
+
+  dexOutAmountWS: string;
+  dexOutAmountWSUi: string;
 
   isClobTrade: boolean;
   srcTokenAddress: string;

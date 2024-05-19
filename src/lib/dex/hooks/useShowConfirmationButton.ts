@@ -18,7 +18,6 @@ import {
   isNativeAddress,
 } from "../../util";
 import { useSwapState } from "../../store/main";
-import { useAmountBN } from "../../hooks/useAmountBN";
 
 export const useUnwrapMF = () => {
   const { refetch } = useTokenListBalances();
@@ -53,11 +52,9 @@ export const useShowConfirmationButton = () => {
   const { mutate: switchNetwork, isPending: switchNetworkLoading } =
     useSwitchNetwork();
   const wrongChain = useIsInvalidChain();
-  
-  const fromAmountBN = new BN(fromAmount || "0");
+
   const { balance: fromTokenBalance } = useTokenListBalance(fromToken?.address);
   
-  const fromTokenBalanceBN = useAmountBN(fromToken?.decimals, fromTokenBalance)
   const wToken = useChainConfig()?.wToken?.address;
   const { mutate: unwrap, isPending: unwrapLoading } = useUnwrapMF();
   const { connectWallet, account, supportedChains } = useMainContext();
@@ -124,12 +121,12 @@ export const useShowConfirmationButton = () => {
       };
     }
 
-    if (fromAmountBN.gt(fromTokenBalanceBN)) {
-      return {
-        disabled: true,
-        text: "Insufficient balance",
-      };
-    }
+    // if (fromAmountBN.gt(fromTokenBalanceBN)) {
+    //   return {
+    //     disabled: true,
+    //     text: "Insufficient balance",
+    //   };
+    // }
 
     if ( quote.error || BN(toAmount || "0").isZero()) {
       return {

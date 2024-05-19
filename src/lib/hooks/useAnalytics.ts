@@ -1,11 +1,11 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { swapAnalytics } from "../analytics";
 import { useMainContext } from "../provider";
 import { useSwapState } from "../store/main";
 import { useQuote } from "./swap/useQuote";
 import { useUsdAmounts, useSlippage } from "./useSwapDetails";
-
+import BN from "bignumber.js";
 export function useAnalytics() {
   const slippage = useSlippage();
   const { fromToken, toToken, dexMinAmountOut, fromAmount } = useSwapState(
@@ -20,14 +20,23 @@ export function useAnalytics() {
   const { data: quote } = useQuote();
   const { provider } = useMainContext();
   const quoteAmountOut = quote?.minAmountOut;
-  const {inTokenUsdAmount, outTokenUsdAmount } = useUsdAmounts();
+  const { inTokenUsdAmount, outTokenUsdAmount } = useUsdAmounts();
+
+  const dexOutAmountWS = useMemo(() => {
+    const slippageAmount = BN(dexMinAmountOut || "0").times(slippage / 100);
+    return BN(dexMinAmountOut || "0")
+      .plus(slippageAmount)
+      .toString();
+  }, [slippage, dexMinAmountOut]);
+
   const initTrade = useCallback(() => {
     swapAnalytics.onInitSwap({
-      fromTokenUsdAmount: inTokenUsdAmount  ?parseFloat(inTokenUsdAmount) : 0,
+      fromTokenUsdAmount: outTokenUsdAmount,
       fromToken,
       toToken,
-      dexMinAmountOut,
-      toTokenUsdAmount: outTokenUsdAmount ? parseFloat(outTokenUsdAmount) : 0,
+      dexAmountOut: dexMinAmountOut,
+      dexOutAmountWS,
+      toTokenUsdAmount: outTokenUsdAmount,
       srcAmount: fromAmount,
       slippage,
       tradeType: "BEST_TRADE",
@@ -35,6 +44,7 @@ export function useAnalytics() {
       provider,
     });
   }, [
+    dexOutAmountWS,
     inTokenUsdAmount,
     fromToken,
     toToken,
@@ -50,5 +60,3 @@ export function useAnalytics() {
     initTrade,
   };
 }
-
-

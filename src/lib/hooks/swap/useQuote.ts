@@ -8,7 +8,6 @@ import {
   QUOTE_ERRORS,
   zeroAddress,
 } from "../../config/consts";
-import { useChainConfig } from "../useChainConfig";
 import { useIsDisabled } from "../useIsDisabled";
 import {
   amountUi,
@@ -22,68 +21,98 @@ import { useApiUrl } from "./useApiUrl";
 import { swapAnalytics } from "../../analytics";
 import BN from "bignumber.js";
 import _ from "lodash";
-import { useHandleTokenAddresses } from "../useHandleTokenAddresses";
-import { useSlippage } from "..";
+import { useChainConfig, useSlippage } from "..";
+import { useMemo } from "react";
+import { useShallow } from "zustand/react/shallow";
 
 export const useQuote = () => {
-  const store = useSwapState();
-  const wTokenAddress = useChainConfig()?.wToken?.address;
+  const {
+    fromToken,
+    toToken,
+    fromAmount,
+    quoteEnabled,
+    dexMinAmountOut,
+    swapStatus,
+  } = useSwapState(
+    useShallow((s) => ({
+      fromToken: s.fromToken,
+      toToken: s.toToken,
+      fromAmount: s.fromAmount,
+      quoteEnabled: s.quoteEnabled,
+      dexMinAmountOut: s.dexMinAmountOut,
+      swapStatus: s.swapStatus,
+    }))
+  );
   const context = useMainContext();
-  const slippage = useSlippage()
+  const slippage = useSlippage();
   const apiUrl = useApiUrl();
   const disabled = useIsDisabled();
   const { sessionId, setSessionId } = useGlobalStore();
-  const { fromAddress, toAddress } = useHandleTokenAddresses(
-    store.fromToken,
-    store.toToken
-  );
-
-  const isUnwrap =
-    eqIgnoreCase(wTokenAddress || "", store.fromToken?.address || "") &&
-    isNativeAddress(store.toToken?.address || "");
 
   const chainId = context.chainId || _.first(context.supportedChains);
+  const wTokenAddress = useChainConfig()?.wToken?.address;
+
+  const { isUnwrap, isWrap } = useMemo(() => {
+    const isUnwrap =
+      eqIgnoreCase(wTokenAddress || "", fromToken?.address || "") &&
+      isNativeAddress(toToken?.address || "");
+
+    const isWrap =
+      eqIgnoreCase(wTokenAddress || "", toToken?.address || "") &&
+      isNativeAddress(fromToken?.address || "");
+
+    return { isUnwrap, isWrap };
+  }, [fromToken, toToken, wTokenAddress]);
 
   const enabled =
-    !isUnwrap &&
     !!context.partner &&
     !!chainId &&
-    !!store.fromToken &&
-    !!store.toToken &&
-    !!store.fromAmount &&
-    BN(store.fromAmount || "0").gt(0) &&
-    store.fromAmount !== "0" &&
-    !!apiUrl &&
-    !disabled &&
-    store.quoteEnabled;
-    const queryKey = [
-      QUERY_KEYS.QUOTE,
-      fromAddress,
-      toAddress,
-      store.fromAmount,
-      slippage,
-      apiUrl,
-      chainId,
-    ]
-    const queryClient = useQueryClient();
+    !!fromToken &&
+    !!toToken &&
+    !!fromAmount &&
+    BN(fromAmount || "0").gt(0);
+  !!apiUrl && !disabled && quoteEnabled;
+  const queryKey = [
+    QUERY_KEYS.QUOTE,
+    fromToken?.address,
+    toToken?.address,
+    fromAmount,
+    slippage,
+    apiUrl,
+    chainId,
+  ];
+  const queryClient = useQueryClient();
+
   return useQuery({
     queryKey,
     queryFn: async ({ signal }) => {
       swapAnalytics.onQuoteRequest();
       let quote;
       const count = counter();
+      if (isUnwrap || isWrap) {        
+        const amount = amountUi(fromToken?.decimals, new BN(fromAmount || "0"));
+        return {
+          ...EMPTY_QUOTE_RESPONSE,
+          outAmount: fromAmount!,
+          ui: {
+            minAmountOut: amount,
+            outAmount: amount,
+          },
+        };
+      }
+
       try {
         const response = await fetch(`${apiUrl}/quote?chainId=${chainId}`, {
           method: "POST",
           body: JSON.stringify({
-            inToken: fromAddress,
-            outToken: toAddress,
-            inAmount: store.fromAmount,
-            outAmount: !store.dexMinAmountOut || BN(store.dexMinAmountOut || '0').isZero() 
-              ? "-1"
-              : new BN(store.dexMinAmountOut).gt(0)
-              ? store.dexMinAmountOut
-              : "0",
+            inToken: isNativeAddress(fromToken?.address || "")
+              ? wTokenAddress
+              : fromToken?.address,
+            outToken: isNativeAddress(toToken?.address || "")
+              ? zeroAddress
+              : toToken?.address,
+            inAmount: fromAmount,
+            outAmount: _.isUndefined(dexMinAmountOut) ? "-1" : dexMinAmountOut,
             user: context.account || zeroAddress,
             slippage,
             qs: encodeURIComponent(
@@ -110,7 +139,7 @@ export const useQuote = () => {
         swapAnalytics.onQuoteSuccess(count(), quote);
 
         const outAmountUI = amountUi(
-          store.toToken?.decimals,
+          toToken?.decimals,
           new BN(quote.outAmount)
         );
 
@@ -118,43 +147,41 @@ export const useQuote = () => {
           quote?.permitData.values.witness.outputs[1].endAmount.hex,
           16
         );
-        
+
         const gasCostOutputToken = parseInt(
           quote?.permitData.values.witness.outputs[0].startAmount.hex,
           16
         );
 
-  
         const ui = {
           outAmount: outAmountUI,
-          minAmountOut: amountUi(
-            store.toToken?.decimals,
-            BN(minAmountOut || 0)
-          ),
+          minAmountOut: amountUi(toToken?.decimals, BN(minAmountOut || 0)),
           gasCostOutputToken: amountUi(
-            store.toToken?.decimals,
+            toToken?.decimals,
             BN(gasCostOutputToken)
           ),
         };
 
         Logger({
-          fromAmount: store.fromAmount,
-          fromAddress,
-          toAddress,
-          dexMinAmountOut: store.dexMinAmountOut,
+          fromAmount,
+          fromAddress: fromToken?.address,
+          toAddress: toToken?.address,
+          dexMinAmountOut,
           quote,
           minAmountOut,
           gasCostOutputToken,
           ui,
           refetchInterval: context.quoteInterval,
         });
-        const res =  {
+        const res = {
           ...quote,
           minAmountOut,
           gasCostOutputToken,
           ui,
         } as QuoteResponse;
-        res.refetchCount = ((queryClient.getQueryData(queryKey) as QuoteResponse)?.refetchCount || 0) + 1
+        res.refetchCount =
+          ((queryClient.getQueryData(queryKey) as QuoteResponse)
+            ?.refetchCount || 0) + 1;
 
         return res;
       } catch (error: any) {
@@ -172,15 +199,15 @@ export const useQuote = () => {
       }
     },
     refetchInterval: ({ state }) => {
-      const quoteInterval = context.quoteInterval || 10_000
-      if(state.data?.disableInterval || store.swapStatus) {
-        return undefined
+      const quoteInterval = context.quoteInterval || 10_000;
+      if (state.data?.disableInterval || swapStatus) {
+        return undefined;
       }
-      const refetchCount = state.data?.refetchCount || 0
-      if (refetchCount > 6) {
-        return refetchCount * quoteInterval / 2
+      const refetchCount = state.data?.refetchCount || 0;
+      if (refetchCount > (context.quoteRefetchUntilThrottle || 6)) {
+        return (refetchCount * quoteInterval) / 2;
       }
-      return context.quoteInterval
+      return context.quoteInterval;
     },
     staleTime: Infinity,
     enabled,

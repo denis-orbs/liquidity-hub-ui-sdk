@@ -74,6 +74,7 @@ export interface ProviderArgs {
   maxFailures?: number;
   connectWallet?: () => void;
   getTokens?: (chainId: number) => Promise<Token[] | undefined>;
+  quoteRefetchUntilThrottle?: number;
 }
 
 export interface QuoteArgs {

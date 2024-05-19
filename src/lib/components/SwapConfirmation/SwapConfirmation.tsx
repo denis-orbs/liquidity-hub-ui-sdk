@@ -10,14 +10,12 @@ interface Props {
   className?: string;
   style?: CSSObject;
   children?: ReactNode;
-  outAmount?: string;
 }
 
 export const SwapConfirmation = ({
   className = "",
   style = {},
   children,
-  outAmount: _outAmount,
 }: Props) => {
   const swapStatus = useSwapState(useShallow((s) => s.swapStatus));
 

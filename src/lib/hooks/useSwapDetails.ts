@@ -8,6 +8,7 @@ import { QUERY_KEYS } from "../config/consts";
 import { useMainContext } from "../provider";
 import { useQuery } from "@tanstack/react-query";
 import { useAmountUI } from "./useAmountUI";
+import { useSubmitWarning } from "./useSubmitWarning";
 
 export function useUsdAmounts() {
   const outAmount = useQuote().data?.outAmount;
@@ -99,6 +100,7 @@ export function useSlippage() {
 }
 
 export const useSwapConfirmation = () => {
+  const warning = useSubmitWarning()
   const store = useSwapState(
     useShallow((s) => ({
       fromToken: s.fromToken,
@@ -139,5 +141,7 @@ export const useSwapConfirmation = () => {
     onClose: store.onCloseSwap,
     title,
     outAmount,
+    warning
+
   };
 };
