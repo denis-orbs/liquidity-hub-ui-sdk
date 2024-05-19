@@ -132,9 +132,24 @@ const getFantomTokens = async (): Promise<Token[]> => {
   })
 }
 
+
+const getLineaTokens = async (): Promise<Token[]> => {
+  const tokens = await fetch("https://api.lynex.fi/api/v1/assets").then((res) => res.json()).then((res) => res.data);
+  return tokens.map((token: any) => {
+    return {
+      address: token.address,
+      symbol: token.symbol,
+      decimals: token.decimals,
+      logoUrl: token.logoURI,
+      name: token.name,
+    }
+  })
+}
+
 export const api = {
   getTokens,
   getPolygonZkEvmTokens,
   priceUsd: fetchPrice,
-  getFantomTokens
+  getFantomTokens,
+  getLineaTokens
 };

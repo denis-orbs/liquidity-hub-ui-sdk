@@ -1,5 +1,6 @@
-import {
+import React, {
   createContext,
+  FC,
   ReactNode,
   useCallback,
   useContext,
@@ -26,7 +27,6 @@ import { ArrowDown } from "react-feather";
 import styled, { ThemeProvider } from "styled-components";
 import { Spinner } from "../components/Spinner";
 import { TokenList } from "../components/TokenList";
-import { Modal } from "../components/Modal";
 import { Button } from "../components/Button";
 import { LoadingText } from "../components/LoadingText";
 import { TokenSearchInput } from "../components/SearchInput";
@@ -80,8 +80,11 @@ export const theme = {
   },
 };
 
+type ModalType = FC<{isOpen: boolean, onClose: () => void, children: ReactNode, title: string}>
+
 interface ContenxtType extends WidgetConfig {
   UIconfig?: WidgetConfig;
+  Modal: ModalType
 }
 
 const Context = createContext({} as ContenxtType);
@@ -93,6 +96,7 @@ const useWidgetContext = () => {
 interface ContextProps {
   children: ReactNode;
   UIconfig?: WidgetConfig;
+  Modal: ModalType
 }
 
 const ContextProvider = (props: ContextProps) => {
@@ -100,6 +104,7 @@ const ContextProvider = (props: ContextProps) => {
     <Context.Provider
       value={{
         UIconfig: props.UIconfig,
+        Modal: props.Modal
       }}
     >
       {props.children}
@@ -118,14 +123,11 @@ const WidgetModal = ({
   onClose: () => void;
   title?: string;
 }) => {
-  const modal = useWidgetContext().UIconfig?.modalStyles;
-
+const Modal = useWidgetContext().Modal;
   return (
     <Modal
       title={title || ""}
-      containerStyles={modal?.containerStyles}
-      bodyStyles={modal?.bodyStyles}
-      open={open}
+      isOpen={open}
       onClose={onClose}
     >
       {children}
@@ -502,15 +504,16 @@ export interface Props extends ProviderArgs {
   UIconfig?: WidgetConfig;
   initialFromToken?: string;
   initialToToken?: string;
+  Modal: ModalType;
 }
 
 export const Widget = (props: Props) => {
-  const { UIconfig, ...rest } = props;
+  const { UIconfig, Modal, ...rest } = props;
 
   return (
     <LiquidityHubProvider {...rest}>
       <ThemeProvider theme={theme}>
-        <ContextProvider UIconfig={props.UIconfig}>
+        <ContextProvider Modal={Modal} UIconfig={props.UIconfig}>
           <Watcher {...props} />
           <Container>
             <FromTokenPanel />

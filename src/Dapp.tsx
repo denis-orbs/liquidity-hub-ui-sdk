@@ -7,6 +7,7 @@ import { Widget } from "./lib/dex/Widget";
 import { supportedChains } from "./lib";
 import { RainbowProvider } from "./RainbowProvider";
 import _ from "lodash";
+import { Modal } from "./components/Modal";
 
 export const useProvider = () => {
   const { data } = useConfig();
@@ -14,7 +15,7 @@ export const useProvider = () => {
 
   const [provider, setProvider] = useState<any>(undefined);
 
-  const setProviderFromConnector = useCallback(async () => {    
+  const setProviderFromConnector = useCallback(async () => {
     const res = await connector?.getProvider();
     setProvider(res);
   }, [setProvider, connector]);
@@ -31,16 +32,15 @@ export const useProvider = () => {
   return provider;
 };
 
-
-
 function Wrapped() {
   const { address } = useAccount();
   const provider = useProvider();
-  
+
   const connectedChainId = useNetwork().chain?.id;
   const { openConnectModal } = useConnectModal();
   return (
     <Widget
+      Modal={Modal}
       connectWallet={openConnectModal}
       provider={provider}
       chainId={connectedChainId}
@@ -48,14 +48,6 @@ function Wrapped() {
       account={address}
       initialFromToken="USDT"
       supportedChains={_.map(supportedChains, "chainId")}
-      UIconfig={{
-        modalStyles: {
-          containerStyles: {
-            maxWidth: "500px",
-            background: "black",
-          },
-        },
-      }}
     />
   );
 }

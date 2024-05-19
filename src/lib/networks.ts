@@ -528,4 +528,27 @@ export const networks = {
     eip1559: false,
     pendingBlocks: true,
   },
+  linea: {
+    id: 59144,
+    name: "Linea",
+    shortname: "linea",
+    native: {
+      address: zeroAddress,
+      symbol: "ETH",
+      decimals: 18,
+      logoUrl: "https://app.1inch.io/assets/images/network-logos/ethereum.svg",
+    },
+    wToken: {
+      address: "0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f",
+      symbol: "WETH",
+      decimals: 18,
+      logoUrl: "https://app.1inch.io/assets/images/network-logos/ethereum.svg",
+    },
+    publicRpcUrl: "https://linea.decubate.com	",
+    logoUrl: "https://s2.coinmarketcap.com/static/img/coins/128x128/27657.png",
+    explorer: "https://lineascan.build/",
+    baseGasPrice: 0,
+    eip1559: false,
+    pendingBlocks: true,
+  },
 };

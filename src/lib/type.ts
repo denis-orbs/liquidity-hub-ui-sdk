@@ -17,10 +17,6 @@ export interface TokenPanelProps {
   usdLoading?: boolean;
 }
 
-export interface ModalStyles {
-  bodyStyles?: CSSObject;
-  containerStyles?: CSSObject;
-}
 
 export type TokenListItemProps = {
   token: Token;
@@ -34,7 +30,6 @@ export type TokenListItemProps = {
 export interface WidgetConfig {
   styles?: CSSObject;
   layout?: WidgetLayout;
-  modalStyles?: ModalStyles;
 }
 
 export interface WidgetLayout {

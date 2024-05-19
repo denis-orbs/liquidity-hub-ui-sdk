@@ -7,6 +7,8 @@ import { nativeTokenAddresses, QUOTE_ERRORS, zero } from "./config/consts";
 import { networks } from "./networks";
 import { numericFormatter } from "react-number-format";
 import { useLiquidityHubPersistedStore } from "./store/main";
+import erc20abi from "./abi/ERC20Abi.json";
+import iwethabi from "./abi/IWETHAbi.json";
 
 export const amountBN = (decimals?: number, amount?: string) =>
   parsebn(amount || "")
@@ -60,9 +62,10 @@ export async function waitForTxReceipt(web3: Web3, txHash: string) {
 export async function getTransactionDetails(
   web3: Web3,
   txHash: string
-): Promise<{ mined: boolean; revertMessage?: string }> {
+): Promise<{ mined: boolean; revertMessage?: string, receipt?: any }> {
+  let receipt
   try {
-    const receipt = await web3.eth.getTransactionReceipt(txHash);
+     receipt = await web3.eth.getTransactionReceipt(txHash);
     if (!receipt) {
       return {
         mined: false,
@@ -85,6 +88,7 @@ export async function getTransactionDetails(
     return {
       mined: receipt.status ? true : false,
       revertMessage,
+      receipt
     };
   } catch (error: any) {
     throw new Error(`Failed to fetch transaction details: ${error.message}`);
@@ -438,4 +442,12 @@ export const Logger = (value: string | object | any[] | number) => {
 export const safeBN = (value?: string | number) => {
   if (!value) return
   return BN(value).decimalPlaces(0).toString()
+}
+export const getContract = (address?: string, web3?: Web3, chainId?: number) => {
+  if (!address || !web3 || !address.startsWith("0x") || !chainId) return undefined;
+  const wethAddress = getChainConfig(chainId)?.wToken?.address
+  return new web3.eth.Contract(
+    isNativeAddress(address) ? iwethabi : (erc20abi as any),
+    isNativeAddress(address) ? wethAddress : address
+  );
 }

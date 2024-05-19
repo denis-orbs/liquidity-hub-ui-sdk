@@ -1,39 +1,24 @@
-import erc20abi from "../abi/ERC20Abi.json";
-import iwethabi from "../abi/IWETHAbi.json";
-
-import {} from "web3";
 import { useCallback, useMemo } from "react";
 import { useMainContext } from "../provider";
 import { useChainConfig } from "./useChainConfig";
-import { isNativeAddress } from "../util";
+import { getContract } from "../util";
 
 export const useContractCallback = () => {
-  const { web3 } = useMainContext();
-  const wethAddress = useChainConfig()?.wToken?.address;
+  const { web3, chainId } = useMainContext();
 
   return useCallback(
     (address?: string) => {
-      if (!address || !web3 || !address.startsWith("0x")) return undefined;
-
-      return new web3.eth.Contract(
-        isNativeAddress(address) ? iwethabi : (erc20abi as any),
-        isNativeAddress(address) ? wethAddress : address
-      );
+      return getContract(address, web3, chainId);
     },
-    [web3, wethAddress]
+    [web3, chainId]
   );
 };
 
 export const useContract = (address?: string) => {
-  const { web3 } = useMainContext();
+  const { web3, chainId } = useMainContext();
   const wethAddress = useChainConfig()?.wToken?.address;
 
   return useMemo(() => {
-    if (!address || !web3 || !address.startsWith("0x")) return undefined;
-
-    return new web3.eth.Contract(
-      isNativeAddress(address) ? iwethabi : (erc20abi as any),
-      isNativeAddress(address) ? wethAddress : address
-    );
+    return getContract(address, web3, chainId);
   }, [web3, wethAddress]);
 };

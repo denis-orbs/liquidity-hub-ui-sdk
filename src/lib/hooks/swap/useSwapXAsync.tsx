@@ -72,7 +72,7 @@ export const useSwapXAsync = () => {
         }
       } catch (error: any) {
         const msg = error.message.error || error.message;
-        swapAnalytics.onSwapFailed(msg, count(), !!txDetails?.revertMessage);
+        swapAnalytics.onSwapFailed(msg, count());
         throw new Error(msg);
       }
     },

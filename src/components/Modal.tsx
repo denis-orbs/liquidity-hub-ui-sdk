@@ -1,32 +1,28 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import Popup from "reactjs-popup";
-import styled, { useTheme, keyframes, CSSObject } from "styled-components";
+import styled, { useTheme, keyframes } from "styled-components";
 import { X } from "react-feather";
-import {  ReactNode } from "react";
-import { Text } from "./Text";
-import { FlexColumn, FlexRow } from "../base-styles";
+import { ReactNode } from "react";
 import "reactjs-popup/dist/index.css";
+import { FlexColumn, FlexRow } from "../lib/base-styles";
+import { Text } from "../lib/components/Text";
 export function Modal({
   title,
-  open,
+  isOpen,
   onClose,
   children,
-  containerStyles,
-    bodyStyles,
 }: {
   title: string;
-  open?: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   children: ReactNode;
-    containerStyles?: CSSObject;
-    bodyStyles?: CSSObject;
 }) {
   const theme = useTheme();
 
   return (
     <StyledPopup
       closeOnDocumentClick={false}
-      open={open}
+      open={isOpen}
       position="right center"
       className="lh-modal"
       overlayStyle={{
@@ -43,13 +39,13 @@ export function Modal({
         width: "100%",
         fontFamily: "inherit",
         transition: "all 0.3s ease-in-out",
-        background: theme.colors.mainBackground,
+        background: theme.colors.modalBackground,
         border: `1px solid ${theme.colors.border}`,
         maxHeight: "90%",
-        ...containerStyles,
+        maxWidth: 500
       }}
     >
-      <StyledContent $style={bodyStyles}>
+      <StyledContent>
         <FlexRow className="lh-modal-header">
           <StyledHeader>
             {title && (
@@ -70,7 +66,7 @@ export function Modal({
 
 const StyledContent = styled(FlexColumn)`
   gap: 0px;
-`
+`;
 
 const StyledTitle = styled(Text)`
   font-size: 20px;

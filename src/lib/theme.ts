@@ -11,7 +11,8 @@ export const lightTheme = {
     linkMain: "rgb(252, 114, 255)",
     divider: "rgba(255, 255, 255, 0.07)",
     primaryDark: "rgb(251, 88, 255)",
-    link: '#D284CF'
+    link: '#D284CF',
+    modalBackground:'black'
   },
 };
 
@@ -26,6 +27,7 @@ export const darkTheme = {
     linkMain: "rgb(252, 114, 255)",
     divider: "rgba(255, 255, 255, 0.07)",
     primaryDark: "rgb(251, 88, 255)",
-    link: '#D284CF'
+    link: '#D284CF',
+    modalBackground:'black'
   },
 };

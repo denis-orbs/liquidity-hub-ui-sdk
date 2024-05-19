@@ -3,7 +3,6 @@ import {
   LH_CONTROL,
   Order,
   Orders,
-  QuoteResponse,
   STEPS,
   Token,
 } from "../type";
@@ -35,9 +34,6 @@ interface SwapStateValues {
 
 interface SwapState extends SwapStateValues {
   updateState: (state: Partial<SwapState>) => void;
-  onSwapError: (error: string) => void;
-  onSwapSuccess: (quote?: QuoteResponse) => void;
-  onSwapStart: () => void;
   onCloseSwap: () => void;
   reset: () => void;
 }
@@ -63,26 +59,9 @@ const initialSwapState: SwapStateValues = {
 
 export const useSwapState = create<SwapState>((set, get) => ({
   ...initialSwapState,
-  onSwapStart: () => set({ swapStatus: "loading" }),
   updateState: (state) => {    
     set({ ...state })
   },
-
-  onSwapSuccess: () => {
-    set({
-      failures: 0,
-      swapStatus: "success",
-    });
-  },
-  onSwapError: (swapError) =>
-    set((s) => {
-      const failures = (s.failures || 0) + 1;
-      return {
-        failures,
-        swapError,
-        swapStatus: "failed",
-      };
-    }),
   onCloseSwap: () => {
     set({
       showConfirmation: false,

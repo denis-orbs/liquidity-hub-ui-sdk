@@ -283,15 +283,12 @@ export class Analytics {
     });
   }
 
-  onSwapFailed(error: string, time: number, onChainFailure: boolean) {
+  onSwapFailed(error: string, time: number) {
     this.updateAndSend({
       swapError: error,
       swapState: "failed",
       swapMillis: time,
-      isNotClobTradeReason: onChainFailure
-        ? "onchain swap error"
-        : "swap failed",
-      onChainClobSwapState: onChainFailure ? "failed" : "null",
+  
     });
   }
 
