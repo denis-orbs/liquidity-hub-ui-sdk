@@ -11,7 +11,7 @@ export const useDexLH = () => {
   const outTokenUsd = usePriceUsd({address: store.toToken?.address}).data
   
   
-  return useLiquidityHub({
+  const res =  useLiquidityHub({
     fromToken: store.fromToken,
     toToken: store.toToken,
     fromAmount,
@@ -20,4 +20,6 @@ export const useDexLH = () => {
     inTokenUsd,
     outTokenUsd,
   });
+
+  return res;
 };

@@ -441,7 +441,7 @@ export const Logger = (value: string | object | any[] | number) => {
 
 export const safeBN = (value?: string | number) => {
   if (!value) return
-  return BN(value).decimalPlaces(0).toString()
+  return BN(value).decimalPlaces(0).toFixed()
 }
 export const getContract = (address?: string, web3?: Web3, chainId?: number) => {
   if (!address || !web3 || !address.startsWith("0x") || !chainId) return undefined;

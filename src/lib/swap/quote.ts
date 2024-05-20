@@ -11,6 +11,7 @@ import {
   shouldReturnZeroOutAmount,
   eqIgnoreCase,
   Logger,
+  safeBN,
 } from "../util";
 
 interface Args {
@@ -138,8 +139,9 @@ export const quote = async ({
     });
     const res = {
       ...quote,
-      minAmountOut,
-      gasCostOutputToken,
+      outAmount:safeBN(quote.outAmount),
+      minAmountOut: safeBN(minAmountOut || 0),
+      gasCostOutputToken: safeBN(gasCostOutputToken),
       ui,
     } as QuoteResponse;
     res.refetchCount =

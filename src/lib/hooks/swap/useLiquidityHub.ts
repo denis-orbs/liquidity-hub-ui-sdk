@@ -85,6 +85,14 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
 
   useQuoteDelay(fromAmount || "0", dexMinAmountOut, args.quoteDelayMillis);
 
+
+  Logger({
+    fromToken: args.fromToken,
+    toToken: args.toToken,
+    fromAmount,
+    dexMinAmountOut,
+  })
+
   useEffect(() => {
     updateState({
       dexMinAmountOut,

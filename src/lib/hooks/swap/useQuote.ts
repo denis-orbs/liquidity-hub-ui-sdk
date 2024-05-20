@@ -1,9 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMainContext } from "../../provider";
 import { useGlobalStore, useSwapState } from "../../store/main";
-import {
-  QUERY_KEYS,
-} from "../../config/consts";
+import { QUERY_KEYS } from "../../config/consts";
 import { useIsDisabled } from "../useIsDisabled";
 import { useApiUrl } from "./useApiUrl";
 import BN from "bignumber.js";
@@ -40,15 +38,16 @@ export const useQuote = () => {
   const wTokenAddress = useChainConfig()?.wToken?.address;
 
   const enabled =
-    !!chainId && 
+    !!chainId &&
     !!wTokenAddress &&
     !!context.partner &&
     !!chainId &&
     !!fromToken &&
     !!toToken &&
-    !!fromAmount &&
-    BN(fromAmount || "0").gt(0);
-  !!apiUrl && !disabled && quoteEnabled;
+    BN(fromAmount || "0").gt(0) &&
+    !!apiUrl &&
+    !disabled &&
+    quoteEnabled;
   const queryKey = [
     QUERY_KEYS.QUOTE,
     fromToken?.address,
@@ -62,7 +61,7 @@ export const useQuote = () => {
 
   return useQuery({
     queryKey,
-    queryFn: async ({ signal }) => {
+    queryFn: async ({ signal }) => {      
       const quoteResponse = await quote({
         fromToken: fromToken!,
         toToken: toToken!,

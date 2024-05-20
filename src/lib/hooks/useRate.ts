@@ -25,7 +25,7 @@ export const useRate = (defaultInverted: boolean = false) => {
       return BN(store?.inTokenUsd).dividedBy(store.outTokenUsd).toString();
     }
     return BN(store.outTokenUsd).dividedBy(store?.inTokenUsd).toString();
-  }, [quote, inverted]);
+  }, [quote, inverted, store?.inTokenUsd, store.outTokenUsd]);
 
   const formattedRate = useFormatNumber({ value });
 
