@@ -175,7 +175,7 @@ export type UseLiquidityHubArgs = {
 };
 
 
-export type TradeOwner = "dex" | "lh";
+export type SwapRoute = "dex" | "lh";
 
 export type AddOrderArgs = {
   fromToken: Token;

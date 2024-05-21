@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useSwapState } from "../store/main";
 import { amountUi, estimateGasPrice } from "../util";
-import { useQuote } from "./swap";
+import { useQuote, useSwapButton } from "./swap";
 import BN from "bignumber.js";
 import { QUERY_KEYS } from "../config/consts";
 import { useMainContext } from "../provider";
@@ -130,6 +130,8 @@ export const useSwapConfirmation = () => {
     useQuote().data?.outAmount
   );
 
+  const button = useSwapButton()
+
   return {
     fromToken: store.fromToken,
     toToken: store.toToken,
@@ -141,7 +143,10 @@ export const useSwapConfirmation = () => {
     onClose: store.onCloseSwap,
     title,
     outAmount,
-    warning
+    warning,
+    buttonText: button.text,
+    swapLoading: button.isPending,
+    submitSwap: button.swap
 
   };
 };

@@ -33,7 +33,7 @@ import { TokenSearchInput } from "../components/SearchInput";
 import { useShallow } from "zustand/react/shallow";
 import BN from "bignumber.js";
 import {
-  useAcceptedAmountOut,
+  usePriceChanged,
   useChainConfig,
   useFormatNumber,
   useSwapButton,
@@ -211,12 +211,8 @@ const SwapModal = () => {
   const { onClose, swapStatus, isOpen, title, warning } = useSwapConfirmation();
   const updateStore = useDexState(useShallow((s) => s.updateStore));
   const wToken = useChainConfig()?.wToken;
-  const quote = useQuote().data;
   
-  const { accept, shouldAccept, amountToAccept } = useAcceptedAmountOut(
-    quote?.outAmount,
-    quote?.minAmountOut
-  );
+  const { acceptChanges, shouldAccept, updatePrice } = usePriceChanged();
 
   const onWrapSuccess = useCallback(() => {
     updateStore({ fromToken: wToken });
@@ -240,7 +236,7 @@ const SwapModal = () => {
   return (
     <WidgetModal title={title} open={isOpen} onClose={onClose}>
       {shouldAccept ? (
-        <AcceptAmountOut amountToAccept={amountToAccept} accept={accept} />
+        <AcceptAmountOut amountToAccept={updatePrice} accept={acceptChanges} />
       ) : (
         <SwapConfirmation>
           {swapStatus === "failed" ? (

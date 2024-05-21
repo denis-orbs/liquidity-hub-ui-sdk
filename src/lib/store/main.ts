@@ -3,6 +3,7 @@ import {
   LH_CONTROL,
   Order,
   Orders,
+  QuoteResponse,
   STEPS,
   Token,
 } from "../type";
@@ -24,12 +25,12 @@ interface SwapStateValues {
   quoteOutdated?: boolean;
   isSigned?: boolean;
   disabledByDex?: boolean;
-  quoteEnabled?: boolean;
   swapConfirmationOutAmount?: string;
   swapConfirmationOutAmountUsd?: string;
   slippage?: number;
   outTokenUsd?: string | number;
   inTokenUsd?: string | number;
+  originalQuote?: QuoteResponse
 }
 
 interface SwapState extends SwapStateValues {
@@ -53,8 +54,8 @@ const initialSwapState: SwapStateValues = {
   quoteOutdated: undefined,
   isSigned: false,
   disabledByDex: false,
-  quoteEnabled: false,
   slippage: undefined,
+  originalQuote: undefined,
 };
 
 export const useSwapState = create<SwapState>((set, get) => ({
@@ -65,6 +66,7 @@ export const useSwapState = create<SwapState>((set, get) => ({
   onCloseSwap: () => {
     set({
       showConfirmation: false,
+      originalQuote: undefined
     });
 
     if (get().swapStatus === "failed") {

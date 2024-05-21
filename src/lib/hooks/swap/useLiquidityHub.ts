@@ -1,61 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useAllowance } from "./useAllowance";
 import { useQuote } from "./useQuote";
-import BN from "bignumber.js";
-import { useLiquidityHubPersistedStore, useSwapState } from "../../store/main";
-import { LH_CONTROL, UseLiquidityHubArgs } from "../../type";
+import { useSwapState } from "../../store/main";
+import {  UseLiquidityHubArgs } from "../../type";
 import { Logger, safeBN } from "../../util";
 import { useShallow } from "zustand/react/shallow";
 import _ from "lodash";
 import { useAnalytics } from "../useAnalytics";
 import { useDebounce } from "../useDebounce";
 
-const useQuoteDelay = (
-  fromAmount: string,
-  dexMinAmountOut?: string,
-  quoteDelayMillis?: number
-) => {
-  const quoteTimeoutRef = useRef<any>(null);
-  const lhControl = useLiquidityHubPersistedStore((s) => s.lhControl);
-  const { updateState, quoteEnabled } = useSwapState(
-    useShallow((store) => ({
-      updateState: store.updateState,
-      quoteEnabled: store.quoteEnabled,
-    }))
-  );
-  useEffect(() => {
-    Logger({
-      quoteEnabled,
-      fromAmount,
-      dexMinAmountOut,
-      quoteDelayMillis,
-    });
-    clearTimeout(quoteTimeoutRef.current);
-    if (quoteEnabled || BN(fromAmount).isZero()) return;
-    if (!quoteDelayMillis || lhControl === LH_CONTROL.FORCE) {
-      updateState({ quoteEnabled: true });
-      return;
-    }
-
-    if (BN(dexMinAmountOut || "0").gt(0)) {
-      Logger("got price from dex, enabling quote ");
-      updateState({ quoteEnabled: true });
-      clearTimeout(quoteTimeoutRef.current);
-      return;
-    }
-    Logger("starting timeout to enable quote");
-    quoteTimeoutRef.current = setTimeout(() => {
-      updateState({ quoteEnabled: true });
-    }, quoteDelayMillis);
-  }, [
-    dexMinAmountOut,
-    quoteDelayMillis,
-    quoteEnabled,
-    updateState,
-    fromAmount,
-    lhControl,
-  ]);
-};
 
 export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
   const { swapStatus, swapError, updateState, showConfirmation } = useSwapState(
@@ -82,9 +35,6 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     () => safeBN(args.minAmountOut),
     [args.minAmountOut]
   );
-
-  useQuoteDelay(fromAmount || "0", dexMinAmountOut, args.quoteDelayMillis);
-
 
   Logger({
     fromToken: args.fromToken,
@@ -126,8 +76,8 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
   const analyticsInit = useAnalytics().initTrade;
 
   const confirmSwap = useCallback(() => {
-    updateState({ showConfirmation: true });
-  }, [updateState]);
+    updateState({ showConfirmation: true, originalQuote: quote.data });
+  }, [updateState, quote]);
 
   return {
     quote,

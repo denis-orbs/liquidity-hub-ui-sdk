@@ -15,17 +15,17 @@ export const useQuote = () => {
     fromToken,
     toToken,
     fromAmount,
-    quoteEnabled,
     dexMinAmountOut,
     swapStatus,
+    showConfirmation
   } = useSwapState(
     useShallow((s) => ({
       fromToken: s.fromToken,
       toToken: s.toToken,
       fromAmount: s.fromAmount,
-      quoteEnabled: s.quoteEnabled,
       dexMinAmountOut: s.dexMinAmountOut,
       swapStatus: s.swapStatus,
+      showConfirmation: s.showConfirmation,
     }))
   );
   const context = useMainContext();
@@ -46,8 +46,8 @@ export const useQuote = () => {
     !!toToken &&
     BN(fromAmount || "0").gt(0) &&
     !!apiUrl &&
-    !disabled &&
-    quoteEnabled;
+    !disabled
+
   const queryKey = [
     QUERY_KEYS.QUOTE,
     fromToken?.address,
@@ -88,6 +88,10 @@ export const useQuote = () => {
     },
     refetchInterval: ({ state }) => {
       const quoteInterval = context.quoteInterval || 10_000;
+
+      if(showConfirmation) {
+        return quoteInterval
+      }
       if (state.data?.disableInterval || swapStatus) {
         return undefined;
       }
@@ -95,11 +99,11 @@ export const useQuote = () => {
       if (refetchCount > (context.quoteRefetchUntilThrottle || 6)) {
         return (refetchCount * quoteInterval) / 2;
       }
-      return context.quoteInterval;
+      return quoteInterval;
     },
     staleTime: Infinity,
     enabled,
     gcTime: 0,
-    retry: 2,
+    retry: 2
   });
 };
