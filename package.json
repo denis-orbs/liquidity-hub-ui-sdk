@@ -1,6 +1,6 @@
 {
   "name": "@orbs-network/liquidity-hub-ui-sdk",
-  "version": "0.0.108",
+  "version": "0.0.109",
   "main": "./dist/main.umd.js",
   "module": "./dist/main.es.js",
   "types": "./dist/index.d.ts",
@@ -59,6 +59,7 @@
     "wagmi": "1.4.12"
   },
   "peerDependencies": {
+    "@tanstack/react-query": ">=5.21.4",
     "react": ">=18.2.0",
     "react-dom": ">=18.2.0"
   }
