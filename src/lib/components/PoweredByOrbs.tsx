@@ -35,21 +35,16 @@ export const PoweredByOrbs = ({
 const StyledLink = styled.a`
   color: ${(props) => props.theme.colors.textMain};
   text-decoration: none;
-  font-size: 15px;
-  line-height: 18px;
   display: flex;
   align-items: center;
   width: 100%;
   justify-content: center;
-  border:1px solid rgba(255,255,255,0.4);
   width: auto;
-  padding: 5px 9px;
   border-radius: 8px;
   margin-left: auto;
   margin-right: auto;
   img {
     margin-left: 6px;
     margin-right: 6px;
-
   }
 `;

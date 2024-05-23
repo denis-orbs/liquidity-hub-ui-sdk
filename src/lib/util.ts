@@ -16,7 +16,7 @@ export const amountBN = (decimals?: number, amount?: string) =>
     .decimalPlaces(0);
 
 export const amountUi = (decimals?: number, amount?: BN) => {
-  if (!decimals || !amount) return "";
+  if (!amount) return "";
   const percision = new BN(10).pow(decimals || 0);
   return amount.times(percision).idiv(percision).div(percision).toString();
 };

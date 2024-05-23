@@ -59,7 +59,7 @@ const linea: Network = {
   chainId: networks.linea.id,
   chainName: networks.linea.name,
   explorerUrl: networks.linea.explorer,
-  apiUrl: "https://linea.hub.orbs.network",
+  apiUrl: "https://hub.orbs.network",
   getTokens: api.getLineaTokens,
 };
 

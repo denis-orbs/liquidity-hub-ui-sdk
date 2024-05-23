@@ -42,7 +42,7 @@ export const useSubmitSwap = (onWrapSuccess?: () => void) => {
   const wTokenAddress = chainConfig?.wToken?.address;
   const explorerUrl = chainConfig?.explorerUrl;
   const addOrder = useOrders().addOrder;
-  const { data: approved } = useAllowance();
+  const { data: approved, refetch: refetchAllowance } = useAllowance();
   const gas = useEstimateGasPrice();
   const apiUrl = useApiUrl();
   return useCallback(
@@ -173,6 +173,7 @@ export const useSubmitSwap = (onWrapSuccess?: () => void) => {
         if (isWrapped) {
           onWrapSuccess?.();
         }
+        refetchAllowance();
         swapAnalytics.clearState();
       }
     },
@@ -198,6 +199,7 @@ export const useSubmitSwap = (onWrapSuccess?: () => void) => {
       chainConfig,
       gas,
       apiUrl,
+      refetchAllowance
     ]
   );
 };

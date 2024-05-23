@@ -1,4 +1,4 @@
-export { SwapConfirmation, OrbsLogo, PoweredByOrbs, ConfirmationPoweredBy } from "./components";
+export { SwapConfirmation, OrbsLogo, PoweredByOrbs, ConfirmationPoweredBy, SwapOverviewContainer } from "./components";
 export type { ProviderArgs, Network, Token, Order } from "./type";
 export { supportedChains } from "./config/supportedChains";
 export { default as ERC20Abi } from "./abi/ERC20Abi.json";

@@ -44,6 +44,8 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
   })
 
   useEffect(() => {
+    Logger('useLiquidityHub useEffect');
+    
     updateState({
       dexMinAmountOut,
       disabledByDex: args.disabled,
@@ -77,7 +79,7 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
 
   const confirmSwap = useCallback(() => {
     updateState({ showConfirmation: true, originalQuote: quote.data });
-  }, [updateState, quote]);
+  }, [updateState, quote.data]);
 
   return {
     quote,

@@ -9,6 +9,7 @@ import { useMainContext } from "../provider";
 import { useQuery } from "@tanstack/react-query";
 import { useAmountUI } from "./useAmountUI";
 import { useSubmitWarning } from "./useSubmitWarning";
+import { usePriceChanged } from "..";
 
 export function useUsdAmounts() {
   const outAmount = useQuote().data?.outAmount;
@@ -115,6 +116,8 @@ export const useSwapConfirmation = () => {
     }))
   );
 
+
+
   const title = useMemo(() => {
     if (store.swapStatus === "failed") {
       return;
@@ -146,7 +149,8 @@ export const useSwapConfirmation = () => {
     warning,
     buttonText: button.text,
     swapLoading: button.isPending,
-    submitSwap: button.swap
+    submitSwap: button.swap,
+    ...usePriceChanged()
 
   };
 };

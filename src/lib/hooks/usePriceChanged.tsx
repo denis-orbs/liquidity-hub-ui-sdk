@@ -33,10 +33,9 @@ export function usePriceChanged() {
     const slippageTokenAmount = BN(quote?.outAmount).multipliedBy(
       BN(slippage).dividedBy(100)
     ).decimalPlaces(0).toFixed();
-
+      
     return BN(quote?.outAmount).minus(slippageTokenAmount).toString();
   }, [slippage, quote?.outAmount]);
-  console.log({updatedAmount, acceptedAmountOut});
   
   const acceptChanges = useCallback(() => {
     setIsUpdated(false);
