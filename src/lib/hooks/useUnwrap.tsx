@@ -33,6 +33,8 @@ export const useUnwrap = () => {
 
         return true;
       } catch (error: any) {
+        console.log({error});
+        
         throw new Error(error.message);
       }
     },

@@ -93,7 +93,7 @@ export const useSubmitSwap = (onWrapSuccess?: () => void) => {
             account,
             web3,
             chainId,
-            fromToken.address,
+            inTokenAddress,
             fromAmount,
             gas
           );

@@ -446,6 +446,7 @@ export const safeBN = (value?: string | number) => {
 export const getContract = (address?: string, web3?: Web3, chainId?: number) => {
   if (!address || !web3 || !address.startsWith("0x") || !chainId) return undefined;
   const wethAddress = getChainConfig(chainId)?.wToken?.address
+  
   return new web3.eth.Contract(
     isNativeAddress(address) ? iwethabi : (erc20abi as any),
     isNativeAddress(address) ? wethAddress : address

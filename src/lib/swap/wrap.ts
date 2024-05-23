@@ -1,17 +1,23 @@
 import Web3 from "web3";
 import { swapAnalytics } from "../analytics";
 import { useEstimateGasPrice } from "../hooks/useEstimateGasPrice";
-import { counter, getContract, sendAndWaitForConfirmations } from "../util";
+import {
+  counter,
+  getContract,
+  sendAndWaitForConfirmations,
+} from "../util";
 
 export const wrap = async (
   account: string,
   web3: Web3,
   chainId: number,
-  fromTokeAddress: string,
+  tokenAddress: string,
   fromAmount: string,
-  gas: ReturnType<typeof useEstimateGasPrice>,
+  gas: ReturnType<typeof useEstimateGasPrice>
 ) => {
-  const fromTokenContract = getContract(fromTokeAddress);
+
+  const fromTokenContract = getContract(tokenAddress, web3, chainId);
+
   if (!fromTokenContract) {
     throw new Error("Contract not found");
   }
@@ -30,6 +36,8 @@ export const wrap = async (
     swapAnalytics.onWrapSuccess(count());
     return true;
   } catch (error) {
+    console.log({ error });
+
     swapAnalytics.onWrapFailed((error as any).message, count());
     throw new Error("Failed to wrap");
   }

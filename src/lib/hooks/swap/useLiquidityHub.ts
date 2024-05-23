@@ -3,7 +3,7 @@ import { useAllowance } from "./useAllowance";
 import { useQuote } from "./useQuote";
 import { useSwapState } from "../../store/main";
 import {  UseLiquidityHubArgs } from "../../type";
-import { Logger, safeBN } from "../../util";
+import { safeBN } from "../../util";
 import { useShallow } from "zustand/react/shallow";
 import _ from "lodash";
 import { useAnalytics } from "../useAnalytics";
@@ -36,16 +36,7 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     [args.minAmountOut]
   );
 
-  Logger({
-    fromToken: args.fromToken,
-    toToken: args.toToken,
-    fromAmount,
-    dexMinAmountOut,
-  })
-
-  useEffect(() => {
-    Logger('useLiquidityHub useEffect');
-    
+  useEffect(() => {    
     updateState({
       dexMinAmountOut,
       disabledByDex: args.disabled,

@@ -4,20 +4,18 @@ import { useSwapState } from "../store/main";
 import { useShallow } from "zustand/react/shallow";
 import { useAmountUI } from "./useAmountUI";
 import { useQuote } from "..";
-import { useSlippage } from "./swap/useSlippage";
 
 export function usePriceChanged() {
-  const [isUpdated, setIsUpdated] = useState(false);
   const quote = useQuote().data;
   const [acceptedAmountOut, setAcceptedAmountOut] = useState<
     string | undefined
   >(undefined);
-  const slippage = useSlippage();
-  const { showConfirmation, toToken, originalQuote } = useSwapState(
+  const { showConfirmation, toToken, originalQuote, swapStatus } = useSwapState(
     useShallow((s) => ({
       showConfirmation: s.showConfirmation,
       toToken: s.toToken,
       originalQuote: s.originalQuote,
+      swapStatus: s.swapStatus,
     }))
   );
 
@@ -28,31 +26,21 @@ export function usePriceChanged() {
     }
   }, [originalQuote, acceptedAmountOut, showConfirmation]);
 
-  const updatedAmount = useMemo(() => {
-    if (!quote?.outAmount) return;
-    const slippageTokenAmount = BN(quote?.outAmount).multipliedBy(
-      BN(slippage).dividedBy(100)
-    ).decimalPlaces(0).toFixed();
-      
-    return BN(quote?.outAmount).minus(slippageTokenAmount).toString();
-  }, [slippage, quote?.outAmount]);
-  
   const acceptChanges = useCallback(() => {
-    setIsUpdated(false);
-    setAcceptedAmountOut(updatedAmount);
-  }, [setIsUpdated, setAcceptedAmountOut, updatedAmount]);
+    setAcceptedAmountOut(quote?.minAmountOut);
+  }, [setAcceptedAmountOut, quote?.minAmountOut]);
 
-  useEffect(() => {
-    if (!acceptedAmountOut || !updatedAmount) return;
+  const shouldAccept = useMemo(() => {
+    if (!acceptedAmountOut || !quote?.minAmountOut || swapStatus) return false;
 
-    if (BN(updatedAmount).isLessThan(BN(acceptedAmountOut))) {
-      setIsUpdated(true);
+    if (BN(quote.minAmountOut).isLessThan(BN(acceptedAmountOut))) {
+      return true;
     }
-  }, [setIsUpdated, setAcceptedAmountOut, acceptedAmountOut, updatedAmount]);
+  }, [acceptedAmountOut, quote?.minAmountOut, swapStatus]);
 
   return {
-    shouldAccept: isUpdated,
+    shouldAccept,
     acceptChanges,
-    updatePrice: useAmountUI(toToken?.decimals, updatedAmount),
+    updatePrice: useAmountUI(toToken?.decimals, quote?.minAmountOut),
   };
 }
