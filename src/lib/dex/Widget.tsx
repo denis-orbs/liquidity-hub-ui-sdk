@@ -210,8 +210,35 @@ const TokenSelect = ({
 
 const SwapModal = () => {
   const { onClose, swapStatus, isOpen, title, warning } = useSwapConfirmation();
-  const updateStore = useDexState(useShallow((s) => s.updateStore));
+  const { updateStore, fromToken, toToken, fromAmount } = useDexState(
+    useShallow((s) => ({
+      updateStore: s.updateStore,
+      fromToken: s.fromToken,
+      toToken: s.toToken,
+      fromAmount: s.fromAmount,
+    }))
+  );
   const wToken = useChainConfig()?.wToken;
+  const outAmount = useQuote().data?.ui.outAmount;
+
+  const fromTokenUsdSN = usePriceUsd({ address: fromToken?.address }).data;
+  const toTokenUsdSN = usePriceUsd({ address: toToken?.address }).data;
+
+  const fromTokenUsd = useFormatNumber({
+    value: useMemo(() => {
+      return BN(fromTokenUsdSN || 0)
+        .multipliedBy(fromAmount || 0)
+        .toString();
+    }, [fromTokenUsdSN, fromAmount]),
+  });
+
+  const toTokenUsd = useFormatNumber({
+    value: useMemo(() => {
+      return BN(toTokenUsdSN || 0)
+        .multipliedBy(outAmount || 0)
+        .toString();
+    }, [toTokenUsdSN, outAmount]),
+  });
 
   const { acceptChanges, shouldAccept, updatePrice } = usePriceChanged();
 
@@ -239,7 +266,7 @@ const SwapModal = () => {
       {shouldAccept ? (
         <AcceptAmountOut amountToAccept={updatePrice} accept={acceptChanges} />
       ) : (
-        <SwapConfirmation>
+        <SwapConfirmation fromTokenUsd={fromTokenUsd} toTokenUsd={toTokenUsd}>
           {swapStatus === "failed" ? (
             <TryAgainButton />
           ) : (
