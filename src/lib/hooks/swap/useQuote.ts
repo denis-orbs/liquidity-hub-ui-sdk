@@ -75,7 +75,7 @@ export const useQuote = () => {
         sessionId,
         slippage,
         signal,
-        quoteInterval: context.quoteInterval,
+        quoteInterval: context.quote?.refetchInterval,
         queryClient,
         queryKey,
         chainId: chainId!,
@@ -88,7 +88,7 @@ export const useQuote = () => {
       return quoteResponse;
     },
     refetchInterval: ({ state }) => {
-      const quoteInterval = context.quoteInterval || 10_000;
+      const quoteInterval = context.quote?.refetchInterval || 10_000;
 
       if (showConfirmation) {
         return quoteInterval;
@@ -97,7 +97,7 @@ export const useQuote = () => {
         return undefined;
       }
       const refetchCount = state.data?.refetchCount || 0;
-      if (refetchCount > (context.quoteRefetchUntilThrottle || 6)) {
+      if (refetchCount > (context.quote?.refetchUntilThrottle || 6)) {
         return (refetchCount * quoteInterval) / 2;
       }
       return quoteInterval;

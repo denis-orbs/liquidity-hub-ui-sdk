@@ -6,7 +6,7 @@ import { Logo } from "../Logo";
 import { Token } from "../../type";
 import { Text } from "../Text";
 import { Separator } from "./Components";
-import { useSwapConfirmation, useUsdAmounts } from "../../hooks/useSwapDetails";
+import { useSwapConfirmation } from "../../hooks/useSwapDetails";
 const StyledSwapDetails = styled(FlexColumn)`
   width: 100%;
   gap: 15px;
@@ -14,21 +14,20 @@ const StyledSwapDetails = styled(FlexColumn)`
 
 export function SwapDetails({fromTokenUsd, toTokenUsd}: {fromTokenUsd?: string | number, toTokenUsd?: string | number}) {
   const { fromToken, fromAmount, toToken, outAmount } = useSwapConfirmation();
-  const {inTokenUsdAmount, outTokenUsdAmount} = useUsdAmounts()
 
   
   return (
     <StyledSwapDetails className="lh-details">
       <TokenDisplay
         title="Swap from"
-        usd={fromTokenUsd || inTokenUsdAmount}
+        usd={fromTokenUsd}
         token={fromToken}
         amount={fromAmount}
       />
       <Separator />
       <TokenDisplay
         title="Swap to"
-        usd={toTokenUsd || outTokenUsdAmount}
+        usd={toTokenUsd}
         token={toToken}
         amount={outAmount}
       />

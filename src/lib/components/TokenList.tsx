@@ -8,7 +8,7 @@ import { useShallow } from "zustand/react/shallow";
 import { Token, TokenListItemProps } from "../type";
 import { useDexState } from "../store/dex";
 import { eqIgnoreCase, filterTokens } from "../util";
-import { useTokenListBalances, useTokens, useUsdAmount } from "../dex/hooks";
+import { useTokenListBalances, useTokens } from "../dex/hooks";
 import { FlexColumn } from "../base-styles";
 
 type ListLabel = { isTitle: boolean; text: string };
@@ -65,7 +65,6 @@ const TokenComponent = ({
     })
   );
   const balance = balances ? balances[token.address] : undefined;
-  const priceUsd = useUsdAmount(token.address, balance);
   const disabled =
     eqIgnoreCase(token.address, fromToken?.address || "") ||
     eqIgnoreCase(token.address, toToken?.address || "");
@@ -81,8 +80,6 @@ const TokenComponent = ({
         token={token}
         selected={disabled}
         balanceLoading={balanceLoading}
-        usd={priceUsd.usd}
-        usdLoading={priceUsd.isLoading}
       />
     </StyledListToken>
   );

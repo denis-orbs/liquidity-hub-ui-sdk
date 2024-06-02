@@ -6,7 +6,7 @@ import { LH_CONTROL } from "../type";
 import { useIsInvalidChain } from "./useIsInvalidChain";
 
 export function useIsDisabled() {
-  const maxFailures = useMainContext().maxFailures;
+  const maxFailures = useMainContext().swap?.maxFailures;
   const invalidChain = useIsInvalidChain();
   const { liquidityHubEnabled, lhControl } = useLiquidityHubPersistedStore(
     (s) => ({

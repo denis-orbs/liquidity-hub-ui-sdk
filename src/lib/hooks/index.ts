@@ -8,7 +8,6 @@ export * from "./useFormatNumber";
 export * from "./useContractCallback";
 export * from './useOrders'
 export * from "./useUnwrap";
-export * from './useRate'
 export * from './useSettings'
 export * from './usePriceChanged'
 export * from './swap'

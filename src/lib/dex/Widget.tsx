@@ -4,6 +4,7 @@ import React, {
   ReactNode,
   useCallback,
   useContext,
+  useMemo,
   useState,
 } from "react";
 import {
@@ -38,13 +39,11 @@ import {
   useFormatNumber,
   useSwapButton,
   useSwapConfirmation,
+  useGasCost,
 } from "../hooks";
 import { Text } from "../components/Text";
 import { Logo } from "../components/Logo";
-import {
-  PoweredByOrbs,
-  SwapConfirmation,
-} from "../components";
+import { PoweredByOrbs, SwapConfirmation } from "../components";
 import { FlexRow, FlexColumn } from "../base-styles";
 import { useTokenListBalance } from "./hooks/useTokenListBalance";
 import { LiquidityHubProvider, useMainContext } from "../provider";
@@ -54,14 +53,15 @@ import {
   useShowConfirmationButton,
   useFromTokenPanel,
   useToTokenPanel,
+  useRate,
+  usePriceUsd,
+  usePriceImpact,
 } from "./hooks";
 import _ from "lodash";
 import { useOnSwapSuccessCallback } from "./hooks/useOnSwapSuccessCallback";
 import { useInitialTokens } from "./hooks/useInitialTokens";
-import { useRate } from "../hooks/useRate";
 import { ConfirmationPoweredBy } from "../components/SwapConfirmation/ConfirmationPoweredBy";
 import { useQuote } from "../hooks/swap/useQuote";
-import { useGasCostUsd, usePriceImpact } from "../hooks/useSwapDetails";
 import { useSwapState } from "../store/main";
 
 export const theme = {
@@ -80,11 +80,16 @@ export const theme = {
   },
 };
 
-type ModalType = FC<{isOpen: boolean, onClose: () => void, children: ReactNode, title: string}>
+type ModalType = FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  children: ReactNode;
+  title: string;
+}>;
 
 interface ContenxtType extends WidgetConfig {
   UIconfig?: WidgetConfig;
-  Modal: ModalType
+  Modal: ModalType;
 }
 
 const Context = createContext({} as ContenxtType);
@@ -96,7 +101,7 @@ const useWidgetContext = () => {
 interface ContextProps {
   children: ReactNode;
   UIconfig?: WidgetConfig;
-  Modal: ModalType
+  Modal: ModalType;
 }
 
 const ContextProvider = (props: ContextProps) => {
@@ -104,7 +109,7 @@ const ContextProvider = (props: ContextProps) => {
     <Context.Provider
       value={{
         UIconfig: props.UIconfig,
-        Modal: props.Modal
+        Modal: props.Modal,
       }}
     >
       {props.children}
@@ -123,13 +128,9 @@ const WidgetModal = ({
   onClose: () => void;
   title?: string;
 }) => {
-const Modal = useWidgetContext().Modal;
+  const Modal = useWidgetContext().Modal;
   return (
-    <Modal
-      title={title || ""}
-      isOpen={open}
-      onClose={onClose}
-    >
+    <Modal title={title || ""} isOpen={open} onClose={onClose}>
       {children}
     </Modal>
   );
@@ -211,7 +212,7 @@ const SwapModal = () => {
   const { onClose, swapStatus, isOpen, title, warning } = useSwapConfirmation();
   const updateStore = useDexState(useShallow((s) => s.updateStore));
   const wToken = useChainConfig()?.wToken;
-  
+
   const { acceptChanges, shouldAccept, updatePrice } = usePriceChanged();
 
   const onWrapSuccess = useCallback(() => {
@@ -298,7 +299,6 @@ const StyledPoweredByOrbs = styled(PoweredByOrbs)`
   margin-top: 30px;
 `;
 
-
 export const SwapSubmitButton = () => {
   const { disabled, text, onClick, isLoading } = useShowConfirmationButton();
 
@@ -361,8 +361,18 @@ const ChangeTokens = () => {
 };
 
 const FromTokenPanel = () => {
-  const { token, amount, onChange, onTokenSelect, usd, usdLoading } =
-    useFromTokenPanel();
+  const { token, amount, onChange, onTokenSelect } = useFromTokenPanel();
+
+  const { data: usdSingleToken, isLoading } = usePriceUsd({
+    address: token?.address,
+  });
+
+  const usd = useMemo(() => {
+    if (!usdSingleToken || !amount) return "0";
+    return BN(usdSingleToken || 0)
+      .times(amount || "0")
+      .toString();
+  }, [usdSingleToken, amount]);
 
   return (
     <TokenPanel
@@ -373,13 +383,25 @@ const FromTokenPanel = () => {
       isSrc={true}
       onTokenSelect={onTokenSelect}
       usd={usd}
-      usdLoading={usdLoading}
+      usdLoading={isLoading}
     />
   );
 };
 
 const ToTokenPanel = () => {
-  const { token, onTokenSelect, amount, usd, usdLoading } = useToTokenPanel();
+  const { token, onTokenSelect, amount } = useToTokenPanel();
+
+  const { data: usdSingleToken, isLoading } = usePriceUsd({
+    address: token?.address,
+  });
+
+  const usd = useMemo(() => {
+    if (!usdSingleToken || !amount) return "0";
+    return BN(amount || 0)
+      .times(usdSingleToken || "0")
+      .toString();
+  }, [usdSingleToken, amount]);
+
   return (
     <TokenPanel
       onTokenSelect={onTokenSelect}
@@ -387,7 +409,7 @@ const ToTokenPanel = () => {
       inputValue={useFormatNumber({ value: amount })}
       label="To"
       usd={usd}
-      usdLoading={usdLoading}
+      usdLoading={isLoading}
     />
   );
 };
@@ -533,7 +555,14 @@ const Watcher = (props: Props) => {
 
 export const TokenListItem = (props: TokenListItemProps) => {
   const balance = useFormatNumber({ value: props.balance });
-  const usd = useFormatNumber({ value: props.usd });
+  const usdSingleToken = usePriceUsd({ address: props.token.address }).data;
+  const usd = useFormatNumber({
+    value: useMemo(() => {
+      return BN(props.balance || 0)
+        .multipliedBy(usdSingleToken || 0)
+        .toString();
+    }, [props.balance, usdSingleToken]),
+  });
 
   return (
     <StyledListToken $disabled={props.selected}>
@@ -628,17 +657,31 @@ const StyledTokenListContainer = styled(FlexColumn)`
 `;
 
 const SwapDetails = () => {
-  const priceImpactF = useFormatNumber({
-    value: usePriceImpact(),
-    decimalScale: 2,
-  });
   const quote = useQuote().data;
   const minAmountOut = useFormatNumber({ value: quote?.ui.minAmountOut });
-
-  const gasCostUsd = useGasCostUsd();
+  const { fromToken, toToken } = useDexState(
+    useShallow((s) => ({
+      fromToken: s.fromToken,
+      toToken: s.toToken,
+    }))
+  );
+  const gasCost = useGasCost()?.ui;
+  const usd = usePriceUsd({ address: toToken?.address }).data;
+  const gasCostUsd = useMemo(() => {
+    if (!gasCost || !usd) return "0";
+    return BN(gasCost).times(usd).toString();
+  }, [gasCost, usd]);
   const gas = useFormatNumber({ value: gasCostUsd, decimalScale: 2 });
-  const rate = useRate();
-  const toToken = useSwapState(useShallow((s) => s.toToken));
+
+  const inTokenUsd = usePriceUsd({ address: fromToken?.address }).data;
+  const outTokenUsd = usePriceUsd({ address: toToken?.address }).data;
+
+  const priceImpactF = useFormatNumber({
+    value: usePriceImpact(inTokenUsd, outTokenUsd),
+    decimalScale: 2,
+  });
+
+  const rate = useRate(inTokenUsd, outTokenUsd);
   const rateUsd = useFormatNumber({
     value: rate.usd,
     decimalScale: 2,
@@ -647,7 +690,8 @@ const SwapDetails = () => {
 
   const fromAmount = useSwapState(useShallow((s) => s.fromAmount));
 
-  if(BN(fromAmount || '0').isZero() || BN(quote?.outAmount || '0').isZero()) return null
+  if (BN(fromAmount || "0").isZero() || BN(quote?.outAmount || "0").isZero())
+    return null;
 
   return (
     <StyledSwapDetails>
@@ -685,8 +729,6 @@ const StyledSwapDetails = styled(FlexColumn)`
   width: 100%;
 `;
 
-
-
 const StyledDetailsRow = styled.div`
   display: flex;
   justify-content: space-between;
@@ -695,12 +737,12 @@ const StyledDetailsRow = styled.div`
 `;
 
 const StyledDetailsRowLabel = styled(Text)`
-font-size: 14px;
-font-weight: 500;
+  font-size: 14px;
+  font-weight: 500;
 `;
 
 const StyledDetailsRowValue = styled(Text)`
-font-size: 14px;
+  font-size: 14px;
   small {
     opacity: 0.5;
   }

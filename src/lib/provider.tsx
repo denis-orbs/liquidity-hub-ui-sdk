@@ -41,14 +41,14 @@ export const LiquidityHubProvider = ({
   account,
   chainId,
   partner,
-  quoteInterval = DEFAULT_QUOTE_INTERVAL,
   apiUrl,
   supportedChains,
   theme,
   slippage,
-  maxFailures,
   connectWallet,
   getTokens,
+  quote,
+  swap
 }: Props) => {
 
 
@@ -88,14 +88,18 @@ export const LiquidityHubProvider = ({
           account,
           chainId,
           partner,
-          quoteInterval,
           apiUrl,
           web3,
           supportedChains,
           slippage,
-          maxFailures,
           connectWallet,
           getTokens,
+          quote: {
+            refetchInterval: quote?.refetchInterval || DEFAULT_QUOTE_INTERVAL,
+          },
+          swap: {
+            maxFailures: swap?.maxFailures,
+          }
         }}
       >
         <ThemeProvider theme={_theme}>

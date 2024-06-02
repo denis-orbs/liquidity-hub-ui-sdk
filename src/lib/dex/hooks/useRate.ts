@@ -1,31 +1,28 @@
 import { useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { useSwapState } from "../store/main";
 import BN from "bignumber.js";
-import { useFormatNumber } from "./useFormatNumber";
-import { useQuote } from "./swap/useQuote";
+import { useFormatNumber, useQuote } from "../..";
+import { useDexState } from "../../store/dex";
 
-export const useRate = (defaultInverted: boolean = false) => {
+export const useRate = (inTokenUsd?: string | number,outTokenUsd?: string | number, defaultInverted?: boolean) => {
   const [inverted, setInverted] = useState(defaultInverted);
-  const store = useSwapState(
+  const store = useDexState(
     useShallow((s) => ({
       fromToken: s.fromToken,
       toToken: s.toToken,
-      inTokenUsd: s.inTokenUsd,
-      outTokenUsd: s.outTokenUsd,
     }))
   );
 
   const quote = useQuote().data;
 
   const value = useMemo(() => {
-    if (!quote || !store?.inTokenUsd || !store.outTokenUsd) return "";
+    if (!quote || !inTokenUsd || !outTokenUsd) return "";
 
     if (!inverted) {
-      return BN(store?.inTokenUsd).dividedBy(store.outTokenUsd).toString();
+      return BN(inTokenUsd).dividedBy(outTokenUsd).toString();
     }
-    return BN(store.outTokenUsd).dividedBy(store?.inTokenUsd).toString();
-  }, [quote, inverted, store?.inTokenUsd, store.outTokenUsd]);
+    return BN(outTokenUsd).dividedBy(inTokenUsd).toString();
+  }, [quote, inverted, inTokenUsd, outTokenUsd]);
 
   const formattedRate = useFormatNumber({ value });
 
@@ -33,7 +30,7 @@ export const useRate = (defaultInverted: boolean = false) => {
   const rightToken = inverted ? store.fromToken?.symbol : store.toToken?.symbol;
 
   const usd = useFormatNumber({
-    value: BN((inverted ? store?.inTokenUsd : store?.outTokenUsd) || 0)
+    value: BN((inverted ? inTokenUsd : outTokenUsd) || 0)
       .multipliedBy(value)
       .toString(),
   });

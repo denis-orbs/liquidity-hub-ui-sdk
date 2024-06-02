@@ -1,7 +1,6 @@
 import { useCallback } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useQuote } from "../../hooks/swap/useQuote";
-import { useUsdAmounts } from "../../hooks/useSwapDetails";
 import { useDexState } from "../../store/dex";
 import { useDexLH } from "./useDexLH";
 import { useTokenListBalance } from "./useTokenListBalance";
@@ -17,8 +16,9 @@ export * from "./useTokenList";
 export * from "./useTokens";
 export * from "./useOnSwapSuccessCallback";
 export * from "./useInitialTokens";
-export * from "./useUsdAmount";
 export * from "./usePriceUsd";
+export * from "./useRate";
+export * from "./usePriceImpact";
 
 export const useSetMaxBalance = () => {
   const onFromAmountChange = useDexState(
@@ -74,16 +74,13 @@ export function useFromTokenPanel() {
   }));
 
   const { balance } = useTokenListBalance(token?.address);
-  const {isLoading } = useQuote();
-  const usd = useUsdAmounts().inTokenUsdAmount
+
   return {
     token,
     amount,
     onTokenSelect,
     onChange,
     balance,
-    usd,
-    usdLoading: isLoading,
   };
 }
 
@@ -92,17 +89,14 @@ export function useToTokenPanel() {
     token: s.toToken,
     onTokenSelect: s.onToTokenChange,
   }));
-  const usd = useUsdAmounts().outTokenUsdAmount
   const balance = useTokenListBalance(token?.address).balance;
 
-  const { data, isLoading } = useQuote();
+  const { data } = useQuote();
   return {
     token,
     amount: data?.ui.outAmount,
     onTokenSelect,
     balance,
-    usd,
-    usdLoading: isLoading,
   };
 }
 

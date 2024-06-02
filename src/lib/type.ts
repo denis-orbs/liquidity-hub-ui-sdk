@@ -17,14 +17,11 @@ export interface TokenPanelProps {
   usdLoading?: boolean;
 }
 
-
 export type TokenListItemProps = {
   token: Token;
   selected?: boolean;
   balance?: string;
   balanceLoading?: boolean;
-  usd?: string;
-  usdLoading: boolean;
 };
 
 export interface WidgetConfig {
@@ -63,13 +60,17 @@ export interface ProviderArgs {
   chainId?: number;
   partner: string;
   apiUrl?: string;
-  quoteInterval?: number;
   disableAnalytics?: boolean;
   theme?: "dark" | "light";
-  maxFailures?: number;
   connectWallet?: () => void;
   getTokens?: (chainId: number) => Promise<Token[] | undefined>;
-  quoteRefetchUntilThrottle?: number;
+  swap?: {
+    maxFailures?: number;
+  };
+  quote?: {
+    refetchInterval?: number;
+    refetchUntilThrottle?: number;
+  };
 }
 
 export interface QuoteArgs {
@@ -174,7 +175,6 @@ export type UseLiquidityHubArgs = {
   outTokenUsd?: string | number;
 };
 
-
 export type SwapRoute = "dex" | "lh";
 
 export type AddOrderArgs = {
@@ -193,8 +193,6 @@ export type Order = {
   toToken: Token;
   fromAmount: string;
   toAmount: string;
-  fromUsd?: string | number;
-  toUsd?: string | number;
   txHash: string;
   explorerLink: string;
 };
@@ -214,10 +212,8 @@ export interface Network {
 export type Abi = AbiItem[];
 export type Balances = { [key: string]: string };
 
-
 export declare type PermitData = {
   domain: TypedDataDomain;
   types: Record<string, TypedDataField[]>;
   values: any;
 };
-

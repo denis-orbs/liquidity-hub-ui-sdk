@@ -27,9 +27,9 @@ const initialState: Partial<DexState> = {
 export const useDexState = create<DexState>((set) => ({
   ...initialState,
   updateStore: (value) => set({ ...value }),
-  onFromAmountChange: (value) => set({ fromAmount: value }),
-  onFromTokenChange: (value) => set({ fromToken: value }),
-  onToTokenChange: (value) => set({ toToken: value }),
+  onFromAmountChange: (fromAmount) => set({ fromAmount }),
+  onFromTokenChange: (fromToken) => set({ fromToken }),
+  onToTokenChange: (toToken) => set({ toToken }),
   onSwitchTokens: () =>
     set((state) => ({
       fromToken: state.toToken,

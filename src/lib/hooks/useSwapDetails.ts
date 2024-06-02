@@ -11,62 +11,16 @@ import { useAmountUI } from "./useAmountUI";
 import { useSubmitWarning } from "./useSubmitWarning";
 import { usePriceChanged } from "..";
 
-export function useUsdAmounts() {
-  const outAmount = useQuote().data?.outAmount;
-
-  const { fromToken, fromAmount, inTokenUsd, toToken, outTokenUsd } =
-    useSwapState(
-      useShallow((s) => ({
-        fromToken: s.fromToken,
-        fromAmount: s.fromAmount,
-        inTokenUsd: s.inTokenUsd,
-        toToken: s.toToken,
-        outTokenUsd: s.outTokenUsd,
-      }))
-    );
-
-  return useMemo(() => {
-    return {
-      inTokenUsdAmount: amountUi(
-        fromToken?.decimals,
-        BN(fromAmount || "0").multipliedBy(inTokenUsd || "0")
-      ),
-      outTokenUsdAmount: amountUi(
-        toToken?.decimals,
-        BN(outAmount || "0").multipliedBy(outTokenUsd || "0")
-      ),
-    };
-  }, [fromToken, fromAmount, inTokenUsd, toToken, outAmount, outTokenUsd]);
-}
-
-export function usePriceImpact() {
-  const { inTokenUsdAmount, outTokenUsdAmount } = useUsdAmounts();
-
-  return useMemo(() => {
-    if (
-      BN(outTokenUsdAmount || "0").isZero() ||
-      BN(inTokenUsdAmount || "0").isZero()
-    )
-      return;
-    return BN(outTokenUsdAmount)
-      .div(inTokenUsdAmount)
-      .minus(1)
-      .times(100)
-      .toString();
-  }, [inTokenUsdAmount, outTokenUsdAmount]);
-}
-
-export function useGasCostUsd() {
-  const outTokenUsd = useSwapState(useShallow((s) => s.outTokenUsd));
+export function useGasCost() {
   const gasCostOutputToken = useQuote().data?.gasCostOutputToken;
   const toToken = useSwapState(useShallow((s) => s.toToken));
   return useMemo(() => {
-    if (!gasCostOutputToken || !outTokenUsd) return;
-    return amountUi(
-      toToken?.decimals,
-      BN(gasCostOutputToken).multipliedBy(outTokenUsd)
-    );
-  }, [gasCostOutputToken, outTokenUsd, toToken]);
+    if (!gasCostOutputToken) return;
+    return {
+      ui: amountUi(toToken?.decimals, BN(gasCostOutputToken)),
+      raw: gasCostOutputToken,
+    };
+  }, [gasCostOutputToken, toToken]);
 }
 
 export const useEstimateGasPrice = () => {
@@ -101,7 +55,7 @@ export function useSlippage() {
 }
 
 export const useSwapConfirmation = () => {
-  const warning = useSubmitWarning()
+  const warning = useSubmitWarning();
   const store = useSwapState(
     useShallow((s) => ({
       fromToken: s.fromToken,
@@ -115,8 +69,6 @@ export const useSwapConfirmation = () => {
       onCloseSwap: s.onCloseSwap,
     }))
   );
-
-
 
   const title = useMemo(() => {
     if (store.swapStatus === "failed") {
@@ -133,7 +85,7 @@ export const useSwapConfirmation = () => {
     useQuote().data?.outAmount
   );
 
-  const button = useSwapButton()
+  const button = useSwapButton();
 
   return {
     fromToken: store.fromToken,
@@ -150,7 +102,6 @@ export const useSwapConfirmation = () => {
     buttonText: button.text,
     swapLoading: button.isPending,
     submitSwap: button.swap,
-    ...usePriceChanged()
-
+    ...usePriceChanged(),
   };
 };
