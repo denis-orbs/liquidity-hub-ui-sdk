@@ -9,12 +9,13 @@ import { ExplorerLink } from "../ExplorerLink";
 interface Props {
   style?: CSSObject;
   children: ReactNode;
+  fromTokenUsd?: string | number, toTokenUsd?: string | number
 }
 
-export const SwapMain = ({ style = {}, children }: Props) => {
+export const SwapMain = ({ style = {}, children, fromTokenUsd, toTokenUsd }: Props) => {
   return (
     <Container style={style}>
-      <SwapDetails />
+      <SwapDetails fromTokenUsd={fromTokenUsd}  toTokenUsd={toTokenUsd} />
       <StepsComponent />
       {children}
       <ExplorerLink styles={{marginTop: 10}} />
