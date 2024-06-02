@@ -171,8 +171,6 @@ export type UseLiquidityHubArgs = {
   debounceFromAmountMillis?: number;
   quoteDelayMillis?: number;
   outAmount?: string;
-  inTokenUsd?: string | number;
-  outTokenUsd?: string | number;
 };
 
 export type SwapRoute = "dex" | "lh";

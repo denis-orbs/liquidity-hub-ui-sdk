@@ -28,8 +28,6 @@ interface SwapStateValues {
   swapConfirmationOutAmount?: string;
   swapConfirmationOutAmountUsd?: string;
   slippage?: number;
-  outTokenUsd?: string | number;
-  inTokenUsd?: string | number;
   originalQuote?: QuoteResponse
 }
 

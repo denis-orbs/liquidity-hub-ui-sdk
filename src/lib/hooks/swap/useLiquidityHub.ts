@@ -41,8 +41,6 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
       dexMinAmountOut,
       disabledByDex: args.disabled,
       slippage: args.slippage,
-      inTokenUsd: args.inTokenUsd,
-      outTokenUsd: args.outTokenUsd,
     });
     if (!showConfirmation) {
       updateState({
@@ -60,8 +58,6 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     fromAmount,
     args.fromToken?.address,
     args.toToken?.address,
-    args.inTokenUsd,
-    args.outTokenUsd,
   ]);
 
   const quote = useQuote();
