@@ -54,5 +54,5 @@ export const EMPTY_QUOTE_RESPONSE = {
   callData: "",
   rawData: "",
   ui: {},
-} as QuoteResponse;
+} as any as QuoteResponse;
 

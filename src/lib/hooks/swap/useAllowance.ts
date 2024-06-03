@@ -9,7 +9,7 @@ import { isNativeAddress } from "../../util";
 import { useSwapState } from "../../store/main";
 import { useShallow } from "zustand/react/shallow";
 const useApproved = (address?: string) => {
-  const { account } = useMainContext();
+  const account = useMainContext().account;
   const getContract = useContractCallback();
   return useCallback(
     async (fromAmount: string) => {

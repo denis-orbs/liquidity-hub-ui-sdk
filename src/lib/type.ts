@@ -109,16 +109,27 @@ export interface UseSwapCallback {
   fromAmount?: string;
 }
 
-export interface QuoteResponse {
+export interface OriginalQuote {
+  inToken: string;
+  outToken: string;
+  inAmount: string;
   outAmount: string;
-  permitData: any;
+  user: string;
+  slippage: number;
+  qs: string;
+  partner: string;
+  exchange: string;
+  sessionId: string;
   serializedOrder: string;
-  callData: string;
-  rawData: any;
-  sessionId?: string;
+  permitData: PermitData;
+  minAmountOut: string;
+  amountOutUI: string;
+  error?: string;
+}
+
+export interface QuoteResponse extends OriginalQuote {
   disableInterval?: boolean;
   gasCostOutputToken?: string;
-  minAmountOut?: string;
   refetchCount?: number;
   ui: {
     outAmount?: string;
@@ -153,13 +164,6 @@ export interface Step {
   hidden?: boolean;
   id: STEPS;
 }
-
-export type QuoteQueryArgs = {
-  fromToken?: Token;
-  toToken?: Token;
-  fromAmount?: string;
-  dexMinAmountOut?: string;
-};
 
 export type UseLiquidityHubArgs = {
   fromToken?: Token;

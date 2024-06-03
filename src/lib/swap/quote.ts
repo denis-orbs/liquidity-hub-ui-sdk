@@ -3,7 +3,7 @@ import BN from "bignumber.js";
 import _ from "lodash";
 import { swapAnalytics } from "../analytics";
 import { EMPTY_QUOTE_RESPONSE, QUOTE_ERRORS, zeroAddress } from "../config/consts";
-import { QuoteResponse, Token } from "../type";
+import { OriginalQuote, QuoteResponse, Token } from "../type";
 import {
   counter,
   amountUi,
@@ -50,7 +50,7 @@ export const quote = async ({
   chainId
 }: Args) => {
   swapAnalytics.onQuoteRequest();
-  let quote;
+  let quote: OriginalQuote | undefined = undefined;
   const count = counter();
 
   const isUnwrap =
@@ -110,10 +110,7 @@ export const quote = async ({
 
     const outAmountUI = amountUi(toToken?.decimals, new BN(quote.outAmount));
 
-    const minAmountOut = parseInt(
-      quote?.permitData.values.witness.outputs[1].endAmount.hex,
-      16
-    );
+
 
     const gasCostOutputToken = parseInt(
       quote?.permitData.values.witness.outputs[0].startAmount.hex,
@@ -122,7 +119,7 @@ export const quote = async ({
 
     const ui = {
       outAmount: outAmountUI,
-      minAmountOut: amountUi(toToken?.decimals, BN(minAmountOut || 0)),
+      minAmountOut: amountUi(toToken?.decimals, BN(quote.minAmountOut || 0)),
       gasCostOutputToken: amountUi(toToken?.decimals, BN(gasCostOutputToken)),
     };
 
@@ -132,18 +129,18 @@ export const quote = async ({
       toAddress: toToken?.address,
       dexMinAmountOut,
       quote,
-      minAmountOut,
+      minAmountOut: quote.minAmountOut,
       gasCostOutputToken,
       ui,
       refetchInterval:quoteInterval,
     });
-    const res = {
+    const res: QuoteResponse = {
       ...quote,
-      outAmount:safeBN(quote.outAmount),
-      minAmountOut: safeBN(minAmountOut || 0),
+      outAmount:safeBN(quote.outAmount) || '',
+      minAmountOut: safeBN(quote.minAmountOut || 0) || '',
       gasCostOutputToken: safeBN(gasCostOutputToken),
       ui,
-    } as QuoteResponse;
+    }
     res.refetchCount =
       ((queryClient.getQueryData(queryKey) as QuoteResponse)?.refetchCount ||
         0) + 1;

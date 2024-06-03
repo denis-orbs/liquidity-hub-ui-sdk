@@ -2,7 +2,7 @@ import { ContractCallContext, Multicall } from "ethereum-multicall";
 import Web3 from "web3";
 import ERC20Abi from "./abi/ERC20Abi.json";
 import { Balances, Token } from "./type";
-import { amountUi, isNativeAddress } from "./util";
+import { amountUi, isNativeAddress, Logger } from "./util";
 import BN from "bignumber.js";
 import _ from "lodash";
 export const getBalances = async (
@@ -62,7 +62,7 @@ export const getBalances = async (
           : amountUi(token.decimals, BN(balance));
     });
   } catch (error) {
-    console.log(error);
+    Logger('Multicall get balances failed');
   }
 
   const res = tokens.map((token) => {

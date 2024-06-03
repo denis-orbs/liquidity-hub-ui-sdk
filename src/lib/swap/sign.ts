@@ -2,7 +2,7 @@ import { _TypedDataEncoder } from "@ethersproject/hash";
 import Web3 from "web3";
 import { swapAnalytics } from "../analytics";
 import { PermitData } from "../type";
-import { counter, isTxRejected } from "../util";
+import { counter, isTxRejected, Logger } from "../util";
 
 export const sign = async (
   account: string,
@@ -64,9 +64,8 @@ async function signEIP712(
           error.message.match(/TrustWalletConnect.WCError error 1/) ||
           error.message.match(/Missing or invalid/))
       ) {
-        console.log(
-          "signTypedData: wallet does not implement EIP-712, falling back to eth_sign",
-          error.message
+        Logger(
+          "signTypedData: wallet does not implement EIP-712, falling back to eth_sign"
         );
         throw new Error("Wallet does not support EIP-712");
       }else{

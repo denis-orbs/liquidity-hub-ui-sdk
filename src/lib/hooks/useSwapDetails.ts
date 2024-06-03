@@ -43,23 +43,13 @@ export const useEstimateGasPrice = () => {
   });
 };
 
-export function useSlippage() {
-  const contextSlippage = useMainContext().slippage;
-  const storeSlippage = useSwapState(useShallow((s) => s.slippage));
-  const slippage = storeSlippage || contextSlippage;
-
-  return useMemo(() => {
-    if (!slippage) return 0;
-    return BN(slippage).isNaN() ? 0 : slippage;
-  }, [slippage]);
-}
 
 
 const useBalance = (token?: Token) => {
   const { account, web3 } = useMainContext();
 
   return useQuery({
-    queryKey: ["useBalance", token?.address, account],
+    queryKey: [QUERY_KEYS.TOKEN_BALANCE, token?.address, account],
     queryFn: async () => {
       const result = await getBalances([token!], web3!, account!);
       const balance = amountBN(token?.decimals, result[token?.address!]);

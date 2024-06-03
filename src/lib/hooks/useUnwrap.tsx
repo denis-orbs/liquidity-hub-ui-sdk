@@ -4,7 +4,7 @@ import { useMainContext } from "../provider";
 import { useContractCallback } from "./useContractCallback";
 import { useShallow } from "zustand/react/shallow";
 import BN from "bignumber.js";
-import { sendAndWaitForConfirmations } from "../util";
+import { Logger, sendAndWaitForConfirmations } from "../util";
 import { zeroAddress } from "../config/consts";
 import { useEstimateGasPrice } from "./useSwapDetails";
 
@@ -33,7 +33,7 @@ export const useUnwrap = () => {
 
         return true;
       } catch (error: any) {
-        console.log({error});
+        Logger({error});
         
         throw new Error(error.message);
       }

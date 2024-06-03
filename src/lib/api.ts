@@ -20,7 +20,6 @@ async function fetchPriceParaswap(
     const res = await payload.json();
     return res.data.priceRoute.srcUSD;
   } catch (e) {
-    console.log(e);
     return 0;
   }
 }

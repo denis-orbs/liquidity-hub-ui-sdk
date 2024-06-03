@@ -4,8 +4,8 @@ import { swapAnalytics } from "../analytics";
 import { useMainContext } from "../provider";
 import { useSwapState } from "../store/main";
 import { useQuote } from "./swap/useQuote";
-import {useSlippage } from "./useSwapDetails";
 import BN from "bignumber.js";
+import { useSlippage } from "..";
 export function useAnalytics() {
   const slippage = useSlippage();
   const { fromToken, toToken, dexMinAmountOut, fromAmount } = useSwapState(

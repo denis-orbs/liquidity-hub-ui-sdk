@@ -1,7 +1,7 @@
 import BN from "bignumber.js";
 import Web3 from "web3";
 import { useGlobalStore } from "../store/main";
-import { QuoteResponse } from "../type";
+import { OriginalQuote } from "../type";
 import { amountUi, Logger, waitForTxReceipt } from "../util";
 
 import { AnalyticsData, InitDexTrade, InitTrade } from "./types";
@@ -41,7 +41,7 @@ const onWallet = (provider: any): Partial<AnalyticsData | undefined> => {
       return { walletConnectName, isMetaMask: true };
     }
   } catch (error) {
-    console.log("Error on wallet", error);
+    Logger(`Error on wallet`);
   }
 };
 
@@ -116,7 +116,7 @@ const sendBI = async (data: Partial<AnalyticsData>) => {
       body: JSON.stringify(data),
     });
   } catch (error) {
-    console.log("Analytics error", error);
+    Logger(`Analytics error: ${error}`);
   }
 };
 
@@ -165,7 +165,7 @@ export class Analytics {
     };
   }
 
-  onQuoteSuccess(quoteMillis: number, quoteResponse: QuoteResponse) {
+  onQuoteSuccess(quoteMillis: number, quoteResponse: OriginalQuote) {
     this.data = {
       ...this.data,
       quoteState: "success",
@@ -180,7 +180,7 @@ export class Analytics {
   onQuoteFailed(
     error: string,
     quoteMillis: number,
-    quoteResponse?: QuoteResponse
+    quoteResponse?: OriginalQuote
   ) {
     // we not treat DEX_PRICE_BETTER_ERROR as a failure
     if (error == DEX_PRICE_BETTER_ERROR) {

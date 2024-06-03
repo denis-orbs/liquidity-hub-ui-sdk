@@ -14,5 +14,5 @@ export * from './useAmountBN'
 export * from './useAmountUI'
 export * from './useSwapDetails'
 export * from './useIsDisabled'
-
+export * from './useSlippage'
 export const useOriginalQuote = () => useSwapState(useShallow(it => it.originalQuote))
