@@ -2,7 +2,7 @@ import { _TypedDataEncoder } from "@ethersproject/hash";
 import Web3 from "web3";
 import { swapAnalytics } from "../analytics";
 import { PermitData } from "../type";
-import { counter } from "../util";
+import { counter, isTxRejected } from "../util";
 
 export const sign = async (
   account: string,
@@ -21,8 +21,9 @@ export const sign = async (
     swapAnalytics.onSignatureSuccess(signature, count());
     return signature;
   } catch (error) {
+    
     swapAnalytics.onSignatureFailed((error as any).message, count());
-    throw error;
+    throw new Error((error as Error)?.message);
   }
 };
 
@@ -50,15 +51,13 @@ async function signEIP712(
   try {
     return await signAsync(signer,provider, "eth_signTypedData_v4", message);
   } catch (e: any) {
-    console.log(e);
-
-    if (e.message?.toLowerCase()?.includes("denied" || "rejected")) {
-      throw new Error("User denied signature");
+ 
+    if (isTxRejected(e.message)) {
+      throw e
     }
     try {
       return await signAsync(signer,provider,"eth_signTypedData", message);
     } catch (error: any) {
-      console.log(error);
       if (
         typeof error.message === "string" &&
         (error.message.match(/not (found|implemented)/i) ||
@@ -70,6 +69,8 @@ async function signEIP712(
           error.message
         );
         throw new Error("Wallet does not support EIP-712");
+      }else{
+        throw error;
       }
     }
   }

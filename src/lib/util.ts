@@ -3,7 +3,11 @@ import Web3 from "web3";
 import { Network, Token } from "./type";
 import _ from "lodash";
 import { supportedChains } from "./config/supportedChains";
-import { nativeTokenAddresses, QUOTE_ERRORS, zero } from "./config/consts";
+import {
+  nativeTokenAddresses,
+  QUOTE_ERRORS,
+  zero,
+} from "./config/consts";
 import { networks } from "./networks";
 import { numericFormatter } from "react-number-format";
 import { useLiquidityHubPersistedStore } from "./store/main";
@@ -36,7 +40,7 @@ export async function waitForTxReceipt(web3: Web3, txHash: string) {
 
     await delay(3_000); // to avoid potential rate limiting from public rpc
     try {
-      const { mined, revertMessage } = await getTransactionDetails(
+      const { mined, revertMessage, receipt } = await getTransactionDetails(
         web3,
         txHash
       );
@@ -45,12 +49,14 @@ export async function waitForTxReceipt(web3: Web3, txHash: string) {
         return {
           mined,
           revertMessage: undefined,
+          receipt,
         };
       }
       if (revertMessage) {
         return {
           mined: false,
           revertMessage,
+          receipt,
         };
       }
     } catch (error: any) {
@@ -62,10 +68,10 @@ export async function waitForTxReceipt(web3: Web3, txHash: string) {
 export async function getTransactionDetails(
   web3: Web3,
   txHash: string
-): Promise<{ mined: boolean; revertMessage?: string, receipt?: any }> {
-  let receipt
+): Promise<{ mined: boolean; revertMessage?: string; receipt?: any }> {
+  let receipt;
   try {
-     receipt = await web3.eth.getTransactionReceipt(txHash);
+    receipt = await web3.eth.getTransactionReceipt(txHash);
     if (!receipt) {
       return {
         mined: false,
@@ -88,7 +94,7 @@ export async function getTransactionDetails(
     return {
       mined: receipt.status ? true : false,
       revertMessage,
-      receipt
+      receipt,
     };
   } catch (error: any) {
     throw new Error(`Failed to fetch transaction details: ${error.message}`);
@@ -112,7 +118,6 @@ export const counter = () => {
     return Date.now() - now;
   };
 };
-
 
 export const shouldReturnZeroOutAmount = (error: string) => {
   return Object.values(QUOTE_ERRORS).includes(error);
@@ -438,17 +443,25 @@ export const Logger = (value: string | object | any[] | number) => {
   }
 };
 
-
 export const safeBN = (value?: string | number) => {
-  if (!value) return
-  return BN(value).decimalPlaces(0).toFixed()
-}
-export const getContract = (address?: string, web3?: Web3, chainId?: number) => {
-  if (!address || !web3 || !address.startsWith("0x") || !chainId) return undefined;
-  const wethAddress = getChainConfig(chainId)?.wToken?.address
-  
+  if (!value) return;
+  return BN(value).decimalPlaces(0).toFixed();
+};
+export const getContract = (
+  address?: string,
+  web3?: Web3,
+  chainId?: number
+) => {
+  if (!address || !web3 || !address.startsWith("0x") || !chainId)
+    return undefined;
+  const wethAddress = getChainConfig(chainId)?.wToken?.address;
+
   return new web3.eth.Contract(
     isNativeAddress(address) ? iwethabi : (erc20abi as any),
     isNativeAddress(address) ? wethAddress : address
   );
-}
+};
+
+export const isTxRejected = (message: string) => {
+ return message?.toLowerCase()?.includes("rejected") || message?.toLowerCase()?.includes("denied")
+};

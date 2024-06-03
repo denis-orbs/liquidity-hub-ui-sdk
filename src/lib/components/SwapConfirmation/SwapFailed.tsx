@@ -5,14 +5,16 @@ import { Text } from "../Text";
 import { useSwapState } from "../../store/main";
 import { useShallow } from "zustand/react/shallow";
 import { ReactNode } from "react";
+import { useChainConfig } from "../../hooks";
 
 export const SwapFailed = ({children}:{children?: ReactNode}) => {
-  const {swapError } = useSwapState(
+  const { isWrapped } = useSwapState(
     useShallow((s) => ({
-      swapStaus: s.swapStatus,
-      swapError: s.swapError
+      isWrapped: s.isWrapped,
     }))
   );
+
+  const chainConfig = useChainConfig()
 
   return (
     <Container className="lh-failed">
@@ -20,7 +22,8 @@ export const SwapFailed = ({children}:{children?: ReactNode}) => {
         <AlertCircle />
       </MainLogo>
       <Title className="lh-failed-title">{'Swap failed on Liquidity Hub'}</Title>
-      {swapError && <Message>{swapError}</Message>}
+      {isWrapped && chainConfig && <Message>{`${chainConfig?.native.symbol} has been wrapped to ${chainConfig?.wToken?.symbol}`}</Message>}
+     
       {children}
     </Container>
   );
@@ -32,7 +35,6 @@ const Message = styled(Text)`
   line-height: normal;
   margin-top: 5px;
 `;
-
 const Title = styled(Text)`
   font-size: 22px;
   font-weight: 500;

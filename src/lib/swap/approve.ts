@@ -25,6 +25,6 @@ export const approve = async (
     swapAnalytics.onApprovalSuccess(count());
   } catch (error) {
     swapAnalytics.onApprovalFailed((error as any).message, count());
-    throw new Error("Failed to approve");
+    throw error
   }
 };

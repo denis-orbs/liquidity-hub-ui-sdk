@@ -48,6 +48,7 @@ function Wrapped() {
       account={address}
       initialFromToken="USDT"
       supportedChains={_.map(supportedChains, "chainId")}
+      slippage={0.5}
     />
   );
 }

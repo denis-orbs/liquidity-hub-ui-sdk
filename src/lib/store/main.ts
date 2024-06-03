@@ -28,7 +28,8 @@ interface SwapStateValues {
   swapConfirmationOutAmount?: string;
   swapConfirmationOutAmountUsd?: string;
   slippage?: number;
-  originalQuote?: QuoteResponse
+  originalQuote?: QuoteResponse;
+  isWrapped?: boolean;
 }
 
 interface SwapState extends SwapStateValues {
@@ -54,6 +55,7 @@ const initialSwapState: SwapStateValues = {
   disabledByDex: false,
   slippage: undefined,
   originalQuote: undefined,
+  isWrapped: false,
 };
 
 export const useSwapState = create<SwapState>((set, get) => ({

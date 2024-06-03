@@ -56,4 +56,3 @@ export const EMPTY_QUOTE_RESPONSE = {
   ui: {},
 } as QuoteResponse;
 
-

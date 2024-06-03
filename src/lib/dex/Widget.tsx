@@ -34,10 +34,8 @@ import { TokenSearchInput } from "../components/SearchInput";
 import { useShallow } from "zustand/react/shallow";
 import BN from "bignumber.js";
 import {
-  usePriceChanged,
   useChainConfig,
   useFormatNumber,
-  useSwapButton,
   useSwapConfirmation,
   useGasCost,
 } from "../hooks";
@@ -209,7 +207,7 @@ const TokenSelect = ({
 };
 
 const SwapModal = () => {
-  const { onClose, swapStatus, isOpen, title, warning } = useSwapConfirmation();
+  const { onClose, swapStatus, isOpen, modalTitle, submitButton, swapLoading, priceChangedWarning } = useSwapConfirmation();
   const { updateStore, fromToken, toToken, fromAmount } = useDexState(
     useShallow((s) => ({
       updateStore: s.updateStore,
@@ -224,29 +222,22 @@ const SwapModal = () => {
   const fromTokenUsdSN = usePriceUsd({ address: fromToken?.address }).data;
   const toTokenUsdSN = usePriceUsd({ address: toToken?.address }).data;
 
-  const fromTokenUsd = useFormatNumber({
-    value: useMemo(() => {
-      return BN(fromTokenUsdSN || 0)
-        .multipliedBy(fromAmount || 0)
-        .toString();
-    }, [fromTokenUsdSN, fromAmount]),
-  });
+  const fromTokenUsd = useMemo(() => {
+    return BN(fromTokenUsdSN || 0)
+      .multipliedBy(fromAmount || 0)
+      .toString();
+  }, [fromTokenUsdSN, fromAmount]);
 
-  const toTokenUsd = useFormatNumber({
-    value: useMemo(() => {
-      return BN(toTokenUsdSN || 0)
-        .multipliedBy(outAmount || 0)
-        .toString();
-    }, [toTokenUsdSN, outAmount]),
-  });
-
-  const { acceptChanges, shouldAccept, updatePrice } = usePriceChanged();
+  const toTokenUsd = useMemo(() => {
+    return BN(toTokenUsdSN || 0)
+      .multipliedBy(outAmount || 0)
+      .toString();
+  }, [toTokenUsdSN, outAmount]);
 
   const onWrapSuccess = useCallback(() => {
     updateStore({ fromToken: wToken });
   }, [updateStore, wToken]);
 
-  const swapButton = useSwapButton(onWrapSuccess);
 
   const onSuccess = useOnSwapSuccessCallback();
 
@@ -256,15 +247,15 @@ const SwapModal = () => {
 
   const onClick = useCallback(async () => {
     try {
-      await swapButton.swap();
+      await submitButton.onSwap({onWrapSuccess});
       onSuccess();
     } catch (error) {}
-  }, [swapButton.swap, onSuccess]);
+  }, [onSuccess, submitButton, onWrapSuccess]);
 
   return (
-    <WidgetModal title={title} open={isOpen} onClose={onClose}>
-      {shouldAccept ? (
-        <AcceptAmountOut amountToAccept={updatePrice} accept={acceptChanges} />
+    <WidgetModal title={modalTitle} open={isOpen} onClose={onClose}>
+      {priceChangedWarning.shouldAccept ? (
+        <AcceptAmountOut amountToAccept={priceChangedWarning.newPrice} accept={priceChangedWarning.acceptChanges} />
       ) : (
         <SwapConfirmation fromTokenUsd={fromTokenUsd} toTokenUsd={toTokenUsd}>
           {swapStatus === "failed" ? (
@@ -275,10 +266,10 @@ const SwapModal = () => {
                 <SwapDetails />
                 <StyledSubmitButton
                   onClick={onClick}
-                  isLoading={swapButton.isPending || warning?.isLoading}
-                  $disabled={!!warning}
+                  isLoading={swapLoading}
+                  $disabled={submitButton.disabled}
                 >
-                  {warning?.text || swapButton.text}
+                  {submitButton.content}
                 </StyledSubmitButton>
               </>
             )

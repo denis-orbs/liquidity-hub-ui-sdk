@@ -36,9 +36,8 @@ export const wrap = async (
     swapAnalytics.onWrapSuccess(count());
     return true;
   } catch (error) {
-    console.log({ error });
 
     swapAnalytics.onWrapFailed((error as any).message, count());
-    throw new Error("Failed to wrap");
+    throw error
   }
 };

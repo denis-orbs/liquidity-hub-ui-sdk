@@ -7,6 +7,7 @@ import { useChainConfig } from "../useChainConfig";
 import {
   amountUi,
   isNativeAddress,
+  isTxRejected,
   Logger,
   waitForTxReceipt,
 } from "../../util";
@@ -23,7 +24,7 @@ import { useEstimateGasPrice } from "../useEstimateGasPrice";
 import { swapX } from "../../swap/swapX";
 import { useApiUrl } from "./useApiUrl";
 
-export const useSubmitSwap = (onWrapSuccess?: () => void) => {
+export const useSubmitSwap = () => {
   const { onCloseSwap, fromAmount, fromToken, toToken, failures, updateState } =
     useSwapState(
       useShallow((store) => ({
@@ -46,11 +47,7 @@ export const useSubmitSwap = (onWrapSuccess?: () => void) => {
   const gas = useEstimateGasPrice();
   const apiUrl = useApiUrl();
   return useCallback(
-    async (props?: {
-      hasFallback?: boolean;
-      onSuccess?: () => Promise<void>;
-    }) => {
-      let isWrapped = false;
+    async (props?: { hasFallback?: boolean, onWrapSuccess?: () => void }) => {
       try {
         if (!apiUrl) {
           throw new Error("API URL not found");
@@ -89,16 +86,10 @@ export const useSubmitSwap = (onWrapSuccess?: () => void) => {
         updateState({ swapStatus: "loading" });
         if (isNativeIn) {
           updateState({ currentStep: STEPS.WRAP });
-          await wrap(
-            account,
-            web3,
-            chainId,
-            inTokenAddress,
-            fromAmount,
-            gas
-          );
+          await wrap(account, web3, chainId, inTokenAddress, fromAmount, gas);
           inTokenAddress = wTokenAddress;
-          isWrapped = true;
+          props?.onWrapSuccess?.();
+          updateState({ isWrapped: true });
         }
         if (!approved) {
           Logger("Approval required");
@@ -148,34 +139,38 @@ export const useSubmitSwap = (onWrapSuccess?: () => void) => {
           explorerLink: `${explorerUrl}/tx/${txHash}`,
         });
 
-        await props?.onSuccess?.();
         Logger("Swap success");
-        return txHash;
+        swapAnalytics.clearState();
+        return {
+          txHash,
+          receipt: txDetails.receipt,
+        };
       } catch (error: any) {
-        let message = "";
+        // if user rejects the tx, we get back to confirmation step
+        if (isTxRejected((error as Error).message)) {
+          updateState({
+            swapStatus: undefined,
+          });
+          return;
+        }
 
         swapAnalytics.onClobFailure();
+        updateState({
+          failures: (failures || 0) + 1,
+        });
         if (props?.hasFallback) {
           // fallback to Dex
           onCloseSwap();
         }
         Logger(`Swap error: ${error.message}`);
-        if (isWrapped) {
-          message = `${chainConfig?.native.symbol} has been wrapped to ${chainConfig?.wToken?.symbol}`;
-        }
         updateState({
-          failures: (failures || 0) + 1,
-          swapError: message,
+          swapError: error.message,
           swapStatus: "failed",
         });
-        throw message;
-      } finally {
-        if (isWrapped) {
-          onWrapSuccess?.();
-        }
-        refetchAllowance();
         swapAnalytics.clearState();
-      }
+        refetchAllowance();
+        throw error.message;
+      } 
     },
     [
       approve,
@@ -199,7 +194,7 @@ export const useSubmitSwap = (onWrapSuccess?: () => void) => {
       chainConfig,
       gas,
       apiUrl,
-      refetchAllowance
+      refetchAllowance,
     ]
   );
 };

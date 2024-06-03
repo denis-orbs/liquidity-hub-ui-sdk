@@ -12,9 +12,8 @@ export const useDexLH = () => {
     toToken: store.toToken,
     fromAmount,
     debounceFromAmountMillis: 300,
-    slippage: 0.5,
-  });
+  });  
 
-
+  
   return res;
 };

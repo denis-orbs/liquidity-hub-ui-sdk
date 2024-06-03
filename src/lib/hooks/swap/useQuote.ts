@@ -89,6 +89,7 @@ export const useQuote = () => {
     },
     refetchInterval: ({ state }) => {
       const quoteInterval = context.quote?.refetchInterval || 10_000;
+      const refetchUntilThrottle = context.quote?.refetchUntilThrottle || 10;
 
       if (showConfirmation) {
         return quoteInterval;
@@ -97,7 +98,7 @@ export const useQuote = () => {
         return undefined;
       }
       const refetchCount = state.data?.refetchCount || 0;
-      if (refetchCount > (context.quote?.refetchUntilThrottle || 6)) {
+      if (refetchCount > refetchUntilThrottle) {
         return (refetchCount * quoteInterval) / 2;
       }
       return quoteInterval;
