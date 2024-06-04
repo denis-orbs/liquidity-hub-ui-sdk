@@ -1,20 +1,16 @@
 import { useCallback, useMemo, useState } from "react";
 import { useAllowance } from "./useAllowance";
 import { useQuote } from "./useQuote";
-import {
-  ActionStatus,
-  QuoteResponse,
-  STEPS,
-  SwapConfirmationArgs,
-  UseLiquidityHubArgs,
-} from "../../type";
+import { UseLiquidityHubArgs } from "../../type";
 import { isNativeAddress, safeBN } from "../../util";
 import _ from "lodash";
 import { useAnalytics } from "../useAnalytics";
 import { useDebounce } from "../useDebounce";
 import {
+  useAmountUI,
   useBalance,
   useIsDisabled,
+  UseLiquidityHubState,
   usePriceChanged,
   useSteps,
   useSubmitSwap,
@@ -22,23 +18,18 @@ import {
 } from "../..";
 import BN from "bignumber.js";
 export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [swapStatus, setSwapStatus] = useState<ActionStatus>(undefined);
-  const [currentStep, setCurrentStep] = useState<STEPS | undefined>(undefined);
-  const [originalQuote, setOriginalQuote] = useState<QuoteResponse | undefined>(
-    undefined
-  );
-  const [swapError, setSwapError] = useState<string | undefined>(undefined);
-  const [failures, setFailures] = useState(0);
+  const [state, setState] = useState({} as UseLiquidityHubState);
 
   const debouncedFromAmount = useDebounce(
     args.fromAmount,
-    _.isUndefined(args.debounceFromAmountMillis)
+    BN(args.fromAmount || 0).isZero()
+      ? 0
+      : _.isUndefined(args.debounceFromAmountMillis)
       ? 2_00
       : args.debounceFromAmountMillis
   );
   const disabled = useIsDisabled({
-    failures,
+    failures: state.failures,
     disabledByDex: args.disabled,
   });
 
@@ -56,62 +47,70 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     };
   }, [debouncedFromAmount, args.minAmountOut]);
 
-  const updateSwapStatus = useCallback((status: ActionStatus) => {
-    setSwapStatus(status);
-  }, []);
+  const updateState = useCallback(
+    (newState: Partial<UseLiquidityHubState>) => {
+      setState((prevState) => ({ ...prevState, ...newState }));
+    },
 
-  const incrementFailues = useCallback(() => {
-    setFailures((prev) => prev + 1);
-  }, []);
+    [setState]
+  );
 
-  const resetFailures = useCallback(() => {
-    setFailures(0);
-  }, []);
-
-  const updateSwapStep = useCallback((step?: STEPS) => {
-    setCurrentStep(step);
-  }, []);
+  const setSessionId = useCallback(
+    (sessionId: string) => {
+      updateState({ sessionId });
+    },
+    [updateState]
+  );
 
   const quote = useQuote({
     fromToken: args.fromToken,
     toToken: args.toToken,
     fromAmount,
     dexMinAmountOut,
-    swapStatus,
-    showConfirmation,
+    swapStatus: state.swapStatus,
+    showConfirmation: state.showConfirmation,
     disabled,
     slippage,
+    setSessionId,
+    sessionId: state.sessionId,
   });
-  const { data: isApproved, isLoading: approvalLoading, refetch: refetchAllowance } = useAllowance(
-    args.fromToken,
-    fromAmount
-  );
+
+  const {
+    data: isApproved,
+    isLoading: allowanceLoading,
+    refetch: refetchAllowance,
+  } = useAllowance(args.fromToken, fromAmount);
   const analyticsInit = useAnalytics({
     fromToken: args.fromToken,
     toToken: args.toToken,
     fromAmount,
     dexMinAmountOut,
     quote: quote.data,
-    slippage
+    slippage,
+    sessionId: state.sessionId,
   }).initTrade;
 
   const onShowConfirmation = useCallback(() => {
-    setShowConfirmation(true);
-    setOriginalQuote(quote.data);
-  }, [quote.data]);
-  const { onSwap: submitSwap, isSigned, isWrapped } = useSubmitSwap({
+    updateState({
+      showConfirmation: true,
+      originalQuote: state.originalQuote || quote.data,
+    });
+  }, [quote.data, updateState, state.originalQuote]);
+
+  const {
+    mutateAsync: submitSwap,
+    isPending: swapLoading,
+    error: swapError,
+  } = useSubmitSwap({
     fromToken: args.fromToken,
     toToken: args.toToken,
     fromAmount,
-    updateSwapStatus,
-    updateSwapStep,
-    setSwapError,
-    incrementFailues,
-    resetFailures,
     refetchAllowance,
+    updateState,
     approved: isApproved,
     quote: quote.data,
   });
+
   const balance = useBalance(args.fromToken).data;
 
   const swapButtonContent = useMemo(() => {
@@ -127,74 +126,81 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     if (!isApproved) return "Approve and Swap";
     return "Sign and Swap";
   }, [isApproved, args.fromToken, fromAmount, quote.data?.outAmount, balance]);
+
   const priceChangeWarning = usePriceChanged({
     quote: quote.data,
-    originalQuote,
-    swapStatus,
-    showConfirmation,
+    originalQuote: state.originalQuote,
+    swapStatus: state.swapStatus,
+    showConfirmation: state.showConfirmation,
     toToken: args.toToken,
   });
+  
 
   const modalTitle = useMemo(() => {
-    if (swapStatus === "failed") {
-      return;
-    }
-    if (swapStatus === "success") {
-      return "Swap Successfull";
-    }
+    if (state.swapStatus === "failed") return;
+    if (state.swapStatus === "success") return "Swap Successfull";
     return "Review Swap";
-  }, [swapStatus]);
+  }, [state.swapStatus]);
 
-  const onClose = useCallback(() => {
-    setShowConfirmation(false);
-    setOriginalQuote(undefined);
-    if (swapStatus === "failed") {
-      setTimeout(() => {
-        setSwapStatus(undefined);
-        setCurrentStep(undefined);
-        setSwapError(undefined);
-      }, 3_00);
-    } else if (swapStatus === "success") {
-      setTimeout(() => {
-        setSwapStatus(undefined);
-        setCurrentStep(undefined);
-        setSwapError(undefined);
-      }, 3_00);
-    }
-  }, [swapStatus]);
+  const onClose = useCallback(
+    (timeout = 300) => {
+      updateState({
+        showConfirmation: false,
+      });
+      if (!state.swapStatus) {
+        updateState({
+          originalQuote: undefined,
+        });
+      }
+      if (state.swapStatus === "success") {
+        setTimeout(() => {
+          setState({} as UseLiquidityHubState);
+        }, timeout);
+      }
+      if (state.swapStatus === "failed") {
+        // refetch quote to get new session id
+        quote.refetch();
+        setTimeout(() => {
+          setState(
+            (prev) =>
+              ({ failures: (prev.failures || 0) + 1 } as UseLiquidityHubState)
+          );
+        }, timeout);
+      }
+    },
+    [state.swapStatus, updateState, setState, quote.refetch]
+  );
 
   const steps = useSteps({
     fromToken: args.fromToken,
-    currentStep,
-    isSigned,
+    currentStep: state.currentStep,
+    isSigned: state.isSigned,
+    allowanceLoading,
+    isApproved,
   });
 
   return {
     quote,
+    txHash: state.txHash,
     onShowConfirmation,
-    swapError,
+    swapError: state.swapStatus === "failed" ? swapError : undefined,
     analyticsInit,
-    isApproved,
     getSwapRoute,
-    swapConfirmation: {
-      swapStatus,
-      modalTitle,
-      submitSwap,
-      swapButtonContent,
-      swapButtonDisabled: approvalLoading || swapStatus === "loading",
-      priceChangeWarning,
-      swapLoading: swapStatus === "loading",
-      fromAmount,
-      outAmount: quote.data?.ui.outAmount,
-      fromToken: args.fromToken,
-      toToken: args.toToken,
-      isOpen: showConfirmation,
-      onClose,
-      currentStep,
-      originalQuote,
-      steps,
-      isLoading: swapStatus === "loading",
-      isWrapped
-    } as SwapConfirmationArgs,
+    swapStatus: state.swapStatus,
+    modalTitle,
+    submitSwap,
+    swapButtonContent,
+    swapButtonDisabled: allowanceLoading || swapLoading,
+    priceChangeWarning,
+    swapLoading,
+    fromToken: args.fromToken,
+    toToken: args.toToken,
+    isOpen: state.showConfirmation,
+    onClose,
+    currentStep: state.currentStep,
+    steps,
+    isWrapped: state.isWrapped,
+    fromAmount: useAmountUI(args.fromToken?.decimals, fromAmount),
+    outAmount: quote.data?.ui.outAmount,
   };
 };

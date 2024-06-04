@@ -6,8 +6,6 @@ import {
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-
-
 interface LHControlStore {
   debug: boolean;
   setDebug: (value: boolean) => void;
@@ -64,14 +62,4 @@ export const useOrdersStore = create<OrdersStore>((set) => ({
       return { orders };
     });
   },
-}));
-
-interface GlobalStore {
-  sessionId?: string;
-  setSessionId: (sessionId?: string) => void;
-}
-
-export const useGlobalStore = create<GlobalStore>((set) => ({
-  sessionId: undefined,
-  setSessionId: (sessionId) => set({ sessionId }),
 }));

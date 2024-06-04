@@ -1,5 +1,5 @@
 import { swapAnalytics } from "../analytics";
-import { QuoteResponse } from "../type";
+import { OriginalQuote } from "../type";
 import { counter } from "../util";
 
 interface Args {
@@ -7,7 +7,7 @@ interface Args {
   inTokenAddress: string;
   outTokenAddress: string;
   fromAmount: string;
-  quote: QuoteResponse;
+  quote?: OriginalQuote;
   account: string;
   chainId: number;
   apiUrl: string;
@@ -19,6 +19,9 @@ export const swapX = async (args: Args) => {
   const count = counter();
   swapAnalytics.onSwapRequest();
   try {
+    if (!args.quote) {
+      throw new Error("Missing quote");
+    }
     const response = await fetch(`${apiUrl}/swapx?chainId=${chainId}`, {
       method: "POST",
       body: JSON.stringify({

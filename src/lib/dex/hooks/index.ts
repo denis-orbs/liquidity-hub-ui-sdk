@@ -11,7 +11,6 @@ export * from "./useTokenListBalances";
 export * from "./useTokenListBalance";
 export * from "./useTokenList";
 export * from "./useTokens";
-export * from "./useOnSwapSuccessCallback";
 export * from "./useInitialTokens";
 export * from "./usePriceUsd";
 export * from "./useRate";

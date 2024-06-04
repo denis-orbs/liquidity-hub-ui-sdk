@@ -10,7 +10,7 @@ import { ExplorerLink } from "../ExplorerLink";
 import { useSwapConfirmationContext } from "./context";
 
 export const SwapSuccess = () => {
-  const { fromToken, toToken, fromAmount, outAmount } = useSwapConfirmationContext()
+  const { fromToken, toToken, fromAmount, quote, txHash } = useSwapConfirmationContext()
 
   return (
     <StyledSuccess className="lh-success">
@@ -27,9 +27,9 @@ export const SwapSuccess = () => {
       <StyledTokensContainer>
         <SuccessToken token={fromToken} amount={fromAmount} />
         <Separator />
-        <SuccessToken token={toToken} amount={outAmount} />
+        <SuccessToken token={toToken} amount={quote.data?.ui.outAmount} />
       </StyledTokensContainer>
-      <ExplorerLink styles={{marginTop: 50}} />
+      <ExplorerLink styles={{marginTop: 50}} txHash={txHash} />
     </StyledSuccess>
   );
 };

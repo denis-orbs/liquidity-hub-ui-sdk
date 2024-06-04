@@ -1,10 +1,10 @@
 import BN from "bignumber.js";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useMutation } from "@tanstack/react-query";
 import { useTokenListBalance } from "./useTokenListBalance";
 import { useTokenListBalances } from "./useTokenListBalances";
-import { SwapConfirmationArgs, useSwitchNetwork, useUnwrap } from "../..";
+import { LiquidityHubPayload, useSwitchNetwork, useUnwrap } from "../..";
 import { useIsInvalidChain, useChainConfig } from "../../hooks";
 import { useMainContext } from "../../provider";
 import { useDexState } from "../../store/dex";
@@ -35,20 +35,11 @@ export const useUnwrapMF = () => {
   });
 };
 
-export const useShowConfirmationButton = ({
-  onSumbit,
-  args,
-  quoteLoading,
-  quoteError
-}: {
-  onSumbit: () => void;
-  args: SwapConfirmationArgs;
-  quoteLoading: boolean;
-  quoteError: string | undefined;
-}) => {
-  const { fromToken, toToken, fromAmount, outAmount } = args;
+export const useShowConfirmationButton = (props: LiquidityHubPayload) => {
+  const { quote, analyticsInit, onShowConfirmation, fromToken, toToken, fromAmount } = props;
 
-  const toAmount = outAmount;
+
+  const toAmount = quote.data?.ui.outAmount;
   const { mutate: switchNetwork, isPending: switchNetworkLoading } =
     useSwitchNetwork();
   const wrongChain = useIsInvalidChain();
@@ -59,12 +50,16 @@ export const useShowConfirmationButton = ({
   const { mutate: unwrap, isPending: unwrapLoading } = useUnwrapMF();
   const { connectWallet, account, supportedChains } = useMainContext();
 
+  const onSumbit = useCallback(() => {
+    analyticsInit();
+    onShowConfirmation();
+  }, [onShowConfirmation, analyticsInit]);
 
 
-  const isLoading = quoteLoading || switchNetworkLoading || unwrapLoading;
+  const isLoading = quote.isLoading || switchNetworkLoading || unwrapLoading;
 
   return useMemo(() => {
-    if (quoteLoading) {
+    if (quote.isLoading) {
       return {
         disabled: false,
         text: "",
@@ -117,14 +112,8 @@ export const useShowConfirmationButton = ({
       };
     }
 
-    // if (fromAmountBN.gt(fromTokenBalanceBN)) {
-    //   return {
-    //     disabled: true,
-    //     text: "Insufficient balance",
-    //   };
-    // }
 
-    if (quoteError || BN(toAmount || "0").isZero()) {
+    if (quote.error || BN(toAmount || "0").isZero()) {
       return {
         disabled: true,
         text: "No liquidity",
@@ -153,8 +142,7 @@ export const useShowConfirmationButton = ({
     wToken,
     unwrap,
     unwrapLoading,
-    quoteLoading,
-    quoteError,
-    
+    quote.isLoading,
+    quote.error,    
   ]);
 };

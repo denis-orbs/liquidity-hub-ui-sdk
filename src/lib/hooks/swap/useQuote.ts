@@ -1,6 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMainContext } from "../../provider";
-import { useGlobalStore } from "../../store/main";
 import { QUERY_KEYS } from "../../config/consts";
 import { useApiUrl } from "./useApiUrl";
 import BN from "bignumber.js";
@@ -17,7 +16,9 @@ export const useQuote = ({
   swapStatus,
   showConfirmation,
   disabled,
-  slippage
+  slippage,
+  sessionId,
+  setSessionId
 }: {
   fromToken?: Token;
   toToken?: Token;
@@ -27,10 +28,11 @@ export const useQuote = ({
   showConfirmation?: boolean;
   disabled?: boolean;
   slippage: number;
+  setSessionId: (sessionId: string) => void;
+  sessionId?: string;
 }) => {
   const context = useMainContext();
   const apiUrl = useApiUrl();
-  const { sessionId, setSessionId } = useGlobalStore();
 
   const chainId = context.chainId || _.first(context.supportedChains);
   const wTokenAddress = useChainConfig()?.wToken?.address;
@@ -79,7 +81,7 @@ export const useQuote = ({
         chainId: chainId!,
       });
 
-      if (quoteResponse.sessionId) {
+      if (quoteResponse.sessionId) {        
         setSessionId(quoteResponse.sessionId);
       }
 

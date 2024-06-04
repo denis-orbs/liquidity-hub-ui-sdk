@@ -10,14 +10,13 @@ export function usePriceImpact(
 ) {
   const { fromAmountUI, fromToken, toToken } = useDexState(
     useShallow((it) => ({
-        fromAmountUI: it.fromAmount,
+      fromAmountUI: it.fromAmount,
       fromToken: it.fromToken,
       toToken: it.toToken,
     }))
   );
 
   const fromAmount = useAmountBN(fromToken?.decimals, fromAmountUI);
-
 
   return useMemo(() => {
     if (
@@ -32,8 +31,6 @@ export function usePriceImpact(
     ) {
       return;
     }
-
-    
 
     const inTokenUsdAmount = BN(
       amountUi(fromToken?.decimals, BN(fromAmount))

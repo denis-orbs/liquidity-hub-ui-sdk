@@ -9,7 +9,8 @@ export function useAnalytics({
   dexMinAmountOut,
   fromAmount,
   quote,
-  slippage
+  slippage,
+  sessionId
 }: {
   fromToken?: Token;
   toToken?: Token;
@@ -17,6 +18,7 @@ export function useAnalytics({
   fromAmount?: string;
   quote?: QuoteResponse,
   slippage: number;
+  sessionId?: string;
 }) {
 
 
@@ -41,6 +43,7 @@ export function useAnalytics({
       tradeType: "BEST_TRADE",
       quoteAmountOut,
       provider,
+      sessionId
     });
   }, [
     dexOutAmountWS,
@@ -51,6 +54,7 @@ export function useAnalytics({
     slippage,
     quoteAmountOut,
     provider,
+    sessionId
   ]);
 
   return {

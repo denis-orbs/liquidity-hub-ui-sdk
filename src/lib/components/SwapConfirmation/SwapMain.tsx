@@ -10,13 +10,13 @@ interface Props {
 }
 
 export const SwapMain = ({ style = {} }: Props) => {
-  const { bottomContent, fromTokenUsd, toTokenUsd } = useSwapConfirmationContext();
+  const { bottomContent, fromTokenUsd, toTokenUsd, txHash } = useSwapConfirmationContext();
   return (
     <Container style={style}>
       <SwapDetails fromTokenUsd={fromTokenUsd} toTokenUsd={toTokenUsd} />
       <StepsComponent />
       {bottomContent}
-      <ExplorerLink styles={{ marginTop: 10 }} />
+      <ExplorerLink styles={{ marginTop: 10 }} txHash={txHash} />
     </Container>
   );
 };

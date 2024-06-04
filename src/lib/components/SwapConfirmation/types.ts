@@ -1,6 +1,6 @@
-import { SwapConfirmationArgs } from "../../type";
+import { LiquidityHubPayload } from "../..";
 
-export interface SwapConfirmationProps extends SwapConfirmationArgs {
+export interface SwapConfirmationProps extends LiquidityHubPayload {
     fromTokenUsd?: string | number;
     toTokenUsd?: string | number;
     bottomContent?: React.ReactNode;

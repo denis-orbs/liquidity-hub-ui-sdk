@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { amountBN, amountUi, estimateGasPrice } from "../util";
+import { amountBN, estimateGasPrice } from "../util";
 import BN from "bignumber.js";
 import { QUERY_KEYS } from "../config/consts";
 import { useMainContext } from "../provider";
@@ -7,16 +7,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useAmountUI } from "./useAmountUI";
 import { ActionStatus, QuoteResponse, Token } from "..";
 import { getBalances } from "../multicall";
-
-export function useGasCost(toToken?: Token, gasCostOutputToken?: string) {
-  return useMemo(() => {
-    if (!gasCostOutputToken) return;
-    return {
-      ui: amountUi(toToken?.decimals, BN(gasCostOutputToken)),
-      raw: gasCostOutputToken,
-    };
-  }, [gasCostOutputToken, toToken]);
-}
 
 export const useEstimateGasPrice = () => {
   const { web3, chainId } = useMainContext();
@@ -38,8 +28,6 @@ export const useEstimateGasPrice = () => {
   });
 };
 
-
-
 export const useBalance = (token?: Token) => {
   const { account, web3 } = useMainContext();
 
@@ -54,18 +42,22 @@ export const useBalance = (token?: Token) => {
   });
 };
 
-
-export function usePriceChanged({quote, showConfirmation, toToken, originalQuote, swapStatus}:{
-  quote?: QuoteResponse,
-  showConfirmation?: boolean,
-  toToken?: Token,
-  originalQuote?: QuoteResponse,
-  swapStatus?: ActionStatus
+export function usePriceChanged({
+  quote,
+  showConfirmation,
+  toToken,
+  originalQuote,
+  swapStatus,
+}: {
+  quote?: QuoteResponse;
+  showConfirmation?: boolean;
+  toToken?: Token;
+  originalQuote?: QuoteResponse;
+  swapStatus?: ActionStatus;
 }) {
   const [acceptedAmountOut, setAcceptedAmountOut] = useState<
     string | undefined
   >(undefined);
-
 
   useEffect(() => {
     // initiate
@@ -79,9 +71,16 @@ export function usePriceChanged({quote, showConfirmation, toToken, originalQuote
   }, [setAcceptedAmountOut, quote?.minAmountOut]);
 
   const shouldAccept = useMemo(() => {
-    if (!acceptedAmountOut || !quote?.minAmountOut || swapStatus) return false;
+    if (
+      !acceptedAmountOut ||
+      BN(acceptedAmountOut || 0).isZero() ||
+      !quote?.minAmountOut ||
+      BN(quote?.minAmountOut || 0).isZero() || 
+      swapStatus
+    )
+      return false;
 
-    if (BN(quote.minAmountOut).isLessThan(BN(acceptedAmountOut))) {
+    if (BN(quote.minAmountOut).isLessThan(BN(acceptedAmountOut))) {      
       return true;
     }
   }, [acceptedAmountOut, quote?.minAmountOut, swapStatus]);

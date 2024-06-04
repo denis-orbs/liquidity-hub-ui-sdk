@@ -1,6 +1,5 @@
 import BN from "bignumber.js";
 import Web3 from "web3";
-import { useGlobalStore } from "../store/main";
 import { OriginalQuote } from "../type";
 import { amountUi, Logger, waitForTxReceipt } from "../util";
 
@@ -100,6 +99,7 @@ const initSwap = (args: InitTrade): Partial<AnalyticsData> | undefined => {
     tradeType: args.tradeType,
     quoteAmountOut: args.quoteAmountOut,
     quoteAmountOutUI,
+    sessionId: args.sessionId,
     ...wallet,
   };
 };
@@ -143,7 +143,6 @@ export class Analytics {
     this.data = {
       ...this.data,
       ...values,
-      sessionId: useGlobalStore.getState().sessionId,
     };
     clearTimeout(this.timeout);
     this.timeout = setTimeout(() => {

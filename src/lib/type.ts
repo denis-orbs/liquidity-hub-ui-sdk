@@ -5,6 +5,7 @@ import {
 } from "@ethersproject/abstract-signer";
 import { CSSObject } from "styled-components";
 import { ReactNode } from "react";
+import { useLiquidityHub } from ".";
 
 export interface TokenPanelProps {
   inputValue?: string;
@@ -124,12 +125,26 @@ export interface OriginalQuote {
   minAmountOut: string;
   amountOutUI: string;
   error?: string;
+  gasAmountOut?: string;
+}
+
+export interface UseLiquidityHubState {
+  showConfirmation: boolean,
+  swapStatus:ActionStatus | undefined,
+  currentStep: STEPS | undefined,
+  originalQuote: QuoteResponse | undefined,
+  swapError:string | undefined,
+  failures: number,
+  txHash: string | undefined,
+  isWrapped: boolean,
+  isSigned: boolean,
+  sessionId?: string;
 }
 
 export interface QuoteResponse extends OriginalQuote {
   disableInterval?: boolean;
-  gasCostOutputToken?: string;
   refetchCount?: number;
+  originalQuote?: OriginalQuote;
   ui: {
     outAmount?: string;
     minAmountOut?: string;
@@ -219,40 +234,4 @@ export declare type PermitData = {
   values: any;
 };
 
-export interface SwapConfirmationArgs {
-  modalTitle: string;
-  submitSwap: (
-    props?:
-      | {
-          hasFallback?: boolean | undefined;
-          onWrapSuccess?: (() => void) | undefined;
-        }
-      | undefined
-  ) => Promise<
-    | {
-        txHash: any;
-        receipt: any;
-      }
-    | undefined
-  >;
-  swapButtonContent: string;
-  swapButtonDisabled: boolean;
-  priceChangeWarning: {
-    shouldAccept: boolean | undefined;
-    acceptChanges: () => void;
-    newPrice: string;
-}
-  swapLoading: boolean;
-  fromAmount: string;
-  outAmount: string;
-  fromToken?: Token;
-  toToken?: Token;
-  isOpen: boolean;
-  onClose: () => void;
-  currentStep?: STEPS;
-  originalQuote?: QuoteResponse;
-  steps: Step[]
-  swapStatus?: ActionStatus;
-isLoading: boolean
-isWrapped: boolean
-}
+export type LiquidityHubPayload = ReturnType<typeof useLiquidityHub>;

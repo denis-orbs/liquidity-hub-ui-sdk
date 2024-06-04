@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { useAllowance } from "./useAllowance";
 import SwapImg from "../../assets/swap.svg";
 import ApproveImg from "../../assets/approve.svg";
 import {Step, STEPS, Token } from "../../type";
@@ -10,16 +9,19 @@ export const useSteps = ({
   fromToken,
   currentStep,
   isSigned,
+  allowanceLoading,
+  isApproved
 }: {
   fromToken?: Token;
   currentStep?: STEPS;
   isSigned: boolean;
+  allowanceLoading: boolean;
+  isApproved?: boolean;
 }) => {
   const explorer = useChainConfig()?.explorerUrl;
 
-  const { isLoading: allowanceQueryLoading, data: isApproved } = useAllowance();
   const steps = useMemo(() => {
-    if (allowanceQueryLoading) {
+    if (allowanceLoading) {
       return [];
     }
 
@@ -54,7 +56,7 @@ export const useSteps = ({
   }, [
     fromToken,
     isApproved,
-    allowanceQueryLoading,
+    allowanceLoading,
     isSigned,
     currentStep,
     explorer,

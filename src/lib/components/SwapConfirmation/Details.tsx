@@ -13,7 +13,7 @@ const StyledSwapDetails = styled(FlexColumn)`
 `;
 
 export function SwapDetails({fromTokenUsd, toTokenUsd}: {fromTokenUsd?: string | number, toTokenUsd?: string | number}) {
-  const { fromToken, fromAmount, toToken, outAmount } = useSwapConfirmationContext();
+  const { fromToken, fromAmount, toToken, quote } = useSwapConfirmationContext();
 
   
   return (
@@ -29,7 +29,7 @@ export function SwapDetails({fromTokenUsd, toTokenUsd}: {fromTokenUsd?: string |
         title="Swap to"
         usd={toTokenUsd}
         token={toToken}
-        amount={outAmount}
+        amount={quote.data?.ui.outAmount}
       />
     </StyledSwapDetails>
   );
