@@ -1,11 +1,10 @@
 import { useMemo } from "react";
-import { useShallow } from "zustand/react/shallow";
 import { useMainContext } from "../provider";
-import { useLiquidityHubPersistedStore, useSwapState } from "../store/main";
+import { useLiquidityHubPersistedStore } from "../store/main";
 import { LH_CONTROL } from "../type";
 import { useIsInvalidChain } from "./useIsInvalidChain";
 
-export function useIsDisabled() {
+export function useIsDisabled({failures, disabledByDex}: {failures?: number; disabledByDex?: boolean}) {
   const maxFailures = useMainContext().swap?.maxFailures;
   const invalidChain = useIsInvalidChain();
   const { liquidityHubEnabled, lhControl } = useLiquidityHubPersistedStore(
@@ -15,12 +14,6 @@ export function useIsDisabled() {
     })
   );
 
-  const { failures, disabledByDex } = useSwapState(
-    useShallow((s) => ({
-      failures: s.failures,
-      disabledByDex: s.disabledByDex,
-    }))
-  );
 
   const failedMaxFailures = !maxFailures
     ? false

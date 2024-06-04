@@ -4,12 +4,13 @@ import styled from "styled-components";
 import { Logo } from "../Logo";
 import { Text } from "../Text";
 import { Separator } from "./Components";
-import { useFormatNumber, useSwapConfirmation } from "../../hooks";
+import { useFormatNumber } from "../../hooks";
 import SuccessImg from "../../assets/okay.png";
 import { ExplorerLink } from "../ExplorerLink";
+import { useSwapConfirmationContext } from "./context";
 
 export const SwapSuccess = () => {
-  const { fromToken, toToken, fromAmount, outAmount } = useSwapConfirmation()
+  const { fromToken, toToken, fromAmount, outAmount } = useSwapConfirmationContext()
 
   return (
     <StyledSuccess className="lh-success">

@@ -1,13 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
-import { useChainConfig } from "../..";
+import { Token, useChainConfig } from "../..";
 import { useMainContext } from "../../provider";
 import { useContractCallback } from "../useContractCallback";
 import { permit2Address, QUERY_KEYS } from "../../config/consts";
 import BN from "bignumber.js";
 import { isNativeAddress } from "../../util";
-import { useSwapState } from "../../store/main";
-import { useShallow } from "zustand/react/shallow";
 const useApproved = (address?: string) => {
   const account = useMainContext().account;
   const getContract = useContractCallback();
@@ -31,13 +29,9 @@ const useApproved = (address?: string) => {
   );
 };
 
-export const useAllowance = () => {
+export const useAllowance = (fromToken?: Token, fromAmount?: string) => {
   const wToken = useChainConfig()?.wToken;
 
-  const { fromToken, fromAmount } = useSwapState(useShallow(s => ({
-    fromToken: s.fromToken,
-    fromAmount: s.fromAmount
-  })))
 
   const isApproved = useApproved(
     isNativeAddress(fromToken?.address || "")

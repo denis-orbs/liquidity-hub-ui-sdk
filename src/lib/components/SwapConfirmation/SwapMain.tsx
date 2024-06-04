@@ -1,7 +1,6 @@
 import styled, { CSSObject } from "styled-components";
 import { StepComponent } from "./Step";
 import { SwapDetails } from "./Details";
-import { useSteps } from "../../hooks/swap/useSteps";
 import { FlexColumn } from "../../base-styles";
 import { ExplorerLink } from "../ExplorerLink";
 import { useSwapConfirmationContext } from "./context";
@@ -23,9 +22,8 @@ export const SwapMain = ({ style = {} }: Props) => {
 };
 
 const StepsComponent = () => {
-  const { steps, status } = useSteps();
-
-  if (status !== "loading") return null;
+  const {steps, swapStatus} = useSwapConfirmationContext();
+  if (swapStatus !== "loading") return null;
 
   return (
     <>

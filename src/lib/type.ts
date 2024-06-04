@@ -218,3 +218,41 @@ export declare type PermitData = {
   types: Record<string, TypedDataField[]>;
   values: any;
 };
+
+export interface SwapConfirmationArgs {
+  modalTitle: string;
+  submitSwap: (
+    props?:
+      | {
+          hasFallback?: boolean | undefined;
+          onWrapSuccess?: (() => void) | undefined;
+        }
+      | undefined
+  ) => Promise<
+    | {
+        txHash: any;
+        receipt: any;
+      }
+    | undefined
+  >;
+  swapButtonContent: string;
+  swapButtonDisabled: boolean;
+  priceChangeWarning: {
+    shouldAccept: boolean | undefined;
+    acceptChanges: () => void;
+    newPrice: string;
+}
+  swapLoading: boolean;
+  fromAmount: string;
+  outAmount: string;
+  fromToken?: Token;
+  toToken?: Token;
+  isOpen: boolean;
+  onClose: () => void;
+  currentStep?: STEPS;
+  originalQuote?: QuoteResponse;
+  steps: Step[]
+  swapStatus?: ActionStatus;
+isLoading: boolean
+isWrapped: boolean
+}

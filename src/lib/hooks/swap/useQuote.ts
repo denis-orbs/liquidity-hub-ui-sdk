@@ -1,37 +1,35 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMainContext } from "../../provider";
-import { useGlobalStore, useSwapState } from "../../store/main";
+import { useGlobalStore } from "../../store/main";
 import { QUERY_KEYS } from "../../config/consts";
-import { useIsDisabled } from "../useIsDisabled";
 import { useApiUrl } from "./useApiUrl";
 import BN from "bignumber.js";
 import _ from "lodash";
-import { useChainConfig, useSlippage } from "..";
-import { useShallow } from "zustand/react/shallow";
+import { useChainConfig } from "..";
 import { quote } from "../../swap/quote";
+import { ActionStatus, Token } from "../../type";
 
-export const useQuote = () => {
-  const {
-    fromToken,
-    toToken,
-    fromAmount,
-    dexMinAmountOut,
-    swapStatus,
-    showConfirmation,
-  } = useSwapState(
-    useShallow((s) => ({
-      fromToken: s.fromToken,
-      toToken: s.toToken,
-      fromAmount: s.fromAmount,
-      dexMinAmountOut: s.dexMinAmountOut,
-      swapStatus: s.swapStatus,
-      showConfirmation: s.showConfirmation,
-    }))
-  );
+export const useQuote = ({
+  fromToken,
+  toToken,
+  fromAmount,
+  dexMinAmountOut,
+  swapStatus,
+  showConfirmation,
+  disabled,
+  slippage
+}: {
+  fromToken?: Token;
+  toToken?: Token;
+  fromAmount?: string;
+  dexMinAmountOut?: string;
+  swapStatus?: ActionStatus;
+  showConfirmation?: boolean;
+  disabled?: boolean;
+  slippage: number;
+}) => {
   const context = useMainContext();
-  const slippage = useSlippage();
   const apiUrl = useApiUrl();
-  const disabled = useIsDisabled();
   const { sessionId, setSessionId } = useGlobalStore();
 
   const chainId = context.chainId || _.first(context.supportedChains);
@@ -109,5 +107,3 @@ export const useQuote = () => {
     retry: 2,
   });
 };
-
-

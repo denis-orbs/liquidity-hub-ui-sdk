@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import BN from "bignumber.js";
-import { useFormatNumber, useQuote } from "../..";
+import { useFormatNumber } from "../..";
 import { useDexState } from "../../store/dex";
 
 export const useRate = (inTokenUsd?: string | number,outTokenUsd?: string | number, defaultInverted?: boolean) => {
@@ -13,16 +13,15 @@ export const useRate = (inTokenUsd?: string | number,outTokenUsd?: string | numb
     }))
   );
 
-  const quote = useQuote().data;
 
   const value = useMemo(() => {
-    if (!quote || !inTokenUsd || !outTokenUsd) return "";
+    if (!inTokenUsd || !outTokenUsd) return "";
 
     if (!inverted) {
       return BN(inTokenUsd).dividedBy(outTokenUsd).toString();
     }
     return BN(outTokenUsd).dividedBy(inTokenUsd).toString();
-  }, [quote, inverted, inTokenUsd, outTokenUsd]);
+  }, [inverted, inTokenUsd, outTokenUsd]);
 
   const formattedRate = useFormatNumber({ value });
 

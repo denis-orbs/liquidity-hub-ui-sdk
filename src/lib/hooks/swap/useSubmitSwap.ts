@@ -1,8 +1,6 @@
-import { useGlobalStore, useSwapState } from "../../store/main";
-import { useCallback } from "react";
-import { useShallow } from "zustand/react/shallow";
+import { useGlobalStore } from "../../store/main";
+import { useCallback, useState } from "react";
 import { swapAnalytics } from "../../analytics";
-import { useAllowance } from "./useAllowance";
 import { useChainConfig } from "../useChainConfig";
 import {
   amountUi,
@@ -14,8 +12,7 @@ import {
 import BN from "bignumber.js";
 import { zeroAddress } from "../../config/consts";
 import { useOrders } from "../useOrders";
-import { useQuote } from "./useQuote";
-import { STEPS } from "../../type";
+import { ActionStatus, QuoteResponse, STEPS, Token } from "../../type";
 import { useMainContext } from "../../provider";
 import { sign } from "../../swap/sign";
 import { approve } from "../../swap/approve";
@@ -24,29 +21,44 @@ import { useEstimateGasPrice } from "../useEstimateGasPrice";
 import { swapX } from "../../swap/swapX";
 import { useApiUrl } from "./useApiUrl";
 
-export const useSubmitSwap = () => {
-  const { onCloseSwap, fromAmount, fromToken, toToken, failures, updateState } =
-    useSwapState(
-      useShallow((store) => ({
-        onCloseSwap: store.onCloseSwap,
-        fromAmount: store.fromAmount,
-        fromToken: store.fromToken,
-        toToken: store.toToken,
-        updateState: store.updateState,
-        failures: store.failures,
-      }))
-    );
+export const useSubmitSwap = ({
+  fromAmount,
+  fromToken,
+  toToken,
+  quote,
+  updateSwapStatus,
+  updateSwapStep,
+  setSwapError,
+  incrementFailues,
+  resetFailures,
+  refetchAllowance,
+  approved
+}: {
+  fromAmount?: string;
+  fromToken?: Token;
+  toToken?: Token;
+  quote?: QuoteResponse,
+  updateSwapStatus: (status?: ActionStatus) => void;
+  updateSwapStep: (step?: STEPS) => void;
+  setSwapError: (error?: string) => void;
+  incrementFailues: () => void;
+  resetFailures: () => void;
+  refetchAllowance: () => void;
+  approved?: boolean;
+}) => {
+  const [txHash, setTxHash] = useState<string | undefined
+  >(undefined)
+  const [isWrapped, setIsWrapped] = useState(false)
+  const [isSigned, setIsSigned] = useState(false)
 
-  const { data: quote } = useQuote();
   const { web3, provider, account, chainId } = useMainContext();
   const chainConfig = useChainConfig();
   const wTokenAddress = chainConfig?.wToken?.address;
   const explorerUrl = chainConfig?.explorerUrl;
   const addOrder = useOrders().addOrder;
-  const { data: approved, refetch: refetchAllowance } = useAllowance();
   const gas = useEstimateGasPrice();
   const apiUrl = useApiUrl();
-  return useCallback(
+  const onSwap =  useCallback(
     async (props?: { hasFallback?: boolean; onWrapSuccess?: () => void }) => {
       try {
         if (!apiUrl) {
@@ -83,25 +95,25 @@ export const useSubmitSwap = () => {
         const outTokenAddress = isNativeOut ? zeroAddress : toToken.address;
         Logger({ inTokenAddress, outTokenAddress });
         Logger({ quote });
-        updateState({ swapStatus: "loading" });
+        updateSwapStatus('loading');
         if (isNativeIn) {
-          updateState({ currentStep: STEPS.WRAP });
+          updateSwapStep( STEPS.WRAP );
           await wrap(account, web3, chainId, inTokenAddress, fromAmount, gas);
           inTokenAddress = wTokenAddress;
           props?.onWrapSuccess?.();
-          updateState({ isWrapped: true });
+          setIsWrapped(true);
         }
         if (!approved) {
           Logger("Approval required");
-          updateState({ currentStep: STEPS.APPROVE });
+          updateSwapStep( STEPS.APPROVE);
           await approve(account, web3, chainId, inTokenAddress);
         } else {
           swapAnalytics.onApprovedBeforeTheTrade();
         }
         Logger("Signing...");
-        updateState({ currentStep: STEPS.SEND_TX });
+        updateSwapStep( STEPS.SEND_TX );
         const signature = await sign(account, web3, provider, quote.permitData);
-        updateState({ isSigned: true });
+        setIsSigned(true);
         Logger(signature);
         const txHash = await swapX({
           signature,
@@ -114,9 +126,7 @@ export const useSubmitSwap = () => {
           apiUrl,
         });
         Logger(txHash);
-        updateState({
-          txHash,
-        });
+        setTxHash(txHash);
         const txDetails = await waitForTxReceipt(web3, txHash);
 
         if (!txDetails?.mined) {
@@ -124,10 +134,8 @@ export const useSubmitSwap = () => {
         }
 
         swapAnalytics.onClobOnChainSwapSuccess();
-        updateState({
-          swapStatus: "success",
-          failures: 0,
-        });
+        updateSwapStatus('success');
+        resetFailures();
         useGlobalStore.getState().setSessionId(undefined);
 
         addOrder({
@@ -148,25 +156,20 @@ export const useSubmitSwap = () => {
       } catch (error: any) {
         // if user rejects the tx, we get back to confirmation step
         if (isTxRejected((error as Error).message)) {
-          updateState({
-            swapStatus: undefined,
-          });
-          throw error.message;
+          updateSwapStatus(undefined);
+          return;
         }
 
         swapAnalytics.onClobFailure();
-        updateState({
-          failures: (failures || 0) + 1,
-        });
+
+        incrementFailues();
         if (props?.hasFallback) {
           // fallback to Dex
-          onCloseSwap();
+          // onCloseSwap();
         }
         Logger(`Swap error: ${error.message}`);
-        updateState({
-          swapError: error.message,
-          swapStatus: "failed",
-        });
+        updateSwapStatus('failed');
+        setSwapError(error.message)
         swapAnalytics.clearState();
         refetchAllowance();
         throw error.message;
@@ -182,11 +185,8 @@ export const useSubmitSwap = () => {
       toToken,
       quote,
       approved,
-      onCloseSwap,
       addOrder,
       explorerUrl,
-      updateState,
-      failures,
       web3,
       provider,
       account,
@@ -194,7 +194,21 @@ export const useSubmitSwap = () => {
       chainConfig,
       gas,
       apiUrl,
+      updateSwapStatus,
+      updateSwapStep,
+      setSwapError,
+      incrementFailues,
+      resetFailures,
       refetchAllowance,
+      isWrapped,
+      isSigned
     ]
   );
+
+  return {
+    onSwap,
+    txHash,
+    isWrapped,
+    isSigned
+  }
 };

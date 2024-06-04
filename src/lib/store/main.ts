@@ -1,92 +1,12 @@
 import {
-  ActionStatus,
   LH_CONTROL,
   Order,
   Orders,
-  QuoteResponse,
-  STEPS,
-  Token,
 } from "../type";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-interface SwapStateValues {
-  currentStep?: STEPS;
-  showConfirmation?: boolean;
-  fromToken?: Token;
-  toToken?: Token;
-  fromAmount?: string;
-  failures?: number;
-  txHash?: string;
-  swapStatus: ActionStatus;
-  swapError?: string;
-  dexMinAmountOut?: string;
-  disableLh?: boolean;
-  quoteOutdated?: boolean;
-  isSigned?: boolean;
-  disabledByDex?: boolean;
-  swapConfirmationOutAmount?: string;
-  swapConfirmationOutAmountUsd?: string;
-  slippage?: number;
-  originalQuote?: QuoteResponse;
-  isWrapped?: boolean;
-}
 
-interface SwapState extends SwapStateValues {
-  updateState: (state: Partial<SwapState>) => void;
-  onCloseSwap: () => void;
-  reset: () => void;
-}
-
-const initialSwapState: SwapStateValues = {
-  currentStep: undefined,
-  fromToken: undefined,
-  toToken: undefined,
-  fromAmount: undefined,
-  showConfirmation: false,
-  failures: 0,
-  txHash: undefined,
-  swapStatus: undefined,
-  swapError: undefined,
-  dexMinAmountOut: undefined,
-  disableLh: false,
-  quoteOutdated: undefined,
-  isSigned: false,
-  disabledByDex: false,
-  slippage: undefined,
-  originalQuote: undefined,
-  isWrapped: false,
-};
-
-export const useSwapState = create<SwapState>((set, get) => ({
-  ...initialSwapState,
-  updateState: (state) => {    
-    set({ ...state })
-  },
-  onCloseSwap: () => {
-    set({
-      showConfirmation: false,
-      originalQuote: undefined
-    });
-
-    if (get().swapStatus === "failed") {
-      setTimeout(() => {
-        set({
-          swapStatus: undefined,
-          swapError: undefined,
-          currentStep: undefined,
-        });
-      }, 3_00);
-    }
-
-    if (get().swapStatus === "success") {
-      setTimeout(() => {
-        get().reset();
-      }, 3_00);
-    }
-  },
-  reset: () => set({ ...initialSwapState }),
-}));
 
 interface LHControlStore {
   debug: boolean;

@@ -4,7 +4,7 @@ import { useShallow } from "zustand/react/shallow";
 import { useMutation } from "@tanstack/react-query";
 import { useTokenListBalance } from "./useTokenListBalance";
 import { useTokenListBalances } from "./useTokenListBalances";
-import { useQuote, useSwitchNetwork, useUnwrap } from "../..";
+import { SwapConfirmationArgs, useSwitchNetwork, useUnwrap } from "../..";
 import { useIsInvalidChain, useChainConfig } from "../../hooks";
 import { useMainContext } from "../../provider";
 import { useDexState } from "../../store/dex";
@@ -14,7 +14,6 @@ import {
   eqIgnoreCase,
   isNativeAddress,
 } from "../../util";
-import { useSwapState } from "../../store/main";
 
 export const useUnwrapMF = () => {
   const { refetch } = useTokenListBalances();
@@ -36,35 +35,40 @@ export const useUnwrapMF = () => {
   });
 };
 
-export const useShowConfirmationButton = ({onSubmit}:{onSubmit: () => void}) => {
-  const { fromToken, toToken, fromAmount } = useSwapState((s) => ({
-    fromToken: s.fromToken,
-    toToken: s.toToken,
-    fromAmount: s.fromAmount,
-  }));
+export const useShowConfirmationButton = ({
+  onSumbit,
+  args,
+  quoteLoading,
+  quoteError
+}: {
+  onSumbit: () => void;
+  args: SwapConfirmationArgs;
+  quoteLoading: boolean;
+  quoteError: string | undefined;
+}) => {
+  const { fromToken, toToken, fromAmount, outAmount } = args;
 
-  const quote = useQuote();
-  const toAmount = quote.data?.ui.outAmount;
+  const toAmount = outAmount;
   const { mutate: switchNetwork, isPending: switchNetworkLoading } =
     useSwitchNetwork();
   const wrongChain = useIsInvalidChain();
 
   const { balance: fromTokenBalance } = useTokenListBalance(fromToken?.address);
-  
+
   const wToken = useChainConfig()?.wToken?.address;
   const { mutate: unwrap, isPending: unwrapLoading } = useUnwrapMF();
   const { connectWallet, account, supportedChains } = useMainContext();
-  
 
 
-  const isLoading = quote.isLoading || switchNetworkLoading || unwrapLoading;
+
+  const isLoading = quoteLoading || switchNetworkLoading || unwrapLoading;
 
   return useMemo(() => {
-    if (quote.isLoading) {
+    if (quoteLoading) {
       return {
         disabled: false,
         text: "",
-        quoteLoading:true,
+        quoteLoading: true,
         isLoading,
       };
     }
@@ -120,7 +124,7 @@ export const useShowConfirmationButton = ({onSubmit}:{onSubmit: () => void}) => 
     //   };
     // }
 
-    if ( quote.error || BN(toAmount || "0").isZero()) {
+    if (quoteError || BN(toAmount || "0").isZero()) {
       return {
         disabled: true,
         text: "No liquidity",
@@ -130,7 +134,7 @@ export const useShowConfirmationButton = ({onSubmit}:{onSubmit: () => void}) => 
     return {
       disabled: false,
       text: "Swap",
-      onClick: onSubmit,
+      onClick: onSumbit,
     };
   }, [
     wrongChain,
@@ -139,9 +143,9 @@ export const useShowConfirmationButton = ({onSubmit}:{onSubmit: () => void}) => 
     fromAmount,
     toAmount,
     fromTokenBalance,
-    quote,
     switchNetwork,
     switchNetworkLoading,
+    onSumbit,
     isLoading,
     account,
     connectWallet,
@@ -149,6 +153,8 @@ export const useShowConfirmationButton = ({onSubmit}:{onSubmit: () => void}) => 
     wToken,
     unwrap,
     unwrapLoading,
-    onSubmit,
+    quoteLoading,
+    quoteError,
+    
   ]);
 };

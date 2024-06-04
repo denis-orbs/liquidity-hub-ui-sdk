@@ -1,12 +1,11 @@
-import { useShallow } from "zustand/react/shallow";
-import { useSwapState } from "../../store/main";
+import { useSwapConfirmationContext } from "./context";
 
 export function SwapOverviewContainer({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const swapStatus = useSwapState(useShallow((s) => s.swapStatus));
+  const swapStatus = useSwapConfirmationContext().swapStatus
   if (swapStatus) return null;
 
   return <>{children}</>;

@@ -2,18 +2,11 @@ import { FlexColumn, FlexRow } from "../../base-styles";
 import { AlertCircle } from "react-feather";
 import styled from "styled-components";
 import { Text } from "../Text";
-import { useSwapState } from "../../store/main";
-import { useShallow } from "zustand/react/shallow";
 import { useChainConfig } from "../../hooks";
 import { useSwapConfirmationContext } from "./context";
 
 export const SwapFailed = () => {
-  const bottomContent = useSwapConfirmationContext().bottomContent
-  const { isWrapped } = useSwapState(
-    useShallow((s) => ({
-      isWrapped: s.isWrapped,
-    }))
-  );
+  const {bottomContent,isWrapped } = useSwapConfirmationContext()
 
   const chainConfig = useChainConfig()
 
