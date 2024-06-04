@@ -47,7 +47,7 @@ export const useSubmitSwap = () => {
   const gas = useEstimateGasPrice();
   const apiUrl = useApiUrl();
   return useCallback(
-    async (props?: { hasFallback?: boolean, onWrapSuccess?: () => void }) => {
+    async (props?: { hasFallback?: boolean; onWrapSuccess?: () => void }) => {
       try {
         if (!apiUrl) {
           throw new Error("API URL not found");
@@ -151,7 +151,7 @@ export const useSubmitSwap = () => {
           updateState({
             swapStatus: undefined,
           });
-          return;
+          throw error.message;
         }
 
         swapAnalytics.onClobFailure();
@@ -170,7 +170,7 @@ export const useSubmitSwap = () => {
         swapAnalytics.clearState();
         refetchAllowance();
         throw error.message;
-      } 
+      }
     },
     [
       approve,

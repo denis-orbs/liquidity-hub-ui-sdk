@@ -2,11 +2,9 @@ import { useCallback } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useQuote } from "../../hooks/swap/useQuote";
 import { useDexState } from "../../store/dex";
-import { useDexLH } from "./useDexLH";
 import { useTokenListBalance } from "./useTokenListBalance";
 import { useTokenListBalances } from "./useTokenListBalances";
 
-export * from "./useDexLH";
 export * from "./usePercentSelect";
 export * from "./useRefreshBalancesAfterTx";
 export * from "./useShowConfirmationButton";
@@ -61,9 +59,6 @@ export const useFromTokenAmount = () => {
   return useDexState(useShallow((s) => s.fromAmount));
 };
 
-export const useToTokenAmount = () => {
-  return useDexLH().quote?.data?.ui.outAmount;
-};
 
 export function useFromTokenPanel() {
   const { token, amount, onTokenSelect, onChange } = useDexState((s) => ({

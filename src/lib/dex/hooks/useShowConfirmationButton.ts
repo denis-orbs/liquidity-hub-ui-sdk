@@ -1,13 +1,10 @@
 import BN from "bignumber.js";
-import { useCallback, useMemo } from "react";
-
+import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useMutation } from "@tanstack/react-query";
-
-import { useDexLH } from "./useDexLH";
 import { useTokenListBalance } from "./useTokenListBalance";
 import { useTokenListBalances } from "./useTokenListBalances";
-import { useSwitchNetwork, useUnwrap } from "../..";
+import { useQuote, useSwitchNetwork, useUnwrap } from "../..";
 import { useIsInvalidChain, useChainConfig } from "../../hooks";
 import { useMainContext } from "../../provider";
 import { useDexState } from "../../store/dex";
@@ -39,15 +36,14 @@ export const useUnwrapMF = () => {
   });
 };
 
-export const useShowConfirmationButton = () => {
+export const useShowConfirmationButton = ({onSubmit}:{onSubmit: () => void}) => {
   const { fromToken, toToken, fromAmount } = useSwapState((s) => ({
     fromToken: s.fromToken,
     toToken: s.toToken,
     fromAmount: s.fromAmount,
   }));
 
-  const { quote, confirmSwap, analyticsInit } =
-    useDexLH();
+  const quote = useQuote();
   const toAmount = quote.data?.ui.outAmount;
   const { mutate: switchNetwork, isPending: switchNetworkLoading } =
     useSwitchNetwork();
@@ -60,10 +56,6 @@ export const useShowConfirmationButton = () => {
   const { connectWallet, account, supportedChains } = useMainContext();
   
 
-  const _confirmSwap = useCallback(() => {
-    analyticsInit();
-    confirmSwap();
-  }, [confirmSwap, analyticsInit]);
 
   const isLoading = quote.isLoading || switchNetworkLoading || unwrapLoading;
 
@@ -138,7 +130,7 @@ export const useShowConfirmationButton = () => {
     return {
       disabled: false,
       text: "Swap",
-      onClick: _confirmSwap,
+      onClick: onSubmit,
     };
   }, [
     wrongChain,
@@ -150,7 +142,6 @@ export const useShowConfirmationButton = () => {
     quote,
     switchNetwork,
     switchNetworkLoading,
-    _confirmSwap,
     isLoading,
     account,
     connectWallet,
@@ -158,6 +149,6 @@ export const useShowConfirmationButton = () => {
     wToken,
     unwrap,
     unwrapLoading,
-
+    onSubmit,
   ]);
 };

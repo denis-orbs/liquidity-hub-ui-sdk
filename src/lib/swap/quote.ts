@@ -2,7 +2,11 @@ import { QueryKey } from "@tanstack/react-query";
 import BN from "bignumber.js";
 import _ from "lodash";
 import { swapAnalytics } from "../analytics";
-import { EMPTY_QUOTE_RESPONSE, QUOTE_ERRORS, zeroAddress } from "../config/consts";
+import {
+  EMPTY_QUOTE_RESPONSE,
+  QUOTE_ERRORS,
+  zeroAddress,
+} from "../config/consts";
 import { OriginalQuote, QuoteResponse, Token } from "../type";
 import {
   counter,
@@ -47,7 +51,7 @@ export const quote = async ({
   quoteInterval,
   queryClient,
   queryKey,
-  chainId
+  chainId,
 }: Args) => {
   swapAnalytics.onQuoteRequest();
   let quote: OriginalQuote | undefined = undefined;
@@ -109,9 +113,6 @@ export const quote = async ({
     swapAnalytics.onQuoteSuccess(count(), quote);
 
     const outAmountUI = amountUi(toToken?.decimals, new BN(quote.outAmount));
-
-
-
     const gasCostOutputToken = parseInt(
       quote?.permitData.values.witness.outputs[0].startAmount.hex,
       16
@@ -132,15 +133,15 @@ export const quote = async ({
       minAmountOut: quote.minAmountOut,
       gasCostOutputToken,
       ui,
-      refetchInterval:quoteInterval,
+      refetchInterval: quoteInterval,
     });
     const res: QuoteResponse = {
       ...quote,
-      outAmount:safeBN(quote.outAmount) || '',
-      minAmountOut: safeBN(quote.minAmountOut || 0) || '',
+      outAmount: safeBN(quote.outAmount) || "",
+      minAmountOut: safeBN(quote.minAmountOut || 0) || "",
       gasCostOutputToken: safeBN(gasCostOutputToken),
       ui,
-    }
+    };
     res.refetchCount =
       ((queryClient.getQueryData(queryKey) as QuoteResponse)?.refetchCount ||
         0) + 1;

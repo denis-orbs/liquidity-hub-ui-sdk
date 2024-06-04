@@ -54,7 +54,6 @@ export interface Token {
 
 export interface ProviderArgs {
   supportedChains: number[];
-  slippage?: number;
   provider?: any;
   account?: string;
   chainId?: number;

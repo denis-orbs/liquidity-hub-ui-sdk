@@ -44,7 +44,6 @@ export const LiquidityHubProvider = ({
   apiUrl,
   supportedChains,
   theme,
-  slippage,
   connectWallet,
   getTokens,
   quote,
@@ -91,7 +90,6 @@ export const LiquidityHubProvider = ({
           apiUrl,
           web3,
           supportedChains,
-          slippage,
           connectWallet,
           getTokens,
           quote: {

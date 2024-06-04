@@ -38,6 +38,8 @@ import {
   useFormatNumber,
   useSwapConfirmation,
   useGasCost,
+  useAmountBN,
+  useLiquidityHub,
 } from "../hooks";
 import { Text } from "../components/Text";
 import { Logo } from "../components/Logo";
@@ -88,6 +90,7 @@ type ModalType = FC<{
 interface ContenxtType extends WidgetConfig {
   UIconfig?: WidgetConfig;
   Modal: ModalType;
+  liquidityHubPayload: ReturnType<typeof useLiquidityHub>;
 }
 
 const Context = createContext({} as ContenxtType);
@@ -103,11 +106,23 @@ interface ContextProps {
 }
 
 const ContextProvider = (props: ContextProps) => {
+  const store = useDexState();
+
+  const fromAmount = useAmountBN(store.fromToken?.decimals, store.fromAmount);
+
+  const liquidityHubPayload = useLiquidityHub({
+    fromToken: store.fromToken,
+    toToken: store.toToken,
+    fromAmount,
+    debounceFromAmountMillis: 300,
+    slippage: 0.5,
+  });
   return (
     <Context.Provider
       value={{
         UIconfig: props.UIconfig,
         Modal: props.Modal,
+        liquidityHubPayload,
       }}
     >
       {props.children}
@@ -332,7 +347,15 @@ const StyledPoweredByOrbs = styled(PoweredByOrbs)`
 `;
 
 export const SwapSubmitButton = () => {
-  const { disabled, text, onClick, isLoading } = useShowConfirmationButton();
+  const { confirmSwap, analyticsInit } = useWidgetContext().liquidityHubPayload;
+  const onSubmit = useCallback(() => {
+    analyticsInit();
+    confirmSwap();
+  }, [confirmSwap, analyticsInit]);
+
+  const { disabled, text, onClick, isLoading } = useShowConfirmationButton({
+    onSubmit,
+  });
 
   return (
     <StyledSubmitButton
