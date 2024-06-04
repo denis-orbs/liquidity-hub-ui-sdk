@@ -3,26 +3,24 @@ import { StepComponent } from "./Step";
 import { SwapDetails } from "./Details";
 import { useSteps } from "../../hooks/swap/useSteps";
 import { FlexColumn } from "../../base-styles";
-import { ReactNode } from "react";
 import { ExplorerLink } from "../ExplorerLink";
+import { useSwapConfirmationContext } from "./context";
 
 interface Props {
   style?: CSSObject;
-  children: ReactNode;
-  fromTokenUsd?: string | number, toTokenUsd?: string | number
 }
 
-export const SwapMain = ({ style = {}, children, fromTokenUsd, toTokenUsd }: Props) => {
+export const SwapMain = ({ style = {} }: Props) => {
+  const { bottomContent, fromTokenUsd, toTokenUsd } = useSwapConfirmationContext();
   return (
     <Container style={style}>
-      <SwapDetails fromTokenUsd={fromTokenUsd}  toTokenUsd={toTokenUsd} />
+      <SwapDetails fromTokenUsd={fromTokenUsd} toTokenUsd={toTokenUsd} />
       <StepsComponent />
-      {children}
-      <ExplorerLink styles={{marginTop: 10}} />
+      {bottomContent}
+      <ExplorerLink styles={{ marginTop: 10 }} />
     </Container>
   );
 };
-
 
 const StepsComponent = () => {
   const { steps, status } = useSteps();

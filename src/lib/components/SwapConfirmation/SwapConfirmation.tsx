@@ -4,35 +4,39 @@ import { useShallow } from "zustand/react/shallow";
 import { SwapSuccess } from "./SwapSuccess";
 import { SwapFailed } from "./SwapFailed";
 import { SwapMain } from "./SwapMain";
-import { ReactNode } from "react";
+import { SwapConfirmationProvider } from "./context";
+import { SwapConfirmationProps } from "./types";
 
-interface Props {
+interface Props extends SwapConfirmationProps {
   className?: string;
   style?: CSSObject;
-  children?: ReactNode;
-  fromTokenUsd?: string | number;
-  toTokenUsd?: string | number;
 }
 
 export const SwapConfirmation = ({
   className = "",
   style = {},
-  children,
+  bottomContent,
   fromTokenUsd,
   toTokenUsd,
 }: Props) => {
   const swapStatus = useSwapState(useShallow((s) => s.swapStatus));
 
   return (
-    <Container className={`${className} lh-summary`} $style={style}>
-      {swapStatus === "success" ? (
-        <SwapSuccess />
-      ) : swapStatus === "failed" ? (
-        <SwapFailed children={children} />
-      ) : (
-        <SwapMain toTokenUsd={toTokenUsd} fromTokenUsd={fromTokenUsd} children={children} />
-      )}
-    </Container>
+    <SwapConfirmationProvider
+      fromTokenUsd={fromTokenUsd}
+      toTokenUsd={toTokenUsd}
+      bottomContent={bottomContent}
+    >
+      <Container className={`${className} lh-summary`} $style={style}>
+        {swapStatus === "success" ? (
+          <SwapSuccess />
+        ) : swapStatus === "failed" ? (
+          <SwapFailed />
+        ) : (
+          <SwapMain />
+        )}
+      </Container>
+    </SwapConfirmationProvider>
   );
 };
 

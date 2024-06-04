@@ -4,10 +4,11 @@ import styled from "styled-components";
 import { Text } from "../Text";
 import { useSwapState } from "../../store/main";
 import { useShallow } from "zustand/react/shallow";
-import { ReactNode } from "react";
 import { useChainConfig } from "../../hooks";
+import { useSwapConfirmationContext } from "./context";
 
-export const SwapFailed = ({children}:{children?: ReactNode}) => {
+export const SwapFailed = () => {
+  const bottomContent = useSwapConfirmationContext().bottomContent
   const { isWrapped } = useSwapState(
     useShallow((s) => ({
       isWrapped: s.isWrapped,
@@ -24,7 +25,7 @@ export const SwapFailed = ({children}:{children?: ReactNode}) => {
       <Title className="lh-failed-title">{'Swap failed on Liquidity Hub'}</Title>
       {isWrapped && chainConfig && <Message>{`${chainConfig?.native.symbol} has been wrapped to ${chainConfig?.wToken?.symbol}`}</Message>}
      
-      {children}
+      {bottomContent}
     </Container>
   );
 };

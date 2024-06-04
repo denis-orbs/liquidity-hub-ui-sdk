@@ -207,7 +207,15 @@ const TokenSelect = ({
 };
 
 const SwapModal = () => {
-  const { onClose, swapStatus, isOpen, modalTitle, submitButton, swapLoading, priceChangedWarning } = useSwapConfirmation();
+  const {
+    onClose,
+    swapStatus,
+    isOpen,
+    modalTitle,
+    submitButton,
+    swapLoading,
+    priceChangedWarning,
+  } = useSwapConfirmation();
   const { updateStore, fromToken, toToken, fromAmount } = useDexState(
     useShallow((s) => ({
       updateStore: s.updateStore,
@@ -238,7 +246,6 @@ const SwapModal = () => {
     updateStore({ fromToken: wToken });
   }, [updateStore, wToken]);
 
-
   const onSuccess = useOnSwapSuccessCallback();
 
   const TryAgainButton = () => {
@@ -247,7 +254,7 @@ const SwapModal = () => {
 
   const onClick = useCallback(async () => {
     try {
-      await submitButton.onSwap({onWrapSuccess});
+      await submitButton.onSwap({ onWrapSuccess });
       onSuccess();
     } catch (error) {}
   }, [onSuccess, submitButton, onWrapSuccess]);
@@ -255,26 +262,33 @@ const SwapModal = () => {
   return (
     <WidgetModal title={modalTitle} open={isOpen} onClose={onClose}>
       {priceChangedWarning.shouldAccept ? (
-        <AcceptAmountOut amountToAccept={priceChangedWarning.newPrice} accept={priceChangedWarning.acceptChanges} />
+        <AcceptAmountOut
+          amountToAccept={priceChangedWarning.newPrice}
+          accept={priceChangedWarning.acceptChanges}
+        />
       ) : (
-        <SwapConfirmation fromTokenUsd={fromTokenUsd} toTokenUsd={toTokenUsd}>
-          {swapStatus === "failed" ? (
-            <TryAgainButton />
-          ) : (
-            !swapStatus && (
-              <>
-                <SwapDetails />
-                <StyledSubmitButton
-                  onClick={onClick}
-                  isLoading={swapLoading}
-                  $disabled={submitButton.disabled}
-                >
-                  {submitButton.content}
-                </StyledSubmitButton>
-              </>
+        <SwapConfirmation
+          fromTokenUsd={fromTokenUsd}
+          toTokenUsd={toTokenUsd}
+          bottomContent={
+            swapStatus === "failed" ? (
+              <TryAgainButton />
+            ) : (
+              !swapStatus && (
+                <>
+                  <SwapDetails />
+                  <StyledSubmitButton
+                    onClick={onClick}
+                    isLoading={swapLoading}
+                    $disabled={submitButton.disabled}
+                  >
+                    {submitButton.content}
+                  </StyledSubmitButton>
+                </>
+              )
             )
-          )}
-        </SwapConfirmation>
+          }
+        />
       )}
       <ConfirmationPoweredBy />
     </WidgetModal>
