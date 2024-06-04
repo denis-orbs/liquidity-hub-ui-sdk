@@ -1,6 +1,5 @@
 import { useCallback } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { useQuote } from "../../hooks/swap/useQuote";
 import { useDexState } from "../../store/dex";
 import { useTokenListBalance } from "./useTokenListBalance";
 import { useTokenListBalances } from "./useTokenListBalances";
@@ -12,7 +11,6 @@ export * from "./useTokenListBalances";
 export * from "./useTokenListBalance";
 export * from "./useTokenList";
 export * from "./useTokens";
-export * from "./useOnSwapSuccessCallback";
 export * from "./useInitialTokens";
 export * from "./usePriceUsd";
 export * from "./useRate";
@@ -86,10 +84,8 @@ export function useToTokenPanel() {
   }));
   const balance = useTokenListBalance(token?.address).balance;
 
-  const { data } = useQuote();
   return {
     token,
-    amount: data?.ui.outAmount,
     onTokenSelect,
     balance,
   };

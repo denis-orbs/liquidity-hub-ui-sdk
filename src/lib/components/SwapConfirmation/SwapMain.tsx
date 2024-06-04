@@ -1,7 +1,6 @@
 import styled, { CSSObject } from "styled-components";
 import { StepComponent } from "./Step";
 import { SwapDetails } from "./Details";
-import { useSteps } from "../../hooks/swap/useSteps";
 import { FlexColumn } from "../../base-styles";
 import { ExplorerLink } from "../ExplorerLink";
 import { useSwapConfirmationContext } from "./context";
@@ -11,21 +10,20 @@ interface Props {
 }
 
 export const SwapMain = ({ style = {} }: Props) => {
-  const { bottomContent, fromTokenUsd, toTokenUsd } = useSwapConfirmationContext();
+  const { bottomContent, fromTokenUsd, toTokenUsd, txHash } = useSwapConfirmationContext();
   return (
     <Container style={style}>
       <SwapDetails fromTokenUsd={fromTokenUsd} toTokenUsd={toTokenUsd} />
       <StepsComponent />
       {bottomContent}
-      <ExplorerLink styles={{ marginTop: 10 }} />
+      <ExplorerLink styles={{ marginTop: 10 }} txHash={txHash} />
     </Container>
   );
 };
 
 const StepsComponent = () => {
-  const { steps, status } = useSteps();
-
-  if (status !== "loading") return null;
+  const {steps, swapStatus} = useSwapConfirmationContext();
+  if (swapStatus !== "loading") return null;
 
   return (
     <>

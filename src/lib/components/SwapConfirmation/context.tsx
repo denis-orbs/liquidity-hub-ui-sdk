@@ -15,10 +15,11 @@ export function SwapConfirmationProvider({
   children,
   fromTokenUsd,
   toTokenUsd,
-  bottomContent
+  bottomContent,
+  ...rest
 }: Props) {
   return (
-    <SwapConfirmationContext.Provider value={{ fromTokenUsd, toTokenUsd, bottomContent }}>
+    <SwapConfirmationContext.Provider value={{ fromTokenUsd, toTokenUsd, bottomContent, ...rest }}>
       {children}
     </SwapConfirmationContext.Provider>
   );

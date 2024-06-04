@@ -6,14 +6,14 @@ import { Logo } from "../Logo";
 import { Token } from "../../type";
 import { Text } from "../Text";
 import { Separator } from "./Components";
-import { useSwapConfirmation } from "../../hooks/useSwapDetails";
+import { useSwapConfirmationContext } from "./context";
 const StyledSwapDetails = styled(FlexColumn)`
   width: 100%;
   gap: 15px;
 `;
 
 export function SwapDetails({fromTokenUsd, toTokenUsd}: {fromTokenUsd?: string | number, toTokenUsd?: string | number}) {
-  const { fromToken, fromAmount, toToken, outAmount } = useSwapConfirmation();
+  const { fromToken, fromAmount, toToken, quote } = useSwapConfirmationContext();
 
   
   return (
@@ -29,7 +29,7 @@ export function SwapDetails({fromTokenUsd, toTokenUsd}: {fromTokenUsd?: string |
         title="Swap to"
         usd={toTokenUsd}
         token={toToken}
-        amount={outAmount}
+        amount={quote.data?.ui.outAmount}
       />
     </StyledSwapDetails>
   );

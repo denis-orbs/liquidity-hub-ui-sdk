@@ -2,21 +2,19 @@ import { useMemo } from "react";
 import styled from "styled-components";
 import { Check } from "react-feather";
 import { ActionStatus, Step } from "../../type";
-import { useSwapState } from "../../store/main";
 import { FlexColumn, FlexRow } from "../../base-styles";
 import { Spinner } from "../Spinner";
 import _ from "lodash";
-import { useShallow } from "zustand/react/shallow";
+import { useSwapConfirmationContext } from "./context";
 
 interface Props {
   step: Step;
+
 }
 
-export function StepComponent({ step }: Props) {
-  const { currentStep, swapStatus } = useSwapState(useShallow((store) => ({
-    currentStep: store.currentStep,
-    swapStatus: store.swapStatus,
-  })));
+export function StepComponent({ step,}: Props) {
+  const {currentStep, swapStatus} = useSwapConfirmationContext();
+
 
   const status = useMemo((): ActionStatus => {
     if (_.isUndefined(currentStep)) return;

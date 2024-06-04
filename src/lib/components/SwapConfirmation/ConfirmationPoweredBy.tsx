@@ -1,11 +1,9 @@
 import styled, { CSSObject } from "styled-components";
-import { useSwapState } from "../../store/main";
+import { ActionStatus } from "../../type";
 import { PoweredByOrbs } from "../PoweredByOrbs";
 
-export function ConfirmationPoweredBy({style = {}, className = ''}:{style?: CSSObject, className?: string}) {
-  const { swapStatus } = useSwapState((s) => ({
-    swapStatus: s.swapStatus,
-  }));
+export function ConfirmationPoweredBy({style = {}, className = '',swapStatus}:{style?: CSSObject, className?: string, swapStatus?: ActionStatus}) {
+
 
   if (!swapStatus || swapStatus === "success") {
     return <StyledPoweredBy style={style} className={className} />;

@@ -7,7 +7,6 @@ interface DexState {
   fromAmount?: string;
   toAmount?: string;
   fetchingBalancesAfterTx?: boolean;
-
   updateStore: (value: Partial<DexState>) => void;
   onFromAmountChange: (value: string) => void;
   onFromTokenChange: (value: Token) => void;

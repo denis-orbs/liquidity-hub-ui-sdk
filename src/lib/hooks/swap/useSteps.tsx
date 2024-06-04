@@ -1,30 +1,27 @@
 import { useMemo } from "react";
-
-import { useAllowance } from "./useAllowance";
 import SwapImg from "../../assets/swap.svg";
 import ApproveImg from "../../assets/approve.svg";
-
-import { useSwapState } from "../../store/main";
-import { Step, STEPS } from "../../type";
+import {Step, STEPS, Token } from "../../type";
 import { isNativeAddress } from "../../util";
-import { useShallow } from "zustand/react/shallow";
 import { useChainConfig } from "../useChainConfig";
 
-export const useSteps = () => {
-  const { fromToken, currentStep, status, isSigned } = useSwapState(
-    useShallow((store) => ({
-      fromToken: store.fromToken,
-      currentStep: store.currentStep,
-      status: store.swapStatus,
-      isSigned: store.isSigned,
-    }))
-  );
-
+export const useSteps = ({
+  fromToken,
+  currentStep,
+  isSigned,
+  allowanceLoading,
+  isApproved
+}: {
+  fromToken?: Token;
+  currentStep?: STEPS;
+  isSigned: boolean;
+  allowanceLoading: boolean;
+  isApproved?: boolean;
+}) => {
   const explorer = useChainConfig()?.explorerUrl;
 
-  const { isLoading: allowanceQueryLoading, data: isApproved } = useAllowance();
   const steps = useMemo(() => {
-    if (allowanceQueryLoading) {
+    if (allowanceLoading) {
       return [];
     }
 
@@ -59,16 +56,11 @@ export const useSteps = () => {
   }, [
     fromToken,
     isApproved,
-    allowanceQueryLoading,
+    allowanceLoading,
     isSigned,
     currentStep,
     explorer,
   ]);
 
-  return {
-    steps,
-    isLoading: allowanceQueryLoading,
-    currentStep,
-    status,
-  };
+  return steps
 };

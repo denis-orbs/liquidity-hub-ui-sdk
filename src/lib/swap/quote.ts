@@ -112,16 +112,10 @@ export const quote = async ({
     }
     swapAnalytics.onQuoteSuccess(count(), quote);
 
-    const outAmountUI = amountUi(toToken?.decimals, new BN(quote.outAmount));
-    const gasCostOutputToken = parseInt(
-      quote?.permitData.values.witness.outputs[0].startAmount.hex,
-      16
-    );
-
     const ui = {
-      outAmount: outAmountUI,
+      outAmount: amountUi(toToken?.decimals, new BN(quote.outAmount)),
       minAmountOut: amountUi(toToken?.decimals, BN(quote.minAmountOut || 0)),
-      gasCostOutputToken: amountUi(toToken?.decimals, BN(gasCostOutputToken)),
+      gasAmountOut: amountUi(toToken?.decimals, BN(quote.gasAmountOut || 0)),
     };
 
     Logger({
@@ -131,15 +125,16 @@ export const quote = async ({
       dexMinAmountOut,
       quote,
       minAmountOut: quote.minAmountOut,
-      gasCostOutputToken,
+      gasAmountOut: quote.gasAmountOut,
       ui,
       refetchInterval: quoteInterval,
     });
     const res: QuoteResponse = {
+        originalQuote: quote,
       ...quote,
       outAmount: safeBN(quote.outAmount) || "",
       minAmountOut: safeBN(quote.minAmountOut || 0) || "",
-      gasCostOutputToken: safeBN(gasCostOutputToken),
+      gasAmountOut: safeBN(quote.gasAmountOut),
       ui,
     };
     res.refetchCount =

@@ -18,6 +18,7 @@ export interface InitTrade {
   provider?: any;
   dexAmountOut?: string;
   dexOutAmountWS?: string;
+  sessionId?: string;
 }
 
 export interface InitDexTrade extends InitTrade {

@@ -1,27 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useShallow } from "zustand/react/shallow";
-import { useSwapState } from "../store/main";
-import { amountBN, amountUi, estimateGasPrice, isNativeAddress } from "../util";
-import { useQuote } from "./swap";
+import { amountBN, estimateGasPrice } from "../util";
 import BN from "bignumber.js";
 import { QUERY_KEYS } from "../config/consts";
 import { useMainContext } from "../provider";
 import { useQuery } from "@tanstack/react-query";
 import { useAmountUI } from "./useAmountUI";
-import { Token, useAllowance, useSubmitSwap } from "..";
+import { ActionStatus, QuoteResponse, Token } from "..";
 import { getBalances } from "../multicall";
-
-export function useGasCost() {
-  const gasCostOutputToken = useQuote().data?.gasCostOutputToken;
-  const toToken = useSwapState(useShallow((s) => s.toToken));
-  return useMemo(() => {
-    if (!gasCostOutputToken) return;
-    return {
-      ui: amountUi(toToken?.decimals, BN(gasCostOutputToken)),
-      raw: gasCostOutputToken,
-    };
-  }, [gasCostOutputToken, toToken]);
-}
 
 export const useEstimateGasPrice = () => {
   const { web3, chainId } = useMainContext();
@@ -43,9 +28,7 @@ export const useEstimateGasPrice = () => {
   });
 };
 
-
-
-const useBalance = (token?: Token) => {
+export const useBalance = (token?: Token) => {
   const { account, web3 } = useMainContext();
 
   return useQuery({
@@ -59,20 +42,22 @@ const useBalance = (token?: Token) => {
   });
 };
 
-
-export function usePriceChanged() {
-  const quote = useQuote().data;
+export function usePriceChanged({
+  quote,
+  showConfirmation,
+  toToken,
+  originalQuote,
+  swapStatus,
+}: {
+  quote?: QuoteResponse;
+  showConfirmation?: boolean;
+  toToken?: Token;
+  originalQuote?: QuoteResponse;
+  swapStatus?: ActionStatus;
+}) {
   const [acceptedAmountOut, setAcceptedAmountOut] = useState<
     string | undefined
   >(undefined);
-  const { showConfirmation, toToken, originalQuote, swapStatus } = useSwapState(
-    useShallow((s) => ({
-      showConfirmation: s.showConfirmation,
-      toToken: s.toToken,
-      originalQuote: s.originalQuote,
-      swapStatus: s.swapStatus,
-    }))
-  );
 
   useEffect(() => {
     // initiate
@@ -86,9 +71,16 @@ export function usePriceChanged() {
   }, [setAcceptedAmountOut, quote?.minAmountOut]);
 
   const shouldAccept = useMemo(() => {
-    if (!acceptedAmountOut || !quote?.minAmountOut || swapStatus) return false;
+    if (
+      !acceptedAmountOut ||
+      BN(acceptedAmountOut || 0).isZero() ||
+      !quote?.minAmountOut ||
+      BN(quote?.minAmountOut || 0).isZero() || 
+      swapStatus
+    )
+      return false;
 
-    if (BN(quote.minAmountOut).isLessThan(BN(acceptedAmountOut))) {
+    if (BN(quote.minAmountOut).isLessThan(BN(acceptedAmountOut))) {      
       return true;
     }
   }, [acceptedAmountOut, quote?.minAmountOut, swapStatus]);
@@ -99,77 +91,3 @@ export function usePriceChanged() {
     newPrice: useAmountUI(toToken?.decimals, quote?.minAmountOut),
   };
 }
-
-
-
-export const useSwapConfirmation = () => {
-  const store = useSwapState(
-    useShallow((s) => ({
-      fromToken: s.fromToken,
-      toToken: s.toToken,
-      txHash: s.txHash,
-      swapStatus: s.swapStatus,
-      swapError: s.swapError,
-      showConfirmation: s.showConfirmation,
-      fromAmount: s.fromAmount,
-      disableLh: s.disableLh,
-      onCloseSwap: s.onCloseSwap,
-    }))
-  );
-  const { data: balance, isLoading: loadingBalance } = useBalance(store.fromToken);
-
-  const modalTitle = useMemo(() => {
-    if (store.swapStatus === "failed") {
-      return;
-    }
-    if (store.swapStatus === "success") {
-      return "Swap Successfull";
-    }
-    return "Review Swap";
-  }, [store.swapStatus]);
-  const fromAmountUI = useAmountUI(store.fromToken?.decimals, store.fromAmount);
-  const outAmount = useAmountUI(
-    store.toToken?.decimals,
-    useQuote().data?.outAmount
-  );
-  const { data: approved, isLoading: allowanceLoading } = useAllowance();
-  const submitSwap = useSubmitSwap();
-    const priceChangedWarning = usePriceChanged();
-  const buttonContent = useMemo(() => {
-
-    if (BN(balance || "0").isLessThan(store.fromAmount || "0")) {
-      return 'Insufficient balance'
-    }
-
-    if (BN(outAmount || "0").isLessThan(0)) {
-      return 'No liquidity for this trade'
-    }
-
-    if (isNativeAddress(store.fromToken?.address || "")) return "Wrap and Swap";
-    if (!approved) return "Approve and Swap";
-    return "Sign and Swap";
-  }, [approved, store.fromToken, store.fromAmount, outAmount, balance]);
-
-
-
-
-  return {
-    fromToken: store.fromToken,
-    toToken: store.toToken,
-    fromAmount: fromAmountUI,
-    txHash: store.txHash,
-    swapStatus: store.swapStatus,
-    swapError: store.swapError,
-    isOpen: !!store.showConfirmation,
-    onClose: store.onCloseSwap,
-    modalTitle,
-    outAmount,
-    swapLoading: store.swapStatus === "loading",
-    submitButton: {
-      content: buttonContent,
-      disabled: allowanceLoading || loadingBalance,
-      onSwap:submitSwap,
-    },
-    priceChangedWarning,
-  };
-};

@@ -1,23 +1,27 @@
 import { useCallback, useMemo } from "react";
-import { useShallow } from "zustand/react/shallow";
 import { swapAnalytics } from "../analytics";
 import { useMainContext } from "../provider";
-import { useSwapState } from "../store/main";
-import { useQuote } from "./swap/useQuote";
 import BN from "bignumber.js";
-import { useSlippage } from "..";
-export function useAnalytics() {
-  const slippage = useSlippage();
-  const { fromToken, toToken, dexMinAmountOut, fromAmount } = useSwapState(
-    useShallow((s) => ({
-      fromToken: s.fromToken,
-      toToken: s.toToken,
-      dexMinAmountOut: s.dexMinAmountOut,
-      fromAmount: s.fromAmount,
-    }))
-  );
+import { QuoteResponse, Token } from "..";
+export function useAnalytics({
+  fromToken,
+  toToken,
+  dexMinAmountOut,
+  fromAmount,
+  quote,
+  slippage,
+  sessionId
+}: {
+  fromToken?: Token;
+  toToken?: Token;
+  dexMinAmountOut?: string;
+  fromAmount?: string;
+  quote?: QuoteResponse,
+  slippage: number;
+  sessionId?: string;
+}) {
 
-  const { data: quote } = useQuote();
+
   const { provider } = useMainContext();
   const quoteAmountOut = quote?.minAmountOut;
 
@@ -39,6 +43,7 @@ export function useAnalytics() {
       tradeType: "BEST_TRADE",
       quoteAmountOut,
       provider,
+      sessionId
     });
   }, [
     dexOutAmountWS,
@@ -49,6 +54,7 @@ export function useAnalytics() {
     slippage,
     quoteAmountOut,
     provider,
+    sessionId
   ]);
 
   return {

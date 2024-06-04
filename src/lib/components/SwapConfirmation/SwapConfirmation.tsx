@@ -1,6 +1,4 @@
 import styled, { CSSObject } from "styled-components";
-import { useSwapState } from "../../store/main";
-import { useShallow } from "zustand/react/shallow";
 import { SwapSuccess } from "./SwapSuccess";
 import { SwapFailed } from "./SwapFailed";
 import { SwapMain } from "./SwapMain";
@@ -15,22 +13,14 @@ interface Props extends SwapConfirmationProps {
 export const SwapConfirmation = ({
   className = "",
   style = {},
-  bottomContent,
-  fromTokenUsd,
-  toTokenUsd,
+  ...rest
 }: Props) => {
-  const swapStatus = useSwapState(useShallow((s) => s.swapStatus));
-
   return (
-    <SwapConfirmationProvider
-      fromTokenUsd={fromTokenUsd}
-      toTokenUsd={toTokenUsd}
-      bottomContent={bottomContent}
-    >
+    <SwapConfirmationProvider {...rest}>
       <Container className={`${className} lh-summary`} $style={style}>
-        {swapStatus === "success" ? (
+        {rest.swapStatus === "success" ? (
           <SwapSuccess />
-        ) : swapStatus === "failed" ? (
+        ) : rest.swapStatus === "failed" ? (
           <SwapFailed />
         ) : (
           <SwapMain />

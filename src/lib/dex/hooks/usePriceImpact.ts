@@ -2,22 +2,21 @@ import { useShallow } from "zustand/react/shallow";
 import { useDexState } from "../../store/dex";
 import BN from "bignumber.js";
 import { useMemo } from "react";
-import { amountUi, useAmountBN, useQuote } from "../..";
+import { amountUi, useAmountBN } from "../..";
 export function usePriceImpact(
   inTokenUsd?: string | number,
-  outTokenUsd?: string | number
+  outTokenUsd?: string | number,
+  outAmount?: string
 ) {
-  const outAmount = useQuote().data?.outAmount;
   const { fromAmountUI, fromToken, toToken } = useDexState(
     useShallow((it) => ({
-        fromAmountUI: it.fromAmount,
+      fromAmountUI: it.fromAmount,
       fromToken: it.fromToken,
       toToken: it.toToken,
     }))
   );
 
   const fromAmount = useAmountBN(fromToken?.decimals, fromAmountUI);
-
 
   return useMemo(() => {
     if (
@@ -32,8 +31,6 @@ export function usePriceImpact(
     ) {
       return;
     }
-
-    
 
     const inTokenUsdAmount = BN(
       amountUi(fromToken?.decimals, BN(fromAmount))
