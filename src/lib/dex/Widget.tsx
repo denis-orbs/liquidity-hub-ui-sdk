@@ -39,6 +39,7 @@ import {
   useChainConfig,
   useFormatNumber,
   useLiquidityHub,
+  usePriceChanged,
 } from "../hooks";
 import { Text } from "../components/Text";
 import { Logo } from "../components/Logo";
@@ -59,7 +60,6 @@ import {
 } from "./hooks";
 import _ from "lodash";
 import { useInitialTokens } from "./hooks/useInitialTokens";
-import { ConfirmationPoweredBy } from "../components/SwapConfirmation/ConfirmationPoweredBy";
 import { getSwapButtonContent, getSwapModalTitle } from "../util";
 
 export const theme = {
@@ -113,7 +113,7 @@ const ContextProvider = (props: ContextProps) => {
     toToken: store.toToken,
     fromAmount,
     debounceFromAmountMillis: 300,
-    slippage: 0.5
+    slippage: 0.5,
   });
 
   return (
@@ -223,15 +223,16 @@ const TokenSelect = ({
 const SwapModal = () => {
   const { lhPayload } = useWidgetContext();
   const {
-    onClose,
+    closeConfirmationModal,
     swapStatus,
-    isOpen,
-    priceChangeWarning,
+    showConfirmationModal,
     submitSwap,
     swapLoading,
     quote,
     hasAllowance,
     allowanceLoading,
+    originalQuote,
+    outAmountUi
   } = lhPayload;
 
   const { updateStore, fromToken, toToken, fromAmount } = useDexState(
@@ -243,7 +244,6 @@ const SwapModal = () => {
     }))
   );
   const wToken = useChainConfig()?.wToken;
-  const outAmount = quote?.data?.ui.outAmount;
   const fromTokenUsdSN = usePriceUsd({ address: fromToken?.address }).data;
   const toTokenUsdSN = usePriceUsd({ address: toToken?.address }).data;
 
@@ -255,9 +255,9 @@ const SwapModal = () => {
 
   const toTokenUsd = useMemo(() => {
     return BN(toTokenUsdSN || 0)
-      .multipliedBy(outAmount || 0)
+      .multipliedBy(outAmountUi || 0)
       .toString();
-  }, [toTokenUsdSN, outAmount]);
+  }, [toTokenUsdSN, outAmountUi]);
 
   const onWrapSuccess = useCallback(() => {
     updateStore({ fromToken: wToken });
@@ -266,12 +266,12 @@ const SwapModal = () => {
   const resetDexState = useDexState((s) => s.onReserAfterSwap);
 
   const TryAgainButton = () => {
-    return <StyledSubmitButton onClick={onClose}>Try again</StyledSubmitButton>;
+    return <StyledSubmitButton onClick={closeConfirmationModal}>Try again</StyledSubmitButton>;
   };
 
   const onClick = useCallback(async () => {
     try {
-      await submitSwap({ onWrapSuccess });      
+      await submitSwap({ onWrapSuccess });
       refetchBalances();
     } catch (error) {
       console.log(error);
@@ -282,21 +282,27 @@ const SwapModal = () => {
     if (swapStatus === "success") {
       resetDexState();
     }
-    onClose(0);
-  }, [resetDexState, swapStatus, onClose]);
-
+    closeConfirmationModal();
+  }, [resetDexState, swapStatus, closeConfirmationModal]);
 
   const modalTitle = useMemo(() => {
     return getSwapModalTitle(swapStatus);
-  }, [swapStatus])
+  }, [swapStatus]);
 
   const swapButtonContent = useMemo(() => {
     return getSwapButtonContent(fromToken?.address, hasAllowance);
-  }
-  , [fromToken, hasAllowance]);
+  }, [fromToken, hasAllowance]);
+
+  const priceChangeWarning = usePriceChanged({
+    quote: quote.data,
+    originalQuote,
+    swapStatus,
+    showConfirmationModal,
+    toToken,
+  });
 
   return (
-    <WidgetModal title={modalTitle} open={isOpen} onClose={closeModal}>
+    <WidgetModal title={modalTitle} open={showConfirmationModal} onClose={closeModal}>
       {priceChangeWarning.shouldAccept ? (
         <AcceptAmountOut
           amountToAccept={priceChangeWarning.newPrice}
@@ -306,28 +312,36 @@ const SwapModal = () => {
         <SwapConfirmation
           fromTokenUsd={fromTokenUsd}
           toTokenUsd={toTokenUsd}
-          bottomContent={
-            swapStatus === "failed" ? (
+          lhPayload={lhPayload}
+        >
+          {swapStatus === "success" ? (
+            <SwapConfirmation.Success />
+          ) : swapStatus === "failed" ? (
+            <FlexColumn>
+              <SwapConfirmation.Error />
               <TryAgainButton />
-            ) : (
-              !swapStatus && (
-                <>
-                  <SwapDetails />
-                  <StyledSubmitButton
-                    onClick={onClick}
-                    isLoading={swapLoading}
-                    $disabled={allowanceLoading || swapLoading}
-                  >
-                    {swapButtonContent}
-                  </StyledSubmitButton>
-                </>
-              )
-            )
-          }
-          {...lhPayload}
-        />
+            </FlexColumn>
+          ) : (
+            <FlexColumn>
+              <SwapConfirmation.Details />
+              <SwapConfirmation.Steps />
+              <SwapConfirmation.SubmitButton>
+                <StyledSubmitButton
+                  onClick={onClick}
+                  isLoading={swapLoading}
+                  $disabled={allowanceLoading || swapLoading}
+                >
+                  {swapButtonContent}
+                </StyledSubmitButton>
+              </SwapConfirmation.SubmitButton>
+              <SwapConfirmation.ExplorerLink />
+            </FlexColumn>
+          )}
+        </SwapConfirmation>
       )}
-      <ConfirmationPoweredBy swapStatus={swapStatus} />
+      {(!swapStatus || swapStatus === "success") && (
+        <PoweredByOrbs style={{ marginTop: 30 }} />
+      )}
     </WidgetModal>
   );
 };
@@ -461,7 +475,7 @@ const FromTokenPanel = () => {
 };
 
 const ToTokenPanel = () => {
-  const outAmount = useWidgetContext().lhPayload?.quote.data?.ui.outAmount;
+  const outAmount = useWidgetContext().lhPayload?.outAmountUi
   const { token, onTokenSelect } = useToTokenPanel();
 
   const { data: usdSingleToken, isLoading } = usePriceUsd({
@@ -730,8 +744,8 @@ const StyledTokenListContainer = styled(FlexColumn)`
 `;
 
 const SwapDetails = () => {
-  const quote = useWidgetContext().lhPayload.quote.data;
-  const minAmountOut = useFormatNumber({ value: quote?.ui.minAmountOut });
+  const {quote, outAmountUi} = useWidgetContext().lhPayload
+  const minAmountOut = useFormatNumber({ value: outAmountUi });
   const { fromToken, toToken, fromAmount } = useDexState(
     useShallow((s) => ({
       fromToken: s.fromToken,
@@ -740,7 +754,7 @@ const SwapDetails = () => {
     }))
   );
 
-  const gasCost =  useAmountUI(toToken?.decimals, quote?.gasAmountOut)
+  const gasCost = useAmountUI(toToken?.decimals, quote.data?.gasAmountOut);
 
   const usd = usePriceUsd({ address: toToken?.address }).data;
   const gasCostUsd = useMemo(() => {
@@ -753,7 +767,7 @@ const SwapDetails = () => {
   const outTokenUsd = usePriceUsd({ address: toToken?.address }).data;
 
   const priceImpactF = useFormatNumber({
-    value: usePriceImpact(inTokenUsd, outTokenUsd, quote?.outAmount),
+    value: usePriceImpact(inTokenUsd, outTokenUsd, quote?.data?.outAmount),
     decimalScale: 2,
   });
 
@@ -764,7 +778,7 @@ const SwapDetails = () => {
     prefix: "$",
   });
 
-  if (BN(fromAmount || "0").isZero() || BN(quote?.outAmount || "0").isZero())
+  if (BN(fromAmount || "0").isZero() || BN(quote.data?.outAmount || "0").isZero())
     return null;
 
   return (

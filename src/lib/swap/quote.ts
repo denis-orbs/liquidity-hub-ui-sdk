@@ -113,11 +113,6 @@ export const quote = async ({
     }
     swapAnalytics.onQuoteSuccess(count(), quote);
 
-    const ui = {
-      outAmount: amountUi(toToken?.decimals, new BN(quote.outAmount)),
-      minAmountOut: amountUi(toToken?.decimals, BN(quote.minAmountOut || 0)),
-      gasAmountOut: amountUi(toToken?.decimals, BN(quote.gasAmountOut || 0)),
-    };
 
     Logger({
       fromAmount,
@@ -127,7 +122,6 @@ export const quote = async ({
       quote,
       minAmountOut: quote.minAmountOut,
       gasAmountOut: quote.gasAmountOut,
-      ui,
       refetchInterval: quoteInterval,
     });
     const res: QuoteResponse = {
@@ -136,7 +130,6 @@ export const quote = async ({
       outAmount: safeBN(quote.outAmount) || "",
       minAmountOut: safeBN(quote.minAmountOut || 0) || "",
       gasAmountOut: safeBN(quote.gasAmountOut),
-      ui,
     };
     res.refetchCount =
       ((queryClient.getQueryData(queryKey) as QuoteResponse)?.refetchCount ||

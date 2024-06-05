@@ -92,7 +92,7 @@ export const useSubmitSwap = ({
         await wrap(account, web3, chainId, inTokenAddress, fromAmount, gas);
         inTokenAddress = wTokenAddress;
         props?.onWrapSuccess?.();
-        updateState({ isNativeIn: true });
+        updateState({ isWrapped: true });
       }
       if (!hasAllowance) {
         Logger("Approval required");
@@ -130,8 +130,8 @@ export const useSubmitSwap = ({
       addOrder({
         fromToken: fromToken,
         toToken: toToken,
-        fromAmount: amountUi(fromToken.decimals, new BN(fromAmount)),
-        toAmount: quote.ui.outAmount || "",
+        fromAmount: amountUi(fromToken.decimals, BN(fromAmount)),
+        toAmount: amountUi(toToken.decimals, BN(quote.outAmount)) || "",
         txHash,
         explorerLink: `${explorerUrl}/tx/${txHash}`,
       });

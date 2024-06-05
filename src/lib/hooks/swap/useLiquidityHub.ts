@@ -10,9 +10,7 @@ import {
   useAmountUI,
   useIsDisabled,
   UseLiquidityHubState,
-  usePriceChanged,
   useSubmitSwap,
-  useSwapRoute,
 } from "../..";
 import BN from "bignumber.js";
 export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
@@ -101,14 +99,6 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     quote: quote.data,
   });
 
-  const priceChangeWarning = usePriceChanged({
-    quote: quote.data,
-    originalQuote: state.originalQuote,
-    swapStatus: state.swapStatus,
-    showConfirmation: state.showConfirmation,
-    toToken: args.toToken,
-  });
-
   const onClose = useCallback(
     (timeout = 300) => {
       updateState({
@@ -146,27 +136,27 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
 
   return {
     quote,
+    originalQuote: state.originalQuote,
     txHash: state.txHash,
-    onShowConfirmation,
     swapError,
-    analyticsInit,
-    getSwapRoute: useSwapRoute(disabled),
-    swapStatus: state.swapStatus,
-    submitSwap,
-    priceChangeWarning,
     swapLoading,
+    swapStatus: state.swapStatus,
     fromToken: args.fromToken,
     toToken: args.toToken,
-    isOpen: state.showConfirmation,
-    onClose,
+    showConfirmationModal: state.showConfirmation,
     currentStep: state.currentStep,
-    isNativeIn: state.isNativeIn,
+    isWrapped: state.isWrapped,
     fromAmount,
-    outAmount: quote.data?.outAmount,
     fromAmountUi: useAmountUI(args.fromToken?.decimals, fromAmount),
-    outAmountUi: quote.data?.ui.outAmount,
+    outAmountUi: useAmountUI(args.toToken?.decimals, quote.data?.outAmount),
+    gasAmountOutUi: useAmountUI(args.toToken?.decimals, quote.data?.gasAmountOut),
     hasAllowance,
     allowanceLoading,
     isSigned: state.isSigned,
+    isDisabled: disabled,
+    onShowConfirmation,
+    closeConfirmationModal: onClose,
+    submitSwap,
+    analyticsInit,
   };
 };

@@ -136,20 +136,16 @@ export interface UseLiquidityHubState {
   swapError:string | undefined,
   failures: number,
   txHash: string | undefined,
-  isNativeIn: boolean,
+  isWrapped  : boolean,
   isSigned: boolean,
   sessionId?: string;
 }
+
 
 export interface QuoteResponse extends OriginalQuote {
   disableInterval?: boolean;
   refetchCount?: number;
   originalQuote?: OriginalQuote;
-  ui: {
-    outAmount?: string;
-    minAmountOut?: string;
-    gasCostOutputToken?: string;
-  };
 }
 
 export enum LH_CONTROL {
@@ -159,9 +155,9 @@ export enum LH_CONTROL {
 }
 
 export enum STEPS {
-  WRAP,
-  APPROVE,
-  SEND_TX,
+  WRAP = 'wrap',
+  APPROVE = 'approve',
+  SEND_TX = 'sendTx',
 }
 
 export type ActionStatus =

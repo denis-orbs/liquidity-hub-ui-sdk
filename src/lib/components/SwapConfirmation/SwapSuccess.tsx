@@ -10,8 +10,8 @@ import { ExplorerLink } from "../ExplorerLink";
 import { useSwapConfirmationContext } from "./context";
 
 export const SwapSuccess = () => {
-  const { fromToken, toToken, fromAmount, quote, txHash } = useSwapConfirmationContext()
-
+  const { fromToken, toToken, fromAmountUi, outAmountUi, txHash } =
+    useSwapConfirmationContext().lhPayload;
   return (
     <StyledSuccess className="lh-success">
       <StyledTop>
@@ -25,11 +25,11 @@ export const SwapSuccess = () => {
       </StyledTop>
 
       <StyledTokensContainer>
-        <SuccessToken token={fromToken} amount={fromAmount} />
+        <SuccessToken token={fromToken} amount={fromAmountUi} />
         <Separator />
-        <SuccessToken token={toToken} amount={quote.data?.ui.outAmount} />
+        <SuccessToken token={toToken} amount={outAmountUi} />
       </StyledTokensContainer>
-      <ExplorerLink styles={{marginTop: 50}} txHash={txHash} />
+      <ExplorerLink styles={{ marginTop: 50 }} txHash={txHash} />
     </StyledSuccess>
   );
 };
@@ -61,9 +61,6 @@ const StyledTokensContainer = styled(FlexColumn)`
   align-items: center;
   gap: 30px;
 `;
-
-
-
 
 const StyledLogo = styled(Logo)`
   width: 40px;

@@ -1,25 +1,28 @@
 import React, { createContext, useContext } from "react";
-import { SwapConfirmationProps } from "./types";
+import { LiquidityHubPayload } from "../..";
 
-
-interface Props extends SwapConfirmationProps {
-  children: React.ReactNode;
-
+interface ContextArgs {
+  lhPayload: LiquidityHubPayload;
+  fromTokenUsd?: string | number;
+  toTokenUsd?: string | number;
 }
 
-const SwapConfirmationContext = createContext(
-  {} as SwapConfirmationProps
-);
+interface Props extends ContextArgs {
+  children: React.ReactNode;
+}
+
+const SwapConfirmationContext = createContext({} as ContextArgs);
 
 export function SwapConfirmationProvider({
   children,
   fromTokenUsd,
   toTokenUsd,
-  bottomContent,
-  ...rest
+  lhPayload,
 }: Props) {
   return (
-    <SwapConfirmationContext.Provider value={{ fromTokenUsd, toTokenUsd, bottomContent, ...rest }}>
+    <SwapConfirmationContext.Provider
+      value={{ fromTokenUsd, toTokenUsd, lhPayload }}
+    >
       {children}
     </SwapConfirmationContext.Provider>
   );

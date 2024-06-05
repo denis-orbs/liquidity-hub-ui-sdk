@@ -4,7 +4,7 @@ import { useContractCallback } from "./useContractCallback";
 import BN from "bignumber.js";
 import { Logger, sendAndWaitForConfirmations } from "../util";
 import { zeroAddress } from "../config/consts";
-import { useEstimateGasPrice } from "./useSwapDetails";
+import { useEstimateGasPrice } from "./useEstimateGasPrice";
 
 export const useUnwrap = () => {
   const { account, web3, chainId } = useMainContext();

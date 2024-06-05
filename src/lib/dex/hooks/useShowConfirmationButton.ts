@@ -36,10 +36,9 @@ export const useUnwrapMF = () => {
 };
 
 export const useShowConfirmationButton = (props: LiquidityHubPayload) => {
-  const { quote, analyticsInit, onShowConfirmation, fromToken, toToken, fromAmount } = props;
+  const { quote, analyticsInit, onShowConfirmation, fromToken, toToken, fromAmount, outAmountUi } = props;
 
 
-  const toAmount = quote.data?.ui.outAmount;
   const { mutate: switchNetwork, isPending: switchNetworkLoading } =
     useSwitchNetwork();
   const wrongChain = useIsInvalidChain();
@@ -93,7 +92,7 @@ export const useShowConfirmationButton = (props: LiquidityHubPayload) => {
       };
     }
 
-    if (BN(fromAmount || 0).isZero() && BN(toAmount || 0).isZero()) {
+    if (BN(fromAmount || 0).isZero() && BN(outAmountUi || 0).isZero()) {
       return {
         disabled: true,
         text: "Enter an amount",
@@ -113,7 +112,7 @@ export const useShowConfirmationButton = (props: LiquidityHubPayload) => {
     }
 
 
-    if (quote.error || BN(toAmount || "0").isZero()) {
+    if (quote.error || BN(outAmountUi || "0").isZero()) {
       return {
         disabled: true,
         text: "No liquidity",
@@ -130,7 +129,7 @@ export const useShowConfirmationButton = (props: LiquidityHubPayload) => {
     fromToken,
     toToken,
     fromAmount,
-    toAmount,
+    outAmountUi,
     fromTokenBalance,
     switchNetwork,
     switchNetworkLoading,

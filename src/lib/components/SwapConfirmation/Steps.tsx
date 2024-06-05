@@ -1,37 +1,17 @@
-import styled, { CSSObject } from "styled-components";
-import { StepComponent } from "./Step";
-import { SwapDetails } from "./Details";
+import styled from "styled-components";
+import { useSteps } from "../..";
 import { FlexColumn } from "../../base-styles";
-import { ExplorerLink } from "../ExplorerLink";
 import { useSwapConfirmationContext } from "./context";
-import { useSteps } from "../../hooks";
+import { StepComponent } from "./Step";
 
-interface Props {
-  style?: CSSObject;
-}
-
-export const SwapMain = ({ style = {} }: Props) => {
-  const { bottomContent, fromTokenUsd, toTokenUsd, txHash } =
-    useSwapConfirmationContext();
-  return (
-    <Container style={style}>
-      <SwapDetails fromTokenUsd={fromTokenUsd} toTokenUsd={toTokenUsd} />
-      <StepsComponent />
-      {bottomContent}
-      <ExplorerLink styles={{ marginTop: 10 }} txHash={txHash} />
-    </Container>
-  );
-};
-
-const StepsComponent = () => {
-  const { swapStatus, isSigned, fromAmount, currentStep, fromToken } =
-    useSwapConfirmationContext();
-
+export const StepsComponent = () => {
+  const { swapStatus, isSigned, fromAmountUi, currentStep, fromToken } =
+    useSwapConfirmationContext().lhPayload;
   const steps = useSteps({
     fromToken,
     currentStep,
     isSigned,
-    fromAmount,
+    fromAmount: fromAmountUi,
   });
   if (swapStatus !== "loading") return null;
 
@@ -46,10 +26,6 @@ const StepsComponent = () => {
     </>
   );
 };
-
-const Container = styled(FlexColumn)`
-  width: 100%;
-`;
 
 const Divider = styled.div`
   width: 2px;
