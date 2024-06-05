@@ -1,13 +1,9 @@
 import BN, { BigNumber } from "bignumber.js";
 import Web3 from "web3";
-import { Network, Token } from "./type";
+import { ActionStatus, Network, Token } from "./type";
 import _ from "lodash";
 import { supportedChains } from "./config/supportedChains";
-import {
-  nativeTokenAddresses,
-  QUOTE_ERRORS,
-  zero,
-} from "./config/consts";
+import { nativeTokenAddresses, QUOTE_ERRORS, zero } from "./config/consts";
 import { networks } from "./networks";
 import { numericFormatter } from "react-number-format";
 import { useLiquidityHubPersistedStore } from "./store/main";
@@ -463,5 +459,20 @@ export const getContract = (
 };
 
 export const isTxRejected = (message: string) => {
- return message?.toLowerCase()?.includes("rejected") || message?.toLowerCase()?.includes("denied")
+  return (
+    message?.toLowerCase()?.includes("rejected") ||
+    message?.toLowerCase()?.includes("denied")
+  );
 };
+
+export const getSwapModalTitle = (swapStatus: ActionStatus) => {
+  if (swapStatus === "failed") return;
+  if (swapStatus === "success") return "Swap Successfull";
+  return "Review Swap";
+};
+
+
+export const getSwapButtonContent = (fromTokenAddress?: string, hasAllowance?: boolean) => {
+  if (isNativeAddress(fromTokenAddress || "")) return "Wrap and Swap";
+  if (!hasAllowance) return "Approve and Swap";
+}

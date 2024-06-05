@@ -2,17 +2,15 @@ import { useCallback, useMemo, useState } from "react";
 import { useAllowance } from "./useAllowance";
 import { useQuote } from "./useQuote";
 import { UseLiquidityHubArgs } from "../../type";
-import { isNativeAddress, safeBN } from "../../util";
+import { safeBN } from "../../util";
 import _ from "lodash";
 import { useAnalytics } from "../useAnalytics";
 import { useDebounce } from "../useDebounce";
 import {
   useAmountUI,
-  useBalance,
   useIsDisabled,
   UseLiquidityHubState,
   usePriceChanged,
-  useSteps,
   useSubmitSwap,
   useSwapRoute,
 } from "../..";
@@ -32,8 +30,6 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     failures: state.failures,
     disabledByDex: args.disabled,
   });
-
-  const getSwapRoute = useSwapRoute(disabled);
 
   const slippage = useMemo(() => {
     if (!args.slippage) return 0;
@@ -75,11 +71,6 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     sessionId: state.sessionId,
   });
 
-  const {
-    data: isApproved,
-    isLoading: allowanceLoading,
-    refetch: refetchAllowance,
-  } = useAllowance(args.fromToken, fromAmount);
   const analyticsInit = useAnalytics({
     fromToken: args.fromToken,
     toToken: args.toToken,
@@ -101,31 +92,14 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     mutateAsync: submitSwap,
     isPending: swapLoading,
     error: swapError,
+    reset: resetSubmitSwap,
   } = useSubmitSwap({
     fromToken: args.fromToken,
     toToken: args.toToken,
     fromAmount,
-    refetchAllowance,
     updateState,
-    approved: isApproved,
     quote: quote.data,
   });
-
-  const balance = useBalance(args.fromToken).data;
-
-  const swapButtonContent = useMemo(() => {
-    if (BN(balance || "0").isLessThan(fromAmount || "0")) {
-      return "Insufficient balance";
-    }
-
-    if (BN(quote.data?.outAmount || "0").isLessThan(0)) {
-      return "No liquidity for this trade";
-    }
-
-    if (isNativeAddress(args.fromToken?.address || "")) return "Wrap and Swap";
-    if (!isApproved) return "Approve and Swap";
-    return "Sign and Swap";
-  }, [isApproved, args.fromToken, fromAmount, quote.data?.outAmount, balance]);
 
   const priceChangeWarning = usePriceChanged({
     quote: quote.data,
@@ -134,13 +108,6 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     showConfirmation: state.showConfirmation,
     toToken: args.toToken,
   });
-  
-
-  const modalTitle = useMemo(() => {
-    if (state.swapStatus === "failed") return;
-    if (state.swapStatus === "success") return "Swap Successfull";
-    return "Review Swap";
-  }, [state.swapStatus]);
 
   const onClose = useCallback(
     (timeout = 300) => {
@@ -160,6 +127,7 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
       if (state.swapStatus === "failed") {
         // refetch quote to get new session id
         quote.refetch();
+        resetSubmitSwap();
         setTimeout(() => {
           setState(
             (prev) =>
@@ -168,29 +136,23 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
         }, timeout);
       }
     },
-    [state.swapStatus, updateState, setState, quote.refetch]
+    [state.swapStatus, updateState, setState, quote.refetch, resetSubmitSwap]
   );
 
-  const steps = useSteps({
-    fromToken: args.fromToken,
-    currentStep: state.currentStep,
-    isSigned: state.isSigned,
-    allowanceLoading,
-    isApproved,
-  });
+  const { data: hasAllowance, isLoading: allowanceLoading } = useAllowance(
+    args.fromToken?.address,
+    fromAmount
+  );
 
   return {
     quote,
     txHash: state.txHash,
     onShowConfirmation,
-    swapError: state.swapStatus === "failed" ? swapError : undefined,
+    swapError,
     analyticsInit,
-    getSwapRoute,
+    getSwapRoute: useSwapRoute(disabled),
     swapStatus: state.swapStatus,
-    modalTitle,
     submitSwap,
-    swapButtonContent,
-    swapButtonDisabled: allowanceLoading || swapLoading,
     priceChangeWarning,
     swapLoading,
     fromToken: args.fromToken,
@@ -198,9 +160,13 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     isOpen: state.showConfirmation,
     onClose,
     currentStep: state.currentStep,
-    steps,
-    isWrapped: state.isWrapped,
-    fromAmount: useAmountUI(args.fromToken?.decimals, fromAmount),
-    outAmount: quote.data?.ui.outAmount,
+    isNativeIn: state.isNativeIn,
+    fromAmount,
+    outAmount: quote.data?.outAmount,
+    fromAmountUi: useAmountUI(args.fromToken?.decimals, fromAmount),
+    outAmountUi: quote.data?.ui.outAmount,
+    hasAllowance,
+    allowanceLoading,
+    isSigned: state.isSigned,
   };
 };

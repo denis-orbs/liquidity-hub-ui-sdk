@@ -60,6 +60,7 @@ import {
 import _ from "lodash";
 import { useInitialTokens } from "./hooks/useInitialTokens";
 import { ConfirmationPoweredBy } from "../components/SwapConfirmation/ConfirmationPoweredBy";
+import { getSwapButtonContent, getSwapModalTitle } from "../util";
 
 export const theme = {
   colors: {
@@ -225,13 +226,12 @@ const SwapModal = () => {
     onClose,
     swapStatus,
     isOpen,
-    modalTitle,
-    swapButtonContent,
-    swapButtonDisabled,
     priceChangeWarning,
     submitSwap,
     swapLoading,
     quote,
+    hasAllowance,
+    allowanceLoading,
   } = lhPayload;
 
   const { updateStore, fromToken, toToken, fromAmount } = useDexState(
@@ -273,7 +273,9 @@ const SwapModal = () => {
     try {
       await submitSwap({ onWrapSuccess });      
       refetchBalances();
-    } catch (error) {}
+    } catch (error) {
+      console.log(error);
+    }
   }, [submitSwap, onWrapSuccess, refetchBalances]);
 
   const closeModal = useCallback(() => {
@@ -282,6 +284,16 @@ const SwapModal = () => {
     }
     onClose(0);
   }, [resetDexState, swapStatus, onClose]);
+
+
+  const modalTitle = useMemo(() => {
+    return getSwapModalTitle(swapStatus);
+  }, [swapStatus])
+
+  const swapButtonContent = useMemo(() => {
+    return getSwapButtonContent(fromToken?.address, hasAllowance);
+  }
+  , [fromToken, hasAllowance]);
 
   return (
     <WidgetModal title={modalTitle} open={isOpen} onClose={closeModal}>
@@ -304,7 +316,7 @@ const SwapModal = () => {
                   <StyledSubmitButton
                     onClick={onClick}
                     isLoading={swapLoading}
-                    $disabled={swapButtonDisabled}
+                    $disabled={allowanceLoading || swapLoading}
                   >
                     {swapButtonContent}
                   </StyledSubmitButton>

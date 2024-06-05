@@ -136,7 +136,7 @@ export interface UseLiquidityHubState {
   swapError:string | undefined,
   failures: number,
   txHash: string | undefined,
-  isWrapped: boolean,
+  isNativeIn: boolean,
   isSigned: boolean,
   sessionId?: string;
 }

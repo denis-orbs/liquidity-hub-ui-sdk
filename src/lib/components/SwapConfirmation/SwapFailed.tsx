@@ -6,7 +6,7 @@ import { useChainConfig } from "../../hooks";
 import { useSwapConfirmationContext } from "./context";
 
 export const SwapFailed = () => {
-  const {bottomContent,isWrapped } = useSwapConfirmationContext()
+  const {bottomContent, isNativeIn } = useSwapConfirmationContext()
 
   const chainConfig = useChainConfig()
 
@@ -16,7 +16,7 @@ export const SwapFailed = () => {
         <AlertCircle />
       </MainLogo>
       <Title className="lh-failed-title">{'Swap failed on Liquidity Hub'}</Title>
-      {isWrapped && chainConfig && <Message>{`${chainConfig?.native.symbol} has been wrapped to ${chainConfig?.wToken?.symbol}`}</Message>}
+      {isNativeIn && chainConfig && <Message>{`${chainConfig?.native.symbol} has been wrapped to ${chainConfig?.wToken?.symbol}`}</Message>}
      
       {bottomContent}
     </Container>

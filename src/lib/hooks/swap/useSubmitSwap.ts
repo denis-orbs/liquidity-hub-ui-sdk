@@ -19,6 +19,7 @@ import { useEstimateGasPrice } from "../useEstimateGasPrice";
 import { swapX } from "../../swap/swapX";
 import { useApiUrl } from "./useApiUrl";
 import { useMutation } from "@tanstack/react-query";
+import { useAllowance } from "./useAllowance";
 
 export const useSubmitSwap = ({
   fromAmount,
@@ -26,16 +27,12 @@ export const useSubmitSwap = ({
   toToken,
   quote,
   updateState,
-  refetchAllowance,
-  approved,
 }: {
   fromAmount?: string;
   fromToken?: Token;
   toToken?: Token;
   quote?: QuoteResponse;
   updateState: (value: Partial<UseLiquidityHubState>) => void;
-  refetchAllowance: () => void;
-  approved?: boolean;
 }) => {
   const { web3, provider, account, chainId } = useMainContext();
   const chainConfig = useChainConfig();
@@ -44,6 +41,11 @@ export const useSubmitSwap = ({
   const addOrder = useOrders().addOrder;
   const gas = useEstimateGasPrice();
   const apiUrl = useApiUrl();
+
+  const {
+    data: hasAllowance,
+    refetch: refetchAllowance,
+  } = useAllowance(fromToken?.address, fromAmount);
 
   return useMutation({
     mutationFn: async (props?: {
@@ -90,9 +92,9 @@ export const useSubmitSwap = ({
         await wrap(account, web3, chainId, inTokenAddress, fromAmount, gas);
         inTokenAddress = wTokenAddress;
         props?.onWrapSuccess?.();
-        updateState({ isWrapped: true });
+        updateState({ isNativeIn: true });
       }
-      if (!approved) {
+      if (!hasAllowance) {
         Logger("Approval required");
         updateState({ currentStep: STEPS.APPROVE });
         await approve(account, web3, chainId, inTokenAddress);
@@ -157,7 +159,6 @@ export const useSubmitSwap = ({
       updateState({ swapStatus: "failed", sessionId: undefined });
       swapAnalytics.clearState();
       refetchAllowance();
-      throw error.message;
     },
   });
 };

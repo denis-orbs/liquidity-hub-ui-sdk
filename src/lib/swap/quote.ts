@@ -97,6 +97,7 @@ export const quote = async ({
       }),
       signal,
     });
+    Logger('calling quote api')
     quote = await response.json();
 
     if (!quote) {

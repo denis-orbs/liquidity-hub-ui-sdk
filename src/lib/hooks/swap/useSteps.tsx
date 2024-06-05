@@ -1,24 +1,27 @@
 import { useMemo } from "react";
 import SwapImg from "../../assets/swap.svg";
 import ApproveImg from "../../assets/approve.svg";
-import {Step, STEPS, Token } from "../../type";
+import { Step, STEPS, Token } from "../../type";
 import { isNativeAddress } from "../../util";
 import { useChainConfig } from "../useChainConfig";
+import { useAllowance } from "./useAllowance";
 
 export const useSteps = ({
   fromToken,
   currentStep,
   isSigned,
-  allowanceLoading,
-  isApproved
+  fromAmount,
 }: {
   fromToken?: Token;
   currentStep?: STEPS;
   isSigned: boolean;
-  allowanceLoading: boolean;
-  isApproved?: boolean;
+  fromAmount?: string;
 }) => {
   const explorer = useChainConfig()?.explorerUrl;
+  const { data: hasAllowance, isLoading: allowanceLoading } = useAllowance(
+    fromToken?.address,
+    fromAmount
+  );
 
   const steps = useMemo(() => {
     if (allowanceLoading) {
@@ -45,7 +48,7 @@ export const useSteps = ({
 
     const steps = [sendTx];
 
-    if (!isApproved) {
+    if (!hasAllowance) {
       steps.unshift(approve);
     }
 
@@ -55,12 +58,12 @@ export const useSteps = ({
     return steps;
   }, [
     fromToken,
-    isApproved,
+    hasAllowance,
     allowanceLoading,
     isSigned,
     currentStep,
     explorer,
   ]);
 
-  return steps
+  return steps;
 };

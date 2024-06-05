@@ -4,13 +4,15 @@ import { SwapDetails } from "./Details";
 import { FlexColumn } from "../../base-styles";
 import { ExplorerLink } from "../ExplorerLink";
 import { useSwapConfirmationContext } from "./context";
+import { useSteps } from "../../hooks";
 
 interface Props {
   style?: CSSObject;
 }
 
 export const SwapMain = ({ style = {} }: Props) => {
-  const { bottomContent, fromTokenUsd, toTokenUsd, txHash } = useSwapConfirmationContext();
+  const { bottomContent, fromTokenUsd, toTokenUsd, txHash } =
+    useSwapConfirmationContext();
   return (
     <Container style={style}>
       <SwapDetails fromTokenUsd={fromTokenUsd} toTokenUsd={toTokenUsd} />
@@ -22,7 +24,15 @@ export const SwapMain = ({ style = {} }: Props) => {
 };
 
 const StepsComponent = () => {
-  const {steps, swapStatus} = useSwapConfirmationContext();
+  const { swapStatus, isSigned, fromAmount, currentStep, fromToken } =
+    useSwapConfirmationContext();
+
+  const steps = useSteps({
+    fromToken,
+    currentStep,
+    isSigned,
+    fromAmount,
+  });
   if (swapStatus !== "loading") return null;
 
   return (

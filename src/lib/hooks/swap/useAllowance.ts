@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
-import { Token, useChainConfig } from "../..";
+import { useChainConfig } from "../..";
 import { useMainContext } from "../../provider";
 import { useContractCallback } from "../useContractCallback";
 import { permit2Address, QUERY_KEYS } from "../../config/consts";
@@ -29,14 +29,14 @@ const useApproved = (address?: string) => {
   );
 };
 
-export const useAllowance = (fromToken?: Token, fromAmount?: string) => {
+export const useAllowance = (fromToken?: string, fromAmount?: string) => {
   const wToken = useChainConfig()?.wToken;
 
 
   const isApproved = useApproved(
-    isNativeAddress(fromToken?.address || "")
+    isNativeAddress(fromToken || "")
       ? wToken?.address
-      : fromToken?.address
+      : fromToken
   );
   const { account, chainId } = useMainContext();
   return useQuery({
@@ -44,7 +44,7 @@ export const useAllowance = (fromToken?: Token, fromAmount?: string) => {
       QUERY_KEYS.APPROVE,
       account,
       chainId,
-      fromToken?.address,
+      fromToken,
       fromAmount,
     ],
     queryFn: async () => isApproved(fromAmount!),
