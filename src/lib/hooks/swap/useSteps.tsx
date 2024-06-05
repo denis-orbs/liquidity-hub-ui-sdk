@@ -24,10 +24,6 @@ export const useSteps = ({
   );
 
   const steps = useMemo(() => {
-    if (allowanceLoading) {
-      return [];
-    }
-
     const wrap: Step = {
       title: `Wrap ${fromToken?.symbol}`,
       image: SwapImg,
@@ -65,5 +61,8 @@ export const useSteps = ({
     explorer,
   ]);
 
-  return steps;
+  return {
+    steps: allowanceLoading ? [] : steps,
+    isLoading: allowanceLoading,
+  };
 };

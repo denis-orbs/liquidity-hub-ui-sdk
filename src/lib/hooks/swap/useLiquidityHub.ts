@@ -1,5 +1,4 @@
 import { useCallback, useMemo, useState } from "react";
-import { useAllowance } from "./useAllowance";
 import { useQuote } from "./useQuote";
 import { UseLiquidityHubArgs } from "../../type";
 import { safeBN } from "../../util";
@@ -56,6 +55,23 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     [updateState]
   );
 
+  const resetState = useCallback(() => {
+   setTimeout(() => {
+    setState(
+      (prev) => ({ failures: prev.failures || 0 } as UseLiquidityHubState),
+    );
+   }, 3_00);
+  }, [setState]);
+
+  const onSwapFailed = useCallback(() => {
+    updateState({
+      swapStatus: "failed",
+      sessionId: undefined,
+      currentStep: undefined,
+      failures: (state.failures || 0) + 1,
+    });
+  }, [updateState, state.failures]);
+
   const quote = useQuote({
     fromToken: args.fromToken,
     toToken: args.toToken,
@@ -65,8 +81,8 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     showConfirmation: state.showConfirmation,
     disabled,
     slippage,
-    setSessionId,
     sessionId: state.sessionId,
+    setSessionId,
   });
 
   const analyticsInit = useAnalytics({
@@ -97,42 +113,34 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     fromAmount,
     updateState,
     quote: quote.data,
+    onSwapFailed,
   });
 
-  const onClose = useCallback(
-    (timeout = 300) => {
-      updateState({
-        showConfirmation: false,
-      });
-      if (!state.swapStatus) {
-        updateState({
-          originalQuote: undefined,
-        });
-      }
-      if (state.swapStatus === "success") {
-        setTimeout(() => {
-          setState({} as UseLiquidityHubState);
-        }, timeout);
-      }
-      if (state.swapStatus === "failed") {
-        // refetch quote to get new session id
-        quote.refetch();
-        resetSubmitSwap();
-        setTimeout(() => {
-          setState(
-            (prev) =>
-              ({ failures: (prev.failures || 0) + 1 } as UseLiquidityHubState)
-          );
-        }, timeout);
-      }
-    },
-    [state.swapStatus, updateState, setState, quote.refetch, resetSubmitSwap]
-  );
-
-  const { data: hasAllowance, isLoading: allowanceLoading } = useAllowance(
-    args.fromToken?.address,
-    fromAmount
-  );
+  const onClose = useCallback(() => {
+    updateState({
+      showConfirmation: false,
+    });
+    if (!state.swapStatus) {
+      resetSubmitSwap();
+    }
+    if (state.swapStatus === "failed") {
+      // refetch quote to get new session id
+      quote.refetch();
+    }
+    switch (state.swapStatus) {
+      case undefined:
+      case "failed":
+      case "success":
+        resetState();
+    }
+  }, [
+    state.swapStatus,
+    updateState,
+    setState,
+    quote.refetch,
+    resetSubmitSwap,
+    resetState,
+  ]);
 
   return {
     quote,
@@ -143,15 +151,16 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     swapStatus: state.swapStatus,
     fromToken: args.fromToken,
     toToken: args.toToken,
-    showConfirmationModal: state.showConfirmation,
+    showConfirmationModal: !!state.showConfirmation,
     currentStep: state.currentStep,
-    isWrapped: state.isWrapped,
+    isWrapped: !!state.isWrapped,
     fromAmount,
     fromAmountUi: useAmountUI(args.fromToken?.decimals, fromAmount),
     outAmountUi: useAmountUI(args.toToken?.decimals, quote.data?.outAmount),
-    gasAmountOutUi: useAmountUI(args.toToken?.decimals, quote.data?.gasAmountOut),
-    hasAllowance,
-    allowanceLoading,
+    gasAmountOutUi: useAmountUI(
+      args.toToken?.decimals,
+      quote.data?.gasAmountOut
+    ),
     isSigned: state.isSigned,
     isDisabled: disabled,
     onShowConfirmation,

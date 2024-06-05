@@ -472,8 +472,3 @@ export const getSwapModalTitle = (swapStatus: ActionStatus) => {
 };
 
 
-export const getSwapButtonContent = (fromTokenAddress?: string, hasAllowance?: boolean) => {
-  if (isNativeAddress(fromTokenAddress || "")) return "Wrap and Swap";
-  if (!hasAllowance) return "Approve and Swap";
-  return "Sign and Swap";
-}

@@ -155,6 +155,7 @@ export enum LH_CONTROL {
 }
 
 export enum STEPS {
+  LOADING = 'loading',
   WRAP = 'wrap',
   APPROVE = 'approve',
   SEND_TX = 'sendTx',

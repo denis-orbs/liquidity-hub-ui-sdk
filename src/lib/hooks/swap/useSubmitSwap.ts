@@ -27,12 +27,14 @@ export const useSubmitSwap = ({
   toToken,
   quote,
   updateState,
+  onSwapFailed,
 }: {
   fromAmount?: string;
   fromToken?: Token;
   toToken?: Token;
   quote?: QuoteResponse;
   updateState: (value: Partial<UseLiquidityHubState>) => void;
+  onSwapFailed: () => void;
 }) => {
   const { web3, provider, account, chainId } = useMainContext();
   const chainConfig = useChainConfig();
@@ -42,10 +44,10 @@ export const useSubmitSwap = ({
   const gas = useEstimateGasPrice();
   const apiUrl = useApiUrl();
 
-  const {
-    data: hasAllowance,
-    refetch: refetchAllowance,
-  } = useAllowance(fromToken?.address, fromAmount);
+  const { data: hasAllowance, refetch: refetchAllowance } = useAllowance(
+    fromToken?.address,
+    fromAmount
+  );
 
   return useMutation({
     mutationFn: async (props?: {
@@ -147,7 +149,7 @@ export const useSubmitSwap = ({
       swapAnalytics.onClobFailure();
       // if user rejects the tx, we get back to confirmation step
       if (isTxRejected((error as Error).message)) {
-        updateState({ swapStatus: undefined });
+        updateState({ swapStatus: undefined, currentStep: undefined });
         throw error;
       }
 
@@ -156,7 +158,7 @@ export const useSubmitSwap = ({
         // onCloseSwap();
       }
       Logger(`Swap error: ${error.message}`);
-      updateState({ swapStatus: "failed", sessionId: undefined });
+      onSwapFailed();
       swapAnalytics.clearState();
       refetchAllowance();
     },
