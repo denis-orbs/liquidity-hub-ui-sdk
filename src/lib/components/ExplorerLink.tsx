@@ -1,22 +1,17 @@
 import { useChainConfig } from "../hooks";
 import styled, { CSSObject } from "styled-components";
-import {ExternalLink} from 'react-feather'
 
-export const ExplorerLink = ({className = '', styles ={}, txHash}:{className?: string, styles?: CSSObject, txHash?: string}) => {
+export const ExplorerLink = ({className = '', styles ={}, txHash, text = 'View on explorer'}:{className?: string, styles?: CSSObject, txHash?: string, text?: string}) => {
 
   const explorerUrl = useChainConfig()?.explorerUrl;
   if (!txHash) return null;
   return (
     <StyledTxHash target='_blank' className={className} href={`${explorerUrl}/tx/${txHash}`} style={styles} >
-      View on explorer <StyledExternalLink width={15} height={15} />
+      {text}
     </StyledTxHash>
   );
 };
 
-const StyledExternalLink = styled(ExternalLink)`
-    position: relative;
-    top: 2px;
-`
 
 const StyledTxHash = styled.a`
   color: #d284cf;

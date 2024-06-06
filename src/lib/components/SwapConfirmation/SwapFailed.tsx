@@ -7,7 +7,7 @@ import { useSwapConfirmationContext } from "./context";
 
 export const SwapFailed = () => {
   const chainConfig = useChainConfig();
-  const { isWrapped } = useSwapConfirmationContext().lhPayload;
+  const { isWrapped } = useSwapConfirmationContext();
   return (
     <Container className="lh-failed">
       <MainLogo className="lh-failed-img">

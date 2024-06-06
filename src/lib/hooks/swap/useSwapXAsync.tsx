@@ -1,17 +1,14 @@
-// import { useGlobalStore, useSwapState } from "../../store/main";
 // import { useCallback } from "react";
 // import { useMainContext } from "../../provider";
 // import { swapAnalytics } from "../../analytics";
 // import { counter, delay, waitForTxReceipt } from "../../util";
 // import { useApiUrl } from "./useApiUrl";
-// import { useShallow } from "zustand/react/shallow";
+
 // import { QuoteResponse } from "../../type";
 
-// export const useSwapXAsync = () => {
+// export const useSwapXAsync = ({ sessionId }: { sessionId?: string }) => {
 //   const { account, chainId, web3 } = useMainContext();
-//   const updateState = useSwapState(useShallow((s) => s.updateState));
 //   const apiUrl = useApiUrl();
-//   const sessionId = useGlobalStore((s) => s.sessionId);
 //   return useCallback(
 //     async ({
 //       inTokenAddress,
@@ -50,7 +47,6 @@
 //             inAmount: fromAmount,
 //             user: account,
 //             signature: signature,
-           
 //           }),
 //         });
 //         const txHash = await waitForSwap(chainId, apiUrl, sessionId);
@@ -107,6 +103,8 @@
 //     }
 //   }
 // }
+
+// export {};
 
 
 export {}

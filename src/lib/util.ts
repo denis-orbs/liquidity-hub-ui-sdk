@@ -131,14 +131,23 @@ export function bn(n: BN.Value, base?: number): BN {
   return BN(n, base);
 }
 
-export async function sendAndWaitForConfirmations(
-  web3: Web3,
-  chainId: number,
-  tx: any,
-  opts: any,
-  confirmations: number = 0,
-  autoGas?: "fast" | "med" | "slow"
-) {
+export async function sendAndWaitForConfirmations({
+  web3,
+  chainId,
+  tx,
+  opts,
+  confirmations = 0,
+  autoGas,
+  onTxHash
+}: {
+  web3: Web3;
+  chainId: number;
+  tx: any;
+  opts: any;
+  confirmations?: number;
+  autoGas?: "fast" | "med" | "slow";
+  onTxHash?: (txHash: string) => void;
+}) {
   if (!tx && !opts.to) throw new Error("tx or opts.to must be specified");
 
   const [nonce, chain, price] = await Promise.all([
@@ -183,6 +192,10 @@ export async function sendAndWaitForConfirmations(
 
   let sentBlock = Number.POSITIVE_INFINITY;
   promiEvent.once("receipt", (r: any) => (sentBlock = r.blockNumber));
+
+  promiEvent.once("transactionHash", (hash: string) => {
+    onTxHash?.(hash)
+  });
 
   const result = await promiEvent;
 
@@ -470,5 +483,3 @@ export const getSwapModalTitle = (swapStatus: ActionStatus) => {
   if (swapStatus === "success") return "Swap Successfull";
   return "Review Swap";
 };
-
-

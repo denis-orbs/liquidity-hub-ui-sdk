@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
+import BN from "bignumber.js";
 import { useQuote } from "./useQuote";
 import { UseLiquidityHubArgs } from "../../type";
 import { safeBN } from "../../util";
@@ -11,7 +12,7 @@ import {
   UseLiquidityHubState,
   useSubmitSwap,
 } from "../..";
-import BN from "bignumber.js";
+
 export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
   const [state, setState] = useState({} as UseLiquidityHubState);
 
@@ -98,9 +99,9 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
   const onShowConfirmation = useCallback(() => {
     updateState({
       showConfirmation: true,
-      originalQuote: state.originalQuote || quote.data,
+      initialQuote: state.initialQuote || quote.data,
     });
-  }, [quote.data, updateState, state.originalQuote]);
+  }, [quote.data, updateState, state.initialQuote]);
 
   const {
     mutateAsync: submitSwap,
@@ -114,6 +115,7 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     updateState,
     quote: quote.data,
     onSwapFailed,
+    sessionId: state.sessionId,
   });
 
   const onClose = useCallback(() => {
@@ -144,8 +146,10 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
 
   return {
     quote,
-    originalQuote: state.originalQuote,
+    initialQuote: state.initialQuote,
     txHash: state.txHash,
+    approvalTxHash: state.approveTxHash,
+    wrapTxHash: state.wrapTxHash,
     swapError,
     swapLoading,
     swapStatus: state.swapStatus,

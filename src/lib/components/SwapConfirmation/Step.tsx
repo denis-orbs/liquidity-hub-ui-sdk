@@ -13,7 +13,7 @@ interface Props {
 }
 
 export function StepComponent({ step}: Props) {
-  const {currentStep, swapStatus} = useSwapConfirmationContext().lhPayload;
+  const {currentStep, swapStatus} = useSwapConfirmationContext();
 
   const status = useMemo((): ActionStatus => {
     if (_.isUndefined(currentStep)) return;

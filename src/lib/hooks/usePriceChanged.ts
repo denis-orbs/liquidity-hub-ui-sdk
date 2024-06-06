@@ -8,13 +8,13 @@ export function usePriceChanged({
   quote,
   showConfirmationModal,
   toToken,
-  originalQuote,
+  initialQuote,
   swapStatus,
 }: {
   quote?: QuoteResponse;
   showConfirmationModal?: boolean;
   toToken?: Token;
-  originalQuote?: QuoteResponse;
+  initialQuote?: QuoteResponse;
   swapStatus?: ActionStatus;
 }) {
   const [acceptedAmountOut, setAcceptedAmountOut] = useState<
@@ -24,9 +24,9 @@ export function usePriceChanged({
   useEffect(() => {
     // initiate
     if (showConfirmationModal && !acceptedAmountOut) {
-      setAcceptedAmountOut(originalQuote?.minAmountOut);
+      setAcceptedAmountOut(initialQuote?.minAmountOut);
     }
-  }, [originalQuote, acceptedAmountOut, showConfirmationModal]);
+  }, [initialQuote, acceptedAmountOut, showConfirmationModal]);
 
   const acceptChanges = useCallback(() => {
     setAcceptedAmountOut(quote?.minAmountOut);
@@ -41,7 +41,7 @@ export function usePriceChanged({
       swapStatus
     )
       return false;
-
+      // if new price is less than the accepted price
     if (BN(quote.minAmountOut).isLessThan(BN(acceptedAmountOut))) {      
       return true;
     }

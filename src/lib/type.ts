@@ -132,13 +132,16 @@ export interface UseLiquidityHubState {
   showConfirmation: boolean,
   swapStatus:ActionStatus | undefined,
   currentStep: STEPS | undefined,
-  originalQuote: QuoteResponse | undefined,
+  initialQuote: QuoteResponse | undefined,
   swapError:string | undefined,
   failures: number,
   txHash: string | undefined,
   isWrapped  : boolean,
   isSigned: boolean,
   sessionId?: string;
+  approveTxHash?: string;
+  wrapTxHash?: string;
+  unwrapTxHash?: string;
 }
 
 
@@ -174,6 +177,7 @@ export interface Step {
   image?: string;
   hidden?: boolean;
   id: STEPS;
+  txHash?: string;
 }
 
 export type UseLiquidityHubArgs = {
@@ -232,3 +236,9 @@ export declare type PermitData = {
 };
 
 export type LiquidityHubPayload = ReturnType<typeof useLiquidityHub>;
+
+
+export interface SwapConfirmationArgs extends LiquidityHubPayload {
+  fromTokenUsd?: string | number;
+  toTokenUsd?: string | number;
+}

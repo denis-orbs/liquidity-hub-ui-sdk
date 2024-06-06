@@ -1,22 +1,15 @@
 import { useMemo } from "react";
 import SwapImg from "../../assets/swap.svg";
 import ApproveImg from "../../assets/approve.svg";
-import { Step, STEPS, Token } from "../../type";
+import { Step, STEPS } from "../../type";
 import { isNativeAddress } from "../../util";
 import { useChainConfig } from "../useChainConfig";
 import { useAllowance } from "./useAllowance";
+import { useSwapConfirmationContext } from "../../components/SwapConfirmation/context";
 
-export const useSteps = ({
-  fromToken,
-  currentStep,
-  isSigned,
-  fromAmount,
-}: {
-  fromToken?: Token;
-  currentStep?: STEPS;
-  isSigned: boolean;
-  fromAmount?: string;
-}) => {
+export const useSteps = () => {
+  const { fromToken, currentStep, isSigned, fromAmount } =
+    useSwapConfirmationContext();
   const explorer = useChainConfig()?.explorerUrl;
   const { data: hasAllowance, isLoading: allowanceLoading } = useAllowance(
     fromToken?.address,

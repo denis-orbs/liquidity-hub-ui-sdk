@@ -4,24 +4,28 @@ import { swapAnalytics } from "../analytics";
 import { PermitData } from "../type";
 import { counter, isTxRejected, Logger } from "../util";
 
-export const sign = async (
-  account: string,
-  web3: Web3,
-  provider: any,
-  permitData: PermitData
-) => {
+export const sign = async ({
+  account,
+  web3,
+  provider,
+  permitData,
+}: {
+  account: string;
+  web3: Web3;
+  provider: any;
+  permitData: PermitData;
+}) => {
   const count = counter();
   try {
     swapAnalytics.onSignatureRequest();
 
-    const signature = await signEIP712(account, web3,provider,  permitData);
+    const signature = await signEIP712(account, web3, provider, permitData);
     if (!signature) {
       throw new Error("No signature");
     }
     swapAnalytics.onSignatureSuccess(signature, count());
     return signature;
   } catch (error) {
-    
     swapAnalytics.onSignatureFailed((error as any).message, count());
     throw new Error((error as Error)?.message);
   }
@@ -49,14 +53,13 @@ async function signEIP712(
   );
 
   try {
-    return await signAsync(signer,provider, "eth_signTypedData_v4", message);
+    return await signAsync(signer, provider, "eth_signTypedData_v4", message);
   } catch (e: any) {
- 
     if (isTxRejected(e.message)) {
-      throw e
+      throw e;
     }
     try {
-      return await signAsync(signer,provider,"eth_signTypedData", message);
+      return await signAsync(signer, provider, "eth_signTypedData", message);
     } catch (error: any) {
       if (
         typeof error.message === "string" &&
@@ -68,7 +71,7 @@ async function signEIP712(
           "signTypedData: wallet does not implement EIP-712, falling back to eth_sign"
         );
         throw new Error("Wallet does not support EIP-712");
-      }else{
+      } else {
         throw error;
       }
     }

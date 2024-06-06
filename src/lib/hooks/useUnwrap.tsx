@@ -22,16 +22,21 @@ export const useUnwrap = () => {
         const tx = fromTokenContract.methods.withdraw(
           new BN(fromAmount).toFixed(0)
         );
-        await sendAndWaitForConfirmations(web3, chainId, tx, {
-          from: account,
-          maxFeePerGas: gas?.maxFeePerGas,
-          maxPriorityFeePerGas: gas?.priorityFeePerGas,
+        await sendAndWaitForConfirmations({
+          web3,
+          chainId,
+          tx,
+          opts: {
+            from: account,
+            maxFeePerGas: gas?.maxFeePerGas,
+            maxPriorityFeePerGas: gas?.priorityFeePerGas,
+          },
         });
 
         return true;
       } catch (error: any) {
-        Logger({error});
-        
+        Logger({ error });
+
         throw new Error(error.message);
       }
     },

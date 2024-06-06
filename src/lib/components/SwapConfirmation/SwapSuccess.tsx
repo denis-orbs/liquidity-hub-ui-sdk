@@ -11,7 +11,7 @@ import { useSwapConfirmationContext } from "./context";
 
 export const SwapSuccess = () => {
   const { fromToken, toToken, fromAmountUi, outAmountUi, txHash } =
-    useSwapConfirmationContext().lhPayload;
+    useSwapConfirmationContext();
   return (
     <StyledSuccess className="lh-success">
       <StyledTop>

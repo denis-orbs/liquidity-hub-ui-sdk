@@ -2,6 +2,7 @@ import { swapAnalytics } from "../../analytics";
 import { useChainConfig } from "../useChainConfig";
 import {
   amountUi,
+  delay,
   isNativeAddress,
   isTxRejected,
   Logger,
@@ -28,6 +29,7 @@ export const useSubmitSwap = ({
   quote,
   updateState,
   onSwapFailed,
+  sessionId,
 }: {
   fromAmount?: string;
   fromToken?: Token;
@@ -35,6 +37,7 @@ export const useSubmitSwap = ({
   quote?: QuoteResponse;
   updateState: (value: Partial<UseLiquidityHubState>) => void;
   onSwapFailed: () => void;
+  sessionId?: string;
 }) => {
   const { web3, provider, account, chainId } = useMainContext();
   const chainConfig = useChainConfig();
@@ -54,6 +57,9 @@ export const useSubmitSwap = ({
       hasFallback?: boolean;
       onWrapSuccess?: () => void;
     }) => {
+      if (!sessionId) {
+        throw new Error("No session ID found");
+      }
       if (!apiUrl) {
         throw new Error("API URL not found");
       }
@@ -91,7 +97,17 @@ export const useSubmitSwap = ({
       updateState({ swapStatus: "loading" });
       if (isNativeIn) {
         updateState({ currentStep: STEPS.WRAP });
-        await wrap(account, web3, chainId, inTokenAddress, fromAmount, gas);
+        await wrap({
+          account,
+          web3,
+          chainId,
+          tokenAddress: inTokenAddress,
+          fromAmount,
+          gas,
+          onTxHash: (wrapTxHash) => {
+            updateState({ wrapTxHash });
+          },
+        });
         inTokenAddress = wTokenAddress;
         props?.onWrapSuccess?.();
         updateState({ isWrapped: true });
@@ -99,16 +115,31 @@ export const useSubmitSwap = ({
       if (!hasAllowance) {
         Logger("Approval required");
         updateState({ currentStep: STEPS.APPROVE });
-        await approve(account, web3, chainId, inTokenAddress);
+        await approve({
+          account,
+          web3,
+          chainId,
+          fromToken: inTokenAddress,
+          gas,
+          onTxHash: (approveTxHash) => {
+            updateState({ approveTxHash });
+          },
+        });
       } else {
         swapAnalytics.onApprovedBeforeTheTrade();
       }
       Logger("Signing...");
       updateState({ currentStep: STEPS.SEND_TX });
-      const signature = await sign(account, web3, provider, quote.permitData);
+      const signature = await sign({
+        account,
+        web3,
+        provider,
+        permitData: quote.permitData,
+      });
       updateState({ isSigned: true });
       Logger(signature);
-      const txHash = await swapX({
+
+      swapX({
         signature,
         inTokenAddress,
         outTokenAddress,
@@ -118,6 +149,10 @@ export const useSubmitSwap = ({
         chainId,
         apiUrl,
       });
+      const txHash = await waitForSwap(chainId, apiUrl, sessionId, account);
+      if (!txHash) {
+        throw new Error("Swap failed");
+      }
       Logger(txHash);
       updateState({ txHash });
       const txDetails = await waitForTxReceipt(web3, txHash);
@@ -164,3 +199,35 @@ export const useSubmitSwap = ({
     },
   });
 };
+
+async function waitForSwap(
+  chainId: number,
+  apiUrl: string,
+  sessionId: string,
+  user: string
+) {
+  // wait for swap to be processed, check every 2 seconds, for 2 minutes
+  for (let i = 0; i < 60; ++i) {
+    await delay(2_000);
+    try {
+      const response = await fetch(
+        `${apiUrl}/swap/status/${sessionId}?chainId=${chainId}`,
+        {
+          method: "POST",
+          body: JSON.stringify({ user }),
+        }
+      );
+      const result = await response.json();
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      if (result.txHash) {
+        return result.txHash as string;
+      }
+    } catch (error: any) {
+      // TODO, do we need to fail swap, in this api failure case?
+      throw new Error(error.message);
+    }
+  }
+}

@@ -6,14 +6,9 @@ import { useSwapConfirmationContext } from "./context";
 import { StepComponent } from "./Step";
 
 export const StepsComponent = () => {
-  const { swapStatus, isSigned, fromAmountUi, currentStep, fromToken } =
-    useSwapConfirmationContext().lhPayload;
-  const { steps, isLoading } = useSteps({
-    fromToken,
-    currentStep,
-    isSigned,
-    fromAmount: fromAmountUi,
-  });
+  const { swapStatus } =
+    useSwapConfirmationContext();
+  const { steps, isLoading } = useSteps();
   if (swapStatus !== "loading") return null;
 
   return (
