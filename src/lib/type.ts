@@ -70,6 +70,7 @@ export interface ProviderArgs {
   quote?: {
     refetchInterval?: number;
     refetchUntilThrottle?: number;
+    pauseOnConfirmation?: boolean;
   };
 }
 
@@ -158,14 +159,12 @@ export enum LH_CONTROL {
 }
 
 export enum STEPS {
-  LOADING = 'loading',
-  WRAP = 'wrap',
-  APPROVE = 'approve',
-  SEND_TX = 'sendTx',
+  WRAP,
+  APPROVE,
+  SEND_TX,
 }
 
 export type ActionStatus =
-  | "pending"
   | "loading"
   | "success"
   | "failed"

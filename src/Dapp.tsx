@@ -48,6 +48,9 @@ function Wrapped() {
       account={address}
       initialFromToken="USDT"
       supportedChains={_.map(supportedChains, "chainId")}
+      quote ={{
+        pauseOnConfirmation: true
+      }}
     />
   );
 }

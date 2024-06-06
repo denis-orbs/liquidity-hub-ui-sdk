@@ -3,7 +3,6 @@ import BN from "bignumber.js";
 import { useAmountUI } from "./useAmountUI";
 import { ActionStatus, QuoteResponse, Token } from "..";
 
-
 export function usePriceChanged({
   quote,
   showConfirmationModal,
@@ -23,7 +22,10 @@ export function usePriceChanged({
 
   useEffect(() => {
     // initiate
-    if (showConfirmationModal && !acceptedAmountOut) {
+    if (!showConfirmationModal) {
+      setAcceptedAmountOut(undefined);
+    }
+    if (!acceptedAmountOut) {
       setAcceptedAmountOut(initialQuote?.minAmountOut);
     }
   }, [initialQuote, acceptedAmountOut, showConfirmationModal]);
@@ -37,12 +39,12 @@ export function usePriceChanged({
       !acceptedAmountOut ||
       BN(acceptedAmountOut || 0).isZero() ||
       !quote?.minAmountOut ||
-      BN(quote?.minAmountOut || 0).isZero() || 
+      BN(quote?.minAmountOut || 0).isZero() ||
       swapStatus
     )
       return false;
-      // if new price is less than the accepted price
-    if (BN(quote.minAmountOut).isLessThan(BN(acceptedAmountOut))) {      
+    // if new price is less than the accepted price
+    if (BN(quote.minAmountOut).isLessThan(BN(acceptedAmountOut))) {
       return true;
     }
   }, [acceptedAmountOut, quote?.minAmountOut, swapStatus]);

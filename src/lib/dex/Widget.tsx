@@ -237,6 +237,7 @@ const SwapModal = () => {
     toToken,
     fromAmount,
     fromAmountUi,
+    isWrapped,
   } = lhPayload;
 
   const updateStore = useDexState(useShallow((s) => s.updateStore));
@@ -273,19 +274,30 @@ const SwapModal = () => {
 
   const onClick = useCallback(async () => {
     try {
-      await submitSwap({ onWrapSuccess });
+      await submitSwap();
       refetchBalances();
     } catch (error) {
       console.log(error);
     }
-  }, [submitSwap, onWrapSuccess, refetchBalances]);
+  }, [submitSwap, refetchBalances]);
 
   const closeModal = useCallback(() => {
     if (swapStatus === "success") {
       resetDexState();
     }
+
+    if (swapStatus === "failed" && isWrapped) {
+      onWrapSuccess();
+    }
+
     closeConfirmationModal();
-  }, [resetDexState, swapStatus, closeConfirmationModal]);
+  }, [
+    resetDexState,
+    swapStatus,
+    closeConfirmationModal,
+    onWrapSuccess,
+    isWrapped,
+  ]);
 
   const modalTitle = useMemo(() => {
     return getSwapModalTitle(swapStatus);
@@ -297,7 +309,7 @@ const SwapModal = () => {
   );
 
   const priceChangeWarning = usePriceChanged({
-    quote: quote.data,
+    quote,
     initialQuote,
     swapStatus,
     showConfirmationModal,
@@ -757,7 +769,7 @@ const SwapDetails = () => {
     useWidgetContext().lhPayload;
   const minAmountOut = useFormatNumber({ value: outAmountUi });
 
-  const gasCost = useAmountUI(toToken?.decimals, quote.data?.gasAmountOut);
+  const gasCost = useAmountUI(toToken?.decimals, quote?.gasAmountOut);
 
   const usd = usePriceUsd({ address: toToken?.address }).data;
   const gasCostUsd = useMemo(() => {
@@ -770,7 +782,7 @@ const SwapDetails = () => {
   const outTokenUsd = usePriceUsd({ address: toToken?.address }).data;
 
   const priceImpactF = useFormatNumber({
-    value: usePriceImpact(inTokenUsd, outTokenUsd, quote?.data?.outAmount),
+    value: usePriceImpact(inTokenUsd, outTokenUsd, quote?.outAmount),
     decimalScale: 2,
   });
 
@@ -781,10 +793,7 @@ const SwapDetails = () => {
     prefix: "$",
   });
 
-  if (
-    BN(fromAmount || "0").isZero() ||
-    BN(quote.data?.outAmount || "0").isZero()
-  )
+  if (BN(fromAmount || "0").isZero() || BN(quote?.outAmount || "0").isZero())
     return null;
 
   return (

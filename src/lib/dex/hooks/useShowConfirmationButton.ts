@@ -36,7 +36,7 @@ export const useUnwrapMF = () => {
 };
 
 export const useShowConfirmationButton = (props: LiquidityHubPayload) => {
-  const { quote, analyticsInit, onShowConfirmation, fromToken, toToken, fromAmount, outAmountUi } = props;
+  const { quote, quoteLoading, quoteError, analyticsInit, onShowConfirmation, fromToken, toToken, fromAmount, outAmountUi } = props;
 
 
   const { mutate: switchNetwork, isPending: switchNetworkLoading } =
@@ -55,10 +55,10 @@ export const useShowConfirmationButton = (props: LiquidityHubPayload) => {
   }, [onShowConfirmation, analyticsInit]);
 
 
-  const isLoading = quote.isLoading || switchNetworkLoading || unwrapLoading;
+  const isLoading = quoteLoading || switchNetworkLoading || unwrapLoading;
 
   return useMemo(() => {
-    if (quote.isLoading) {
+    if (quoteLoading) {
       return {
         disabled: false,
         text: "",
@@ -99,6 +99,15 @@ export const useShowConfirmationButton = (props: LiquidityHubPayload) => {
       };
     }
 
+    if (!quote?.outAmount) {
+      return {
+        disabled: false,
+        text: "",
+        quoteLoading: true,
+        isLoading: true,
+      };
+    }
+
     if (
       eqIgnoreCase(fromToken.address, wToken || "") &&
       isNativeAddress(toToken.address || "")
@@ -112,7 +121,7 @@ export const useShowConfirmationButton = (props: LiquidityHubPayload) => {
     }
 
 
-    if (quote.error || BN(outAmountUi || "0").isZero()) {
+    if (quoteError || BN(outAmountUi || "0").isZero()) {
       return {
         disabled: true,
         text: "No liquidity",
@@ -141,7 +150,9 @@ export const useShowConfirmationButton = (props: LiquidityHubPayload) => {
     wToken,
     unwrap,
     unwrapLoading,
-    quote.isLoading,
-    quote.error,    
+    quoteError,
+    outAmountUi,
+    quoteLoading,
+    quote?.outAmount
   ]);
 };

@@ -57,21 +57,16 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
   );
 
   const resetState = useCallback(() => {
-   setTimeout(() => {
-    setState(
-      (prev) => ({ failures: prev.failures || 0 } as UseLiquidityHubState),
-    );
-   }, 3_00);
+    setTimeout(() => {
+      setState(
+        (prev) =>
+          ({
+            failures: prev.failures || 0,
+            sessionId: prev.sessionId,
+          } as UseLiquidityHubState)
+      );
+    }, 3_00);
   }, [setState]);
-
-  const onSwapFailed = useCallback(() => {
-    updateState({
-      swapStatus: "failed",
-      sessionId: undefined,
-      currentStep: undefined,
-      failures: (state.failures || 0) + 1,
-    });
-  }, [updateState, state.failures]);
 
   const quote = useQuote({
     fromToken: args.fromToken,
@@ -85,6 +80,15 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     sessionId: state.sessionId,
     setSessionId,
   });
+
+  const onSwapFailed = useCallback(() => {
+    updateState({
+      swapStatus: "failed",
+      sessionId: undefined,
+      currentStep: undefined,
+      failures: (state.failures || 0) + 1,
+    });
+  }, [updateState, state.failures]);
 
   const analyticsInit = useAnalytics({
     fromToken: args.fromToken,
@@ -125,7 +129,7 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     if (!state.swapStatus) {
       resetSubmitSwap();
     }
-    if (state.swapStatus === "failed") {
+    if (state.swapStatus === "failed" || state.swapStatus === "success") {
       // refetch quote to get new session id
       quote.refetch();
     }
@@ -142,16 +146,20 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     quote.refetch,
     resetSubmitSwap,
     resetState,
+    state.isWrapped,
   ]);
 
   return {
-    quote,
+    quote: !state.sessionId ? undefined : quote.data,
+    quoteLoading: quote.isLoading,
+    quoteError: quote.error,
     initialQuote: state.initialQuote,
     txHash: state.txHash,
     approvalTxHash: state.approveTxHash,
     wrapTxHash: state.wrapTxHash,
     swapError,
     swapLoading,
+    swapSuccess: state.swapStatus === "success",
     swapStatus: state.swapStatus,
     fromToken: args.fromToken,
     toToken: args.toToken,

@@ -18,7 +18,7 @@ export const useQuote = ({
   disabled,
   slippage,
   sessionId,
-  setSessionId
+  setSessionId,
 }: {
   fromToken?: Token;
   toToken?: Token;
@@ -37,6 +37,8 @@ export const useQuote = ({
   const chainId = context.chainId || _.first(context.supportedChains);
   const wTokenAddress = useChainConfig()?.wToken?.address;
 
+  const pause = showConfirmation && context.quote?.pauseOnConfirmation;
+
   const enabled =
     !!chainId &&
     !!wTokenAddress &&
@@ -47,7 +49,8 @@ export const useQuote = ({
     BN(fromAmount || "0").gt(0) &&
     !!apiUrl &&
     !disabled &&
-    !swapStatus;
+    swapStatus !== 'loading' &&
+    !pause;
 
   const queryKey = [
     QUERY_KEYS.QUOTE,
@@ -81,7 +84,7 @@ export const useQuote = ({
         chainId: chainId!,
       });
 
-      if (quoteResponse.sessionId) {        
+      if (quoteResponse.sessionId) {
         setSessionId(quoteResponse.sessionId);
       }
 

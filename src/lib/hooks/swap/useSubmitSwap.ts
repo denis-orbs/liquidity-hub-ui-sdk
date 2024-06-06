@@ -53,10 +53,7 @@ export const useSubmitSwap = ({
   );
 
   return useMutation({
-    mutationFn: async (props?: {
-      hasFallback?: boolean;
-      onWrapSuccess?: () => void;
-    }) => {
+    mutationFn: async () => {
       if (!sessionId) {
         throw new Error("No session ID found");
       }
@@ -109,7 +106,6 @@ export const useSubmitSwap = ({
           },
         });
         inTokenAddress = wTokenAddress;
-        props?.onWrapSuccess?.();
         updateState({ isWrapped: true });
       }
       if (!hasAllowance) {
@@ -180,17 +176,12 @@ export const useSubmitSwap = ({
         receipt: txDetails.receipt,
       };
     },
-    onError: (error, props) => {
+    onError: (error) => {
       swapAnalytics.onClobFailure();
       // if user rejects the tx, we get back to confirmation step
       if (isTxRejected((error as Error).message)) {
         updateState({ swapStatus: undefined, currentStep: undefined });
         throw error;
-      }
-
-      if (props?.hasFallback) {
-        // fallback to Dex
-        // onCloseSwap();
       }
       Logger(`Swap error: ${error.message}`);
       onSwapFailed();
