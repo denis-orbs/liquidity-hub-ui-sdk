@@ -311,8 +311,7 @@ const SwapModal = () => {
   const priceChangeWarning = usePriceChanged({
     quote,
     initialQuote,
-    swapStatus,
-    showConfirmationModal,
+    enabled: showConfirmationModal && !swapStatus,
     toToken,
   });
 
@@ -552,8 +551,10 @@ const TokenPanel = ({
   const { balance: _balance, isLoading: balanceLoading } = useTokenListBalance(
     token?.address
   );
+
+  const balanceUi = useAmountUI(token?.decimals, _balance);
   const balance = useFormatNumber({
-    value: _balance,
+    value: balanceUi,
   });
 
   const fetchingBalancesAfterTx = useDexState(
@@ -662,14 +663,16 @@ const Watcher = (props: Props) => {
 };
 
 export const TokenListItem = (props: TokenListItemProps) => {
-  const balance = useFormatNumber({ value: props.balance });
+  const balanceUi = useAmountUI(props.token.decimals, props.balance);
+  
+  const balance = useFormatNumber({ value: balanceUi });
   const usdSingleToken = usePriceUsd({ address: props.token.address }).data;
   const usd = useFormatNumber({
     value: useMemo(() => {
-      return BN(props.balance || 0)
+      return BN(balanceUi || 0)
         .multipliedBy(usdSingleToken || 0)
         .toString();
-    }, [props.balance, usdSingleToken]),
+    }, [balanceUi, usdSingleToken]),
   });
 
   return (

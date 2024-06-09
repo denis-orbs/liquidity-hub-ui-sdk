@@ -1,12 +1,18 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMainContext } from "../../provider";
-import { QUERY_KEYS } from "../../config/consts";
+import { QUERY_KEYS, QUOTE_REFETCH_THROTTLE } from "../../config/consts";
 import { useApiUrl } from "./useApiUrl";
 import BN from "bignumber.js";
 import _ from "lodash";
 import { useChainConfig } from "..";
 import { quote } from "../../swap/quote";
-import { ActionStatus, Token } from "../../type";
+import {
+  ActionStatus,
+  QuoteResponse,
+  Token,
+  UseLiquidityHubState,
+  UseQueryData,
+} from "../../type";
 
 export const useQuote = ({
   fromToken,
@@ -18,7 +24,7 @@ export const useQuote = ({
   disabled,
   slippage,
   sessionId,
-  setSessionId,
+  updateState,
 }: {
   fromToken?: Token;
   toToken?: Token;
@@ -28,7 +34,7 @@ export const useQuote = ({
   showConfirmation?: boolean;
   disabled?: boolean;
   slippage: number;
-  setSessionId: (sessionId: string) => void;
+  updateState: (value: Partial<UseLiquidityHubState>) => void;
   sessionId?: string;
 }) => {
   const context = useMainContext();
@@ -39,6 +45,7 @@ export const useQuote = ({
 
   const pause = showConfirmation && context.quote?.pauseOnConfirmation;
 
+  const fetchLimit = context.quote?.fetchLimit || 10;
   const enabled =
     !!chainId &&
     !!wTokenAddress &&
@@ -49,7 +56,7 @@ export const useQuote = ({
     BN(fromAmount || "0").gt(0) &&
     !!apiUrl &&
     !disabled &&
-    swapStatus !== 'loading' &&
+    swapStatus !== "loading" &&
     !pause;
 
   const queryKey = [
@@ -79,32 +86,45 @@ export const useQuote = ({
         slippage,
         signal,
         quoteInterval: context.quote?.refetchInterval,
-        queryClient,
-        queryKey,
         chainId: chainId!,
       });
 
       if (quoteResponse.sessionId) {
-        setSessionId(quoteResponse.sessionId);
+        updateState({ sessionId: quoteResponse.sessionId });
       }
 
-      return quoteResponse;
+      const refetchCount = showConfirmation
+        ? 0
+        : ((queryClient.getQueryData(queryKey) as UseQueryData)?.refetchCount ||
+            0) + 1;
+      console.log({refetchCount});
+      
+      return {
+        quote: quoteResponse,
+        refetchCount,
+        isPassedLimit: refetchCount > fetchLimit,
+        resetCount: () =>
+          queryClient.setQueryData(queryKey, (data: UseQueryData) => {
+            if (!data) return data;
+            return {
+              ...data,
+              refetchCount: 0,
+            };
+          }),
+      };
     },
-    refetchInterval: ({ state }) => {
-      const quoteInterval = context.quote?.refetchInterval || 10_000;
-      const refetchUntilThrottle = context.quote?.refetchUntilThrottle || 10;
-
+    refetchInterval: ({ state: { data } }) => {
+      if (data?.quote.disableRefetch) {
+        return false;
+      }
       if (showConfirmation) {
-        return quoteInterval;
+        return context.quote?.refetchInterval;
       }
-      if (state.data?.disableInterval || swapStatus) {
-        return undefined;
+
+      if (data?.refetchCount && data?.refetchCount > fetchLimit) {
+        return QUOTE_REFETCH_THROTTLE;
       }
-      const refetchCount = state.data?.refetchCount || 0;
-      if (refetchCount > refetchUntilThrottle) {
-        return (refetchCount * quoteInterval) / 2;
-      }
-      return quoteInterval;
+      return context.quote?.refetchInterval;
     },
     staleTime: Infinity,
     enabled,

@@ -2,8 +2,7 @@ import { ContractCallContext, Multicall } from "ethereum-multicall";
 import Web3 from "web3";
 import ERC20Abi from "./abi/ERC20Abi.json";
 import { Balances, Token } from "./type";
-import { amountUi, isNativeAddress, Logger } from "./util";
-import BN from "bignumber.js";
+import {isNativeAddress, Logger } from "./util";
 import _ from "lodash";
 export const getBalances = async (
   tokens: Token[],
@@ -44,7 +43,7 @@ export const getBalances = async (
   const balances: { [key: string]: string } = {};
 
   if (native) {
-    balances[native.address] = amountUi(native.decimals, BN(nativeBalance));
+    balances[native.address] = nativeBalance
   }
 
   try {
@@ -55,14 +54,11 @@ export const getBalances = async (
 
       const token = (value.originalContractCallContext as any).token;
 
-      const balance = web3.utils.hexToNumberString(result)
-      balances[token.address] =
-      balance === "1"
-          ? "0"
-          : amountUi(token.decimals, BN(balance));
+      const balance = web3.utils.hexToNumberString(result);
+      balances[token.address] = balance === "1" ? "0" : balance;
     });
   } catch (error) {
-    Logger('Multicall get balances failed');
+    Logger("Multicall get balances failed");
   }
 
   const res = tokens.map((token) => {

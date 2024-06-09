@@ -48,7 +48,7 @@ export const FROM_AMOUNT_DEBOUNCE = 300;
 export const EMPTY_QUOTE_RESPONSE = {
   outAmount: "0",
   outAmountUI: "0",
-  disableInterval: true,
+  disableRefetch: true,
   serializedOrder: "",
   permitData: "",
   callData: "",
@@ -56,3 +56,6 @@ export const EMPTY_QUOTE_RESPONSE = {
   ui: {},
 } as any as QuoteResponse;
 
+
+
+export const QUOTE_REFETCH_THROTTLE = 60_000

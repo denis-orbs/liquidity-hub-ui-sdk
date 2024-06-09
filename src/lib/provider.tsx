@@ -90,8 +90,8 @@ export const LiquidityHubProvider = ({
           connectWallet,
           getTokens,
           quote: {
+            ...quote,
             refetchInterval: quote?.refetchInterval || DEFAULT_QUOTE_INTERVAL,
-            pauseOnConfirmation: quote?.pauseOnConfirmation
           },
           swap: {
             maxFailures: swap?.maxFailures,

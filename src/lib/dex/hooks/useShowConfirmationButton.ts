@@ -108,6 +108,13 @@ export const useShowConfirmationButton = (props: LiquidityHubPayload) => {
       };
     }
 
+    if(BN(fromAmount || 0).gt(fromTokenBalance || 0)) {
+      return {
+        disabled: true,
+        text: "Insufficient balance",
+      };
+    }
+
     if (
       eqIgnoreCase(fromToken.address, wToken || "") &&
       isNativeAddress(toToken.address || "")

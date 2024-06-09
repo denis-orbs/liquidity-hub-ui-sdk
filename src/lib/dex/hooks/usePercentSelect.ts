@@ -4,6 +4,7 @@ import BN from "bignumber.js";
 import { useTokenListBalance } from "../hooks/useTokenListBalance";
 import { useShallow } from "zustand/react/shallow";
 import { useDexState } from "../../store/dex";
+import { useAmountUI } from "../../hooks";
 
 
 export const usePercentSelect = () => {
@@ -15,15 +16,15 @@ export const usePercentSelect = () => {
   );
 
   const {balance: fromTokenBalance} = useTokenListBalance(fromToken?.address);
-
+    const balanceUi = useAmountUI(fromToken?.decimals, fromTokenBalance)
   return useCallback(
     (percent: number) => {
       updateState({
-        fromAmount: new BN(fromTokenBalance || "0")
+        fromAmount: new BN(balanceUi || "0")
           .multipliedBy(percent)
           .toString(),
       });
     },
-    [updateState, fromTokenBalance]
+    [updateState, balanceUi]
   );
 };

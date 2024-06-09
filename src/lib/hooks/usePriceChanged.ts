@@ -1,34 +1,34 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import BN from "bignumber.js";
 import { useAmountUI } from "./useAmountUI";
-import { ActionStatus, QuoteResponse, Token } from "..";
+import { QuoteResponse, Token } from "..";
 
 export function usePriceChanged({
   quote,
-  showConfirmationModal,
+  enabled,
   toToken,
   initialQuote,
-  swapStatus,
 }: {
   quote?: QuoteResponse;
-  showConfirmationModal?: boolean;
+  enabled?: boolean;
   toToken?: Token;
   initialQuote?: QuoteResponse;
-  swapStatus?: ActionStatus;
 }) {
   const [acceptedAmountOut, setAcceptedAmountOut] = useState<
     string | undefined
   >(undefined);
 
   useEffect(() => {
-    // initiate
-    if (!showConfirmationModal) {
+    if (!enabled) {
       setAcceptedAmountOut(undefined);
     }
+  }, [enabled]);
+
+  useEffect(() => {
     if (!acceptedAmountOut) {
       setAcceptedAmountOut(initialQuote?.minAmountOut);
     }
-  }, [initialQuote, acceptedAmountOut, showConfirmationModal]);
+  }, [initialQuote, acceptedAmountOut]);
 
   const acceptChanges = useCallback(() => {
     setAcceptedAmountOut(quote?.minAmountOut);
@@ -40,14 +40,14 @@ export function usePriceChanged({
       BN(acceptedAmountOut || 0).isZero() ||
       !quote?.minAmountOut ||
       BN(quote?.minAmountOut || 0).isZero() ||
-      swapStatus
+      !enabled
     )
       return false;
     // if new price is less than the accepted price
     if (BN(quote.minAmountOut).isLessThan(BN(acceptedAmountOut))) {
       return true;
     }
-  }, [acceptedAmountOut, quote?.minAmountOut, swapStatus]);
+  }, [acceptedAmountOut, quote?.minAmountOut, enabled]);
 
   return {
     shouldAccept,

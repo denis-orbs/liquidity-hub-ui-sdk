@@ -1,4 +1,3 @@
-import { QueryKey } from "@tanstack/react-query";
 import BN from "bignumber.js";
 import _ from "lodash";
 import { swapAnalytics } from "../analytics";
@@ -31,8 +30,6 @@ interface Args {
   slippage: number;
   signal: AbortSignal;
   quoteInterval?: number;
-  queryClient: any;
-  queryKey: QueryKey;
   chainId: number;
 }
 
@@ -49,8 +46,6 @@ export const quote = async ({
   slippage,
   signal,
   quoteInterval,
-  queryClient,
-  queryKey,
   chainId,
 }: Args) => {
   swapAnalytics.onQuoteRequest();
@@ -97,7 +92,7 @@ export const quote = async ({
       }),
       signal,
     });
-    Logger('calling quote api')
+    Logger("calling quote api");
     quote = await response.json();
 
     if (!quote) {
@@ -113,7 +108,6 @@ export const quote = async ({
     }
     swapAnalytics.onQuoteSuccess(count(), quote);
 
-
     Logger({
       fromAmount,
       fromAddress: fromToken?.address,
@@ -124,18 +118,14 @@ export const quote = async ({
       gasAmountOut: quote.gasAmountOut,
       refetchInterval: quoteInterval,
     });
-    const res: QuoteResponse = {
-        originalQuote: quote,
+    return {
+      originalQuote: quote,
       ...quote,
       outAmount: safeBN(quote.outAmount) || "",
       minAmountOut: safeBN(quote.minAmountOut || 0) || "",
       gasAmountOut: safeBN(quote.gasAmountOut),
     };
-    res.refetchCount =
-      ((queryClient.getQueryData(queryKey) as QuoteResponse)?.refetchCount ||
-        0) + 1;
 
-    return res;
   } catch (error: any) {
     swapAnalytics.onQuoteFailed(error.message, count(), quote);
 

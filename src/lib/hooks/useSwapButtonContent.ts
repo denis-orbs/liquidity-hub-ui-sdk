@@ -12,5 +12,5 @@ export function useSwapButtonContent(
     if (isNativeAddress(fromTokenAddress || "")) return "Wrap and Swap";
     if (!hasAllowance) return "Approve and Swap";
     return "Sign and Swap";
-  }, [fromTokenAddress, fromAmount, hasAllowance]);
+  }, [fromTokenAddress, hasAllowance]);
 }

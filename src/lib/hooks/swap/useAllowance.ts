@@ -22,7 +22,7 @@ const useApproved = (address?: string) => {
 
         return BN(allowance?.toString() || "0").gte(fromAmount);
       } catch (error) {
-        return false;
+        return
       }
     },
     [account, address, getContract]

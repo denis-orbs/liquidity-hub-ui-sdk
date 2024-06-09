@@ -69,7 +69,7 @@ export interface ProviderArgs {
   };
   quote?: {
     refetchInterval?: number;
-    refetchUntilThrottle?: number;
+    fetchLimit?: number;
     pauseOnConfirmation?: boolean;
   };
 }
@@ -143,13 +143,20 @@ export interface UseLiquidityHubState {
   approveTxHash?: string;
   wrapTxHash?: string;
   unwrapTxHash?: string;
+  quoteCount: number;
 }
 
 
 export interface QuoteResponse extends OriginalQuote {
-  disableInterval?: boolean;
-  refetchCount?: number;
+  disableRefetch?: boolean;
   originalQuote?: OriginalQuote;
+}
+
+export interface UseQueryData {
+  quote: QuoteResponse | undefined;
+  refetchCount?: number;
+  resetCount?: () => void;
+  isPassedLimit?: boolean;
 }
 
 export enum LH_CONTROL {

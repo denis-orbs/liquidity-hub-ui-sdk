@@ -21,6 +21,7 @@ import { swapX } from "../../swap/swapX";
 import { useApiUrl } from "./useApiUrl";
 import { useMutation } from "@tanstack/react-query";
 import { useAllowance } from "./useAllowance";
+import _ from "lodash";
 
 export const useSubmitSwap = ({
   fromAmount,
@@ -28,16 +29,16 @@ export const useSubmitSwap = ({
   toToken,
   quote,
   updateState,
-  onSwapFailed,
   sessionId,
+  failures
 }: {
   fromAmount?: string;
   fromToken?: Token;
   toToken?: Token;
   quote?: QuoteResponse;
   updateState: (value: Partial<UseLiquidityHubState>) => void;
-  onSwapFailed: () => void;
   sessionId?: string;
+  failures: number;
 }) => {
   const { web3, provider, account, chainId } = useMainContext();
   const chainConfig = useChainConfig();
@@ -82,6 +83,10 @@ export const useSubmitSwap = ({
       }
       if (!fromAmount) {
         throw new Error("Missing from amount");
+      }
+      
+      if(_.isUndefined(hasAllowance)) {
+        throw new Error("Allowance not found");
       }
 
       const isNativeIn = isNativeAddress(fromToken.address);
@@ -144,7 +149,7 @@ export const useSubmitSwap = ({
         account,
         chainId,
         apiUrl,
-      });
+      }).then().catch();
       const txHash = await waitForSwap(chainId, apiUrl, sessionId, account);
       if (!txHash) {
         throw new Error("Swap failed");
@@ -184,7 +189,12 @@ export const useSubmitSwap = ({
         throw error;
       }
       Logger(`Swap error: ${error.message}`);
-      onSwapFailed();
+      updateState({
+        swapStatus: "failed",
+        sessionId: undefined,
+        currentStep: undefined,
+        failures: (failures || 0) + 1,
+      });
       swapAnalytics.clearState();
       refetchAllowance();
     },
