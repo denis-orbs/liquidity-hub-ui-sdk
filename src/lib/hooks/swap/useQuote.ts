@@ -97,8 +97,7 @@ export const useQuote = ({
         ? 0
         : ((queryClient.getQueryData(queryKey) as UseQueryData)?.refetchCount ||
             0) + 1;
-      console.log({refetchCount});
-      
+
       return {
         quote: quoteResponse,
         refetchCount,
