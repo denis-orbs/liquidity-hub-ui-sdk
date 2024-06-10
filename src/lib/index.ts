@@ -6,6 +6,7 @@ export * from "./config/consts";
 export * from "./type";
 export { TokenList } from "./components/TokenList";
 export * from "./hooks";
+export * from "./config/networks";
 
 export * as AMMHooks from "./dex/hooks";
 export * from "./dex/Widget";
