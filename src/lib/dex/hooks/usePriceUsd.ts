@@ -16,7 +16,7 @@ export const usePriceUsd = ({
   disabled?: boolean;
 }) => {
   const { chainId: connectedChainId, supportedChains } = useMainContext();
-  const chainId = connectedChainId || supportedChains[0];
+  const chainId = connectedChainId || supportedChains?.[0];
   
   return useQuery({
     queryFn: async () => {

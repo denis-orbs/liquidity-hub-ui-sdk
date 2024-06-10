@@ -78,8 +78,8 @@ export const useShowConfirmationButton = (props: LiquidityHubPayload) => {
     if (wrongChain) {
       return {
         disabled: false,
-        text: `Switch to ${getChainConfig(supportedChains[0])?.chainName}`,
-        onClick: () => switchNetwork?.(supportedChains[0]!),
+        text: `Switch to ${getChainConfig(supportedChains?.[0])?.name}`,
+        onClick: () => switchNetwork?.(supportedChains?.[0]!),
         switchNetworkLoading,
         isLoading,
       };

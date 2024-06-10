@@ -5,7 +5,6 @@ import { QUERY_KEYS } from "../../config/consts";
 import { useIsInvalidChain } from "../../hooks";
 import { useMainContext } from "../../provider";
 import { Token } from "../../type";
-import { getChainConfig } from "../../util";
 
 export const useTokensList = () => {
   const {
@@ -25,7 +24,6 @@ export const useTokensList = () => {
 
       if (!chainId) return [];
 
-      const chainConfig = getChainConfig(chainId);
       let tokens: Token[] = [];
 
       if (getTokensContext) {
@@ -33,13 +31,10 @@ export const useTokensList = () => {
       }
 
       if (!_.size(tokens)) {
-        tokens =
-          (await chainConfig?.getTokens?.()) ||
-          (await api.getTokens(chainId!)) ||
-          [];
+        tokens = await api.getTokensByChainId(chainId!)
       }      
 
-      return tokens;
+      return tokens || [];
     },
     queryKey: [QUERY_KEYS.TOKENS_LIST, connectedChainId],
     staleTime: Infinity,

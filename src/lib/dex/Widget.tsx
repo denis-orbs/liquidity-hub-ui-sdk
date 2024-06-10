@@ -628,6 +628,7 @@ export interface Props extends ProviderArgs {
   initialToToken?: string;
   Modal: ModalType;
   slippage?: number;
+  chains?: number[];
 }
 
 export const Widget = (props: Props) => {

@@ -54,7 +54,7 @@ export interface Token {
 }
 
 export interface ProviderArgs {
-  supportedChains: number[];
+  supportedChains?: number[];
   provider?: any;
   account?: string;
   chainId?: number;
@@ -130,22 +130,21 @@ export interface OriginalQuote {
 }
 
 export interface UseLiquidityHubState {
-  showConfirmation: boolean,
-  swapStatus:ActionStatus | undefined,
-  currentStep: STEPS | undefined,
-  initialQuote: QuoteResponse | undefined,
-  swapError:string | undefined,
-  failures: number,
-  txHash: string | undefined,
-  isWrapped  : boolean,
-  isSigned: boolean,
+  showConfirmation: boolean;
+  swapStatus: ActionStatus | undefined;
+  currentStep: STEPS | undefined;
+  initialQuote: QuoteResponse | undefined;
+  swapError: string | undefined;
+  failures: number;
+  txHash: string | undefined;
+  isWrapped: boolean;
+  isSigned: boolean;
   sessionId?: string;
   approveTxHash?: string;
   wrapTxHash?: string;
   unwrapTxHash?: string;
   quoteCount: number;
 }
-
 
 export interface QuoteResponse extends OriginalQuote {
   disableRefetch?: boolean;
@@ -171,11 +170,7 @@ export enum STEPS {
   SEND_TX,
 }
 
-export type ActionStatus =
-  | "loading"
-  | "success"
-  | "failed"
-  | undefined;
+export type ActionStatus = "loading" | "success" | "failed" | undefined;
 
 export interface Step {
   title: ReactNode;
@@ -223,13 +218,28 @@ export type Order = {
 export type Orders = { [address: string]: { [chain: string]: Order[] } };
 
 export interface Network {
-  native: Token;
-  wToken?: Token;
-  chainId: number;
-  chainName: string;
-  explorerUrl: string;
-  getTokens?: () => Promise<Token[]>;
+  id: number;
+  name: string;
+  shortname: string;
+  native: {
+    address: string;
+    symbol: string;
+    decimals: number;
+    logoUrl: string;
+  };
+  wToken: {
+    symbol: string;
+    address: string;
+    decimals: number;
+    logoUrl: string;
+  };
+  logoUrl: string;
+  explorer: string;
   apiUrl: string;
+  eip1559: boolean;
+  baseGasPrice: number;
+  pendingBlocks: boolean;
+  publicRpcUrl: string;
 }
 
 export type Abi = AbiItem[];
@@ -242,7 +252,6 @@ export declare type PermitData = {
 };
 
 export type LiquidityHubPayload = ReturnType<typeof useLiquidityHub>;
-
 
 export interface SwapConfirmationArgs extends LiquidityHubPayload {
   fromTokenUsd?: string | number;

@@ -8,7 +8,6 @@ import { useChainConfig } from "..";
 import { quote } from "../../swap/quote";
 import {
   ActionStatus,
-  QuoteResponse,
   Token,
   UseLiquidityHubState,
   UseQueryData,
@@ -39,8 +38,7 @@ export const useQuote = ({
 }) => {
   const context = useMainContext();
   const apiUrl = useApiUrl();
-
-  const chainId = context.chainId || _.first(context.supportedChains);
+  const chainId = context.chainId
   const wTokenAddress = useChainConfig()?.wToken?.address;
 
   const pause = showConfirmation && context.quote?.pauseOnConfirmation;

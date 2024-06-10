@@ -6,7 +6,7 @@ import {
   QUOTE_ERRORS,
   zeroAddress,
 } from "../config/consts";
-import { OriginalQuote, QuoteResponse, Token } from "../type";
+import { OriginalQuote, Token } from "../type";
 import {
   counter,
   amountUi,

@@ -10,7 +10,7 @@ import { useSwapConfirmationContext } from "../../components/SwapConfirmation/co
 export const useSteps = () => {
   const { fromToken, currentStep, isSigned, fromAmount } =
     useSwapConfirmationContext();
-  const explorer = useChainConfig()?.explorerUrl;
+  const explorer = useChainConfig()?.explorer;
   const { data: hasAllowance, isLoading: allowanceLoading } = useAllowance(
     fromToken?.address,
     fromAmount

@@ -4,10 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import { useAccount, useConfig, useNetwork } from "wagmi";
 import styled from "styled-components";
 import { Widget } from "./lib/dex/Widget";
-import { supportedChains } from "./lib";
 import { RainbowProvider } from "./RainbowProvider";
 import _ from "lodash";
 import { Modal } from "./components/Modal";
+import { networks } from "./lib/config/networks";
 
 export const useProvider = () => {
   const { data } = useConfig();
@@ -47,7 +47,7 @@ function Wrapped() {
       partner="playground"
       account={address}
       initialFromToken="USDT"
-      supportedChains={_.map(supportedChains, "chainId")}
+      supportedChains={_.map(networks, it => it.id)}
     />
   );
 }

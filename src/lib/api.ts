@@ -1,11 +1,10 @@
 import _ from "lodash";
 import { zeroAddress } from "./config/consts";
-import { supportedChains } from "./config/supportedChains";
-import { networks } from "./networks";
 import { Token } from "./type";
 import { getBaseAssets } from "./util";
 import BN from "bignumber.js";
 import { create } from "zustand";
+import { networks } from "./config/networks";
 
 async function fetchPriceParaswap(
   chainId: number,
@@ -60,9 +59,11 @@ const useTokensStore = create<TokenListStore>((set) => ({
 }));
 
 const getTokens = async (chainId: number): Promise<Token[]> => {
-  let _tokens = useTokensStore.getState().tokens
+  let _tokens = useTokensStore.getState().tokens;
   if (!_.size(_tokens)) {
-    const payload = await fetch("https://lhthena.s3.us-east-2.amazonaws.com/uniswap-list.json");
+    const payload = await fetch(
+      "https://lhthena.s3.us-east-2.amazonaws.com/uniswap-list.json"
+    );
     const res = await payload.json();
     _tokens = res.tokens;
     useTokensStore.getState().setTokens(_tokens);
@@ -71,10 +72,7 @@ const getTokens = async (chainId: number): Promise<Token[]> => {
   const tokens = _tokens.filter((it: any) => it.chainId === chainId);
 
   const baseAssets = [zeroAddress, ...getBaseAssets(chainId)];
-  const native = _.find(
-    supportedChains,
-    (it) => it.chainId === chainId
-  )?.native;
+  const native = _.find(networks, (it) => it.id === chainId)?.native;
 
   const sorted = _.sortBy(tokens, (t: any) => {
     const index = baseAssets.indexOf(t.address);
@@ -99,7 +97,7 @@ const getPolygonZkEvmTokens = async (): Promise<Token[]> => {
   const res = await payload.json();
 
   const native = {
-    ...networks.eth.wToken,
+    ...networks.polygonZkevm.wToken,
     address: "0x4F9A0e7FD2Bf6067db6994CF12E4495Df938E6e9",
   };
 
@@ -116,9 +114,10 @@ const getPolygonZkEvmTokens = async (): Promise<Token[]> => {
   return [native, ...result];
 };
 
-
 const getFantomTokens = async (): Promise<Token[]> => {
-  const res = await fetch("https://raw.githubusercontent.com/viaprotocol/tokenlists/main/tokenlists/ftm.json");
+  const res = await fetch(
+    "https://raw.githubusercontent.com/viaprotocol/tokenlists/main/tokenlists/ftm.json"
+  );
   const data = await res.json();
   return data.map((token: any) => {
     return {
@@ -127,13 +126,14 @@ const getFantomTokens = async (): Promise<Token[]> => {
       decimals: token.decimals,
       logoUrl: token.logoURI,
       name: token.name,
-    }
-  })
-}
-
+    };
+  });
+};
 
 const getLineaTokens = async (): Promise<Token[]> => {
-  const tokens = await fetch("https://api.lynex.fi/api/v1/assets").then((res) => res.json()).then((res) => res.data);
+  const tokens = await fetch("https://api.lynex.fi/api/v1/assets")
+    .then((res) => res.json())
+    .then((res) => res.data);
   return tokens.map((token: any) => {
     return {
       address: token.address,
@@ -141,14 +141,46 @@ const getLineaTokens = async (): Promise<Token[]> => {
       decimals: token.decimals,
       logoUrl: token.logoURI,
       name: token.name,
+    };
+  });
+};
+
+
+const getBlastTokens = async (): Promise<Token[]> => {
+
+  const tokens = await fetch('https://fenix-dex-api.vercel.app/token-prices').then((res) => res.json())
+
+  return _.map(tokens, (token: any) => {
+    return {
+      address: token.basetoken.address,
+      symbol: token.basetoken.symbol,
+      decimals: token.decimals,
+      logoUrl: token.logourl,
+      name: token.basetoken.name,
     }
   })
+
 }
 
+
+
+export const getTokensByChainId = async (chainId: number): Promise<Token[]> => {
+  switch (chainId) {
+    case networks.polygonZkevm.id:
+      return getPolygonZkEvmTokens();
+    case networks.ftm.id:
+      return getFantomTokens();
+    case networks.linea.id:
+      return getLineaTokens();
+    case networks.blast.id:
+      return getBlastTokens();
+
+    default:
+      return getTokens(chainId);
+  }
+};
+
 export const api = {
-  getTokens,
-  getPolygonZkEvmTokens,
   priceUsd: fetchPrice,
-  getFantomTokens,
-  getLineaTokens
+  getTokensByChainId,
 };

@@ -2,13 +2,12 @@ import BN, { BigNumber } from "bignumber.js";
 import Web3 from "web3";
 import { ActionStatus, Network, Token } from "./type";
 import _ from "lodash";
-import { supportedChains } from "./config/supportedChains";
 import { nativeTokenAddresses, QUOTE_ERRORS, zero } from "./config/consts";
-import { networks } from "./networks";
 import { numericFormatter } from "react-number-format";
 import { useLiquidityHubPersistedStore } from "./store/main";
 import erc20abi from "./abi/ERC20Abi.json";
 import iwethabi from "./abi/IWETHAbi.json";
+import { networks } from "./config/networks";
 
 export const amountBN = (decimals?: number, amount?: string) =>
   parsebn(amount || "")
@@ -27,7 +26,7 @@ export function delay(ms: number) {
 
 export const getChainConfig = (chainId?: number): Network | undefined => {
   if (!chainId) return undefined;
-  return Object.values(supportedChains).find((it) => it.chainId === chainId);
+  return Object.values(networks).find((it) => it.id === chainId);
 };
 
 export async function waitForTxReceipt(web3: Web3, txHash: string) {
@@ -338,7 +337,7 @@ export function parsebn(n: BN.Value, defaultValue?: BN, fmt?: BN.Format): BN {
 
 export const getBaseAssets = (chainId: number) => {
   switch (chainId) {
-    case supportedChains.polygon.chainId:
+    case networks.poly.id:
       return [
         "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
         "0x3A58a54C066FdC0f2D55FC9C89F0415C92eBf3C4",
@@ -350,7 +349,7 @@ export const getBaseAssets = (chainId: number) => {
         "0xdAb529f40E671A1D4bF91361c21bf9f0C9712ab7",
         "0x614389EaAE0A6821DC49062D56BDA3d9d45Fa2ff",
       ];
-    case supportedChains.bsc.chainId:
+    case networks.bsc.id:
       return [
         "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
         "0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c",
@@ -361,9 +360,7 @@ export const getBaseAssets = (chainId: number) => {
         "0x2170Ed0880ac9A755fd29B2688956BD959F933F8",
         "0xeBd49b26169e1b52c04cFd19FCf289405dF55F80",
       ];
-    case supportedChains.zkEvm.chainId:
-      return [];
-    case supportedChains.base.chainId:
+    case networks.base.id:
       return [
         "0x4200000000000000000000000000000000000006",
         "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
