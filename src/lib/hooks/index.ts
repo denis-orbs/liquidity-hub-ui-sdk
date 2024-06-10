@@ -1,4 +1,3 @@
-export * from "./useIsInvalidChain";
 export * from "./useSwitchNetwork";
 export * from "./useChainConfig";
 export * from "./useFormatNumber";

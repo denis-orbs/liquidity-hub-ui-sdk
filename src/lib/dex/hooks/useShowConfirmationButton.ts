@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useTokenListBalance } from "./useTokenListBalance";
 import { useTokenListBalances } from "./useTokenListBalances";
 import { LiquidityHubPayload, useSwitchNetwork, useUnwrap } from "../..";
-import { useIsInvalidChain, useChainConfig } from "../../hooks";
+import { useChainConfig } from "../../hooks";
 import { useMainContext } from "../../provider";
 import { useDexState } from "../../store/dex";
 import {
@@ -14,6 +14,7 @@ import {
   eqIgnoreCase,
   isNativeAddress,
 } from "../../util";
+import { useIsInvalidChain } from "./useIsInvalidChain";
 
 export const useUnwrapMF = () => {
   const { refetch } = useTokenListBalances();

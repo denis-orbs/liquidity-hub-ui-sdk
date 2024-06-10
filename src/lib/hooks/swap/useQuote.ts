@@ -42,13 +42,12 @@ export const useQuote = ({
   const wTokenAddress = useChainConfig()?.wToken?.address;
 
   const pause = showConfirmation && context.quote?.pauseOnConfirmation;
-
+  
   const fetchLimit = context.quote?.fetchLimit || 10;
   const enabled =
     !!chainId &&
     !!wTokenAddress &&
     !!context.partner &&
-    !!chainId &&
     !!fromToken &&
     !!toToken &&
     BN(fromAmount || "0").gt(0) &&

@@ -1,33 +1,30 @@
 import { ConnectButton, useConnectModal } from "@rainbow-me/rainbowkit";
 
 import { useCallback, useEffect, useState } from "react";
-import { useAccount, useConfig, useNetwork } from "wagmi";
+import { useAccount } from "wagmi";
 import styled from "styled-components";
 import { Widget } from "./lib/dex/Widget";
 import { RainbowProvider } from "./RainbowProvider";
 import _ from "lodash";
 import { Modal } from "./components/Modal";
 import { networks } from "./lib/config/networks";
+import Web3 from "web3";
 
 export const useProvider = () => {
-  const { data } = useConfig();
-  const { address, connector } = useAccount();
+  const { connector, address } = useAccount();
 
   const [provider, setProvider] = useState<any>(undefined);
 
   const setProviderFromConnector = useCallback(async () => {
-    const res = await connector?.getProvider();
-    setProvider(res);
+    try {
+      const res = await connector?.getProvider();
+      setProvider(res);
+    } catch (error) {}
   }, [setProvider, connector]);
 
   useEffect(() => {
-    const provider = (data as any)?.provider;
-    if (provider) {
-      setProvider(provider);
-    } else {
-      setProviderFromConnector();
-    }
-  }, [address, setProviderFromConnector, data]);
+    setProviderFromConnector();
+  }, [address, setProviderFromConnector]);
 
   return provider;
 };
@@ -35,8 +32,9 @@ export const useProvider = () => {
 function Wrapped() {
   const { address } = useAccount();
   const provider = useProvider();
+  const connectedChainId =
+    provider?.chainId && Web3.utils.hexToNumber(provider.chainId);
 
-  const connectedChainId = useNetwork().chain?.id;
   const { openConnectModal } = useConnectModal();
   return (
     <Widget
@@ -47,7 +45,7 @@ function Wrapped() {
       partner="playground"
       account={address}
       initialFromToken="USDT"
-      supportedChains={_.map(networks, it => it.id)}
+      supportedChains={_.map(networks, (it) => it.id)}
     />
   );
 }

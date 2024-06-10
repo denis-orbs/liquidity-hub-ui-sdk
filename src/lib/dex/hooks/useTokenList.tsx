@@ -2,9 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import _ from "lodash";
 import { api } from "../../api";
 import { QUERY_KEYS } from "../../config/consts";
-import { useIsInvalidChain } from "../../hooks";
 import { useMainContext } from "../../provider";
 import { Token } from "../../type";
+import { useIsInvalidChain } from "./useIsInvalidChain";
 
 export const useTokensList = () => {
   const {

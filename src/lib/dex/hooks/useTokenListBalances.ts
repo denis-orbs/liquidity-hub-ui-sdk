@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import _ from "lodash";
 import { QUERY_KEYS } from "../../config/consts";
-import { useIsInvalidChain } from "../../hooks";
 import { getBalances } from "../../multicall";
 import { useMainContext } from "../../provider";
+import { useIsInvalidChain } from "./useIsInvalidChain";
 import { useTokensList } from "./useTokenList";
 
 export const useTokenListBalances = () => {
