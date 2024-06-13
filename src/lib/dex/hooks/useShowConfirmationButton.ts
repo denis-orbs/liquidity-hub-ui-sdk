@@ -1,20 +1,16 @@
 import BN from "bignumber.js";
 import { useCallback, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { useMutation } from "@tanstack/react-query";
 import { useTokenListBalance } from "./useTokenListBalance";
 import { useTokenListBalances } from "./useTokenListBalances";
 import { LiquidityHubPayload, useSwitchNetwork, useUnwrap } from "../..";
-import { useChainConfig } from "../../hooks";
+import { useAmountBN, useChainConfig } from "../../hooks";
 import { useMainContext } from "../../provider";
 import { useDexState } from "../../store/dex";
-import {
-  amountBN,
-  getChainConfig,
-  eqIgnoreCase,
-  isNativeAddress,
-} from "../../util";
+import { getChainConfig } from "../../util";
 import { useIsInvalidChain } from "./useIsInvalidChain";
+import { useWrapOrUnwrapOnly } from "../../hooks/hooks";
+import { useWrap } from "../../hooks/useWrap";
 
 export const useUnwrapMF = () => {
   const { refetch } = useTokenListBalances();
@@ -24,21 +20,52 @@ export const useUnwrapMF = () => {
       fromToken: s.fromToken,
     }))
   );
+  const amount = useAmountBN(fromToken?.decimals, fromAmount);
 
-  const unwrap = useUnwrap();
-  return useMutation({
-    mutationFn: async () => {
-      return unwrap(amountBN(fromToken?.decimals, fromAmount).toString());
+  const unwrapMF = useUnwrap();
+  return {
+    ...unwrapMF,
+    mutate: () => {
+      return unwrapMF.mutate({ fromAmount: amount, onSuccess: refetch });
     },
-    onSuccess: () => {
-      refetch();
+  };
+};
+
+export const useWrapMF = () => {
+  const { refetch } = useTokenListBalances();
+  const { fromAmount, fromToken } = useDexState(
+    useShallow((s) => ({
+      fromAmount: s.fromAmount,
+      fromToken: s.fromToken,
+    }))
+  );
+
+  const wrapMF = useWrap();
+  const amount = useAmountBN(fromToken?.decimals, fromAmount);
+  return {
+    ...wrapMF,
+    mutate: () => {
+      return wrapMF.mutate({
+        fromTokenAddress: fromToken?.address,
+        fromAmount: amount,
+        onSuccess: refetch,
+      });
     },
-  });
+  };
 };
 
 export const useShowConfirmationButton = (props: LiquidityHubPayload) => {
-  const { quote, quoteLoading, quoteError, analyticsInit, onShowConfirmation, fromToken, toToken, fromAmount, outAmountUi } = props;
-
+  const {
+    quote,
+    quoteLoading,
+    quoteError,
+    analyticsInit,
+    onShowConfirmation,
+    fromToken,
+    toToken,
+    fromAmount,
+    outAmountUi,
+  } = props;
 
   const { mutate: switchNetwork, isPending: switchNetworkLoading } =
     useSwitchNetwork();
@@ -48,6 +75,8 @@ export const useShowConfirmationButton = (props: LiquidityHubPayload) => {
 
   const wToken = useChainConfig()?.wToken?.address;
   const { mutate: unwrap, isPending: unwrapLoading } = useUnwrapMF();
+  const { mutate: wrap, isPending: wrapLoading } = useWrapMF();
+
   const { connectWallet, account, supportedChains } = useMainContext();
 
   const onSumbit = useCallback(() => {
@@ -55,8 +84,13 @@ export const useShowConfirmationButton = (props: LiquidityHubPayload) => {
     onShowConfirmation();
   }, [onShowConfirmation, analyticsInit]);
 
+  const { isUnwrapOnly, isWrapOnly } = useWrapOrUnwrapOnly(
+    fromToken?.address,
+    toToken?.address
+  );
 
-  const isLoading = quoteLoading || switchNetworkLoading || unwrapLoading;
+  const isLoading =
+    quoteLoading || switchNetworkLoading || unwrapLoading || wrapLoading;
 
   return useMemo(() => {
     if (quoteLoading) {
@@ -100,6 +134,25 @@ export const useShowConfirmationButton = (props: LiquidityHubPayload) => {
       };
     }
 
+    if (isWrapOnly) {
+      return {
+        disabled: false,
+        text: "Wrap",
+        onClick: wrap,
+        isLoading,
+      };
+    }
+
+    if (isUnwrapOnly) {
+      return {
+        disabled: false,
+        text: "Unwrap",
+        onClick: unwrap,
+        uwrapLoading: unwrapLoading,
+        isLoading: unwrapLoading,
+      };
+    }
+
     if (!quote?.outAmount) {
       return {
         disabled: false,
@@ -109,25 +162,12 @@ export const useShowConfirmationButton = (props: LiquidityHubPayload) => {
       };
     }
 
-    if(BN(fromAmount || 0).gt(fromTokenBalance || 0)) {
+    if (BN(fromAmount || 0).gt(fromTokenBalance || 0)) {
       return {
         disabled: true,
         text: "Insufficient balance",
       };
     }
-
-    if (
-      eqIgnoreCase(fromToken.address, wToken || "") &&
-      isNativeAddress(toToken.address || "")
-    ) {
-      return {
-        text: "Unwrap",
-        onClick: unwrap,
-        uwrapLoading: unwrapLoading,
-        isLoading,
-      };
-    }
-
 
     if (quoteError || BN(outAmountUi || "0").isZero()) {
       return {
@@ -161,6 +201,9 @@ export const useShowConfirmationButton = (props: LiquidityHubPayload) => {
     quoteError,
     outAmountUi,
     quoteLoading,
-    quote?.outAmount
+    quote?.outAmount,
+    isUnwrapOnly,
+    isWrapOnly,
+    wrap
   ]);
 };

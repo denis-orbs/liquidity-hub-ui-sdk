@@ -9,10 +9,8 @@ import {
 import { OriginalQuote, Token } from "../type";
 import {
   counter,
-  amountUi,
   isNativeAddress,
   shouldReturnZeroOutAmount,
-  eqIgnoreCase,
   Logger,
   safeBN,
 } from "../util";
@@ -52,25 +50,6 @@ export const quote = async ({
   let quote: OriginalQuote | undefined = undefined;
   const count = counter();
 
-  const isUnwrap =
-    eqIgnoreCase(wTokenAddress || "", fromToken?.address || "") &&
-    isNativeAddress(toToken?.address || "");
-
-  const isWrap =
-    eqIgnoreCase(wTokenAddress || "", toToken?.address || "") &&
-    isNativeAddress(fromToken?.address || "");
-
-  if (isUnwrap || isWrap) {
-    const amount = amountUi(fromToken?.decimals, new BN(fromAmount || "0"));
-    return {
-      ...EMPTY_QUOTE_RESPONSE,
-      outAmount: fromAmount!,
-      ui: {
-        minAmountOut: amount,
-        outAmount: amount,
-      },
-    };
-  }
 
   try {
     const response = await fetch(`${apiUrl}/quote?chainId=${chainId}`, {

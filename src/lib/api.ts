@@ -148,17 +148,26 @@ const getLineaTokens = async (): Promise<Token[]> => {
 
 const getBlastTokens = async (): Promise<Token[]> => {
 
-  const tokens = await fetch('https://fenix-dex-api.vercel.app/token-prices').then((res) => res.json())
-
-  return _.map(tokens, (token: any) => {
+  const tokens = await fetch('https://token-list.sushi.com/').then((res) => res.json().then(it => it.tokens.filter((it: any) => it.chainId === networks.blast.id)))
+  
+  const _tokens =  _.map(tokens, (token: any) => {
     return {
-      address: token.basetoken.address,
-      symbol: token.basetoken.symbol,
+      address: token.address,
+      symbol: token.symbol,
       decimals: token.decimals,
-      logoUrl: token.logourl,
-      name: token.basetoken.name,
+      logoUrl: token.logoURI,
+      name: token.name,
     }
   })
+
+  const native = _.find(networks, (it) => it.id ===  networks.blast.id)?.native;
+
+  if(native) {
+    _tokens.unshift(native as any)
+  }
+
+  return _tokens
+
 
 }
 

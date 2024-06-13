@@ -59,3 +59,4 @@ export const EMPTY_QUOTE_RESPONSE = {
 
 
 export const QUOTE_REFETCH_THROTTLE = 60_000
+export const DEFAULT_QUOTE_REFETCH_LIMIT = 10

@@ -12,6 +12,7 @@ import {
   UseLiquidityHubState,
   UseQueryData,
 } from "../../type";
+import { useWrapOrUnwrapOnly } from "../hooks";
 
 export const useQuote = ({
   fromToken,
@@ -38,12 +39,12 @@ export const useQuote = ({
 }) => {
   const context = useMainContext();
   const apiUrl = useApiUrl();
-  const chainId = context.chainId
+  const chainId = context.chainId;
   const wTokenAddress = useChainConfig()?.wToken?.address;
-
   const pause = showConfirmation && context.quote?.pauseOnConfirmation;
-  
-  const fetchLimit = context.quote?.fetchLimit || 10;
+  const fetchLimit = context.quote?.fetchLimit!;
+  const {isUnwrapOnly, isWrapOnly} = useWrapOrUnwrapOnly(fromToken?.address, toToken?.address)
+
   const enabled =
     !!chainId &&
     !!wTokenAddress &&
@@ -54,7 +55,10 @@ export const useQuote = ({
     !!apiUrl &&
     !disabled &&
     swapStatus !== "loading" &&
-    !pause;
+    !pause &&
+    !isUnwrapOnly &&
+    !isWrapOnly;
+
 
   const queryKey = [
     QUERY_KEYS.QUOTE,

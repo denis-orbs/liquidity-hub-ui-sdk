@@ -18,7 +18,7 @@ export const wrap = async ({
   tokenAddress: string;
   fromAmount: string;
   gas: ReturnType<typeof useEstimateGasPrice>;
-  onTxHash: (txHash: string) => void;
+  onTxHash?: (txHash: string) => void;
 }) => {
   const fromTokenContract = getContract(tokenAddress, web3, chainId);
 

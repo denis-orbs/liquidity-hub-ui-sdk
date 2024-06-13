@@ -9,7 +9,10 @@ import {
   useMemo,
 } from "react";
 import { ThemeProvider } from "styled-components";
-import { DEFAULT_QUOTE_INTERVAL } from "./config/consts";
+import {
+  DEFAULT_QUOTE_INTERVAL,
+  DEFAULT_QUOTE_REFETCH_LIMIT,
+} from "./config/consts";
 import Web3 from "web3";
 import { swapAnalytics } from "./analytics";
 import { useShallow } from "zustand/react/shallow";
@@ -48,8 +51,6 @@ export const LiquidityHubProvider = ({
   quote,
   swap,
 }: Props) => {
-
-
   const resetDex = useDexState(useShallow((s) => s.reset));
   const _theme = useMemo(() => {
     if (theme === "light") {
@@ -92,10 +93,11 @@ export const LiquidityHubProvider = ({
           quote: {
             ...quote,
             refetchInterval: quote?.refetchInterval || DEFAULT_QUOTE_INTERVAL,
+            fetchLimit: quote?.fetchLimit || DEFAULT_QUOTE_REFETCH_LIMIT,
           },
           swap: {
             maxFailures: swap?.maxFailures,
-          }
+          },
         }}
       >
         <ThemeProvider theme={_theme}>

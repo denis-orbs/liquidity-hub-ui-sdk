@@ -1,18 +1,19 @@
-import { useCallback } from "react";
 import { useMainContext } from "../provider";
 import { useContractCallback } from "./useContractCallback";
 import BN from "bignumber.js";
 import { Logger, sendAndWaitForConfirmations } from "../util";
 import { zeroAddress } from "../config/consts";
 import { useEstimateGasPrice } from "./useEstimateGasPrice";
+import { useMutation } from "@tanstack/react-query";
 
 export const useUnwrap = () => {
   const { account, web3, chainId } = useMainContext();
   const gas = useEstimateGasPrice().data;
 
   const getContract = useContractCallback();
-  return useCallback(
-    async (fromAmount: string) => {
+  return useMutation({
+    mutationFn: async ({fromAmount}:{fromAmount: string, onSuccess?: () => void}) => {
+
       try {
         const fromTokenContract = getContract(zeroAddress);
 
@@ -40,6 +41,8 @@ export const useUnwrap = () => {
         throw new Error(error.message);
       }
     },
-    [account, getContract, gas]
-  );
+    onSuccess: (_, args) => {
+      args.onSuccess?.()
+    }
+  });
 };

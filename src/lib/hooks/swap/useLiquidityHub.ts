@@ -35,12 +35,14 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     return BN(args.slippage).isNaN() ? 0 : args.slippage;
   }, [args.slippage]);
 
+
   const { fromAmount, dexMinAmountOut } = useMemo(() => {
     return {
       fromAmount: safeBN(debouncedFromAmount),
       dexMinAmountOut: safeBN(args.minAmountOut),
     };
   }, [debouncedFromAmount, args.minAmountOut]);
+
 
   const updateState = useCallback(
     (newState: Partial<UseLiquidityHubState>) => {

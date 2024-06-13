@@ -1,6 +1,6 @@
 import BN, { BigNumber } from "bignumber.js";
 import Web3 from "web3";
-import { ActionStatus, Network, Token } from "./type";
+import { ActionStatus, LH_CONTROL, Network, Token } from "./type";
 import _ from "lodash";
 import { nativeTokenAddresses, QUOTE_ERRORS, zero } from "./config/consts";
 import { numericFormatter } from "react-number-format";
@@ -137,7 +137,7 @@ export async function sendAndWaitForConfirmations({
   opts,
   confirmations = 0,
   autoGas,
-  onTxHash
+  onTxHash,
 }: {
   web3: Web3;
   chainId: number;
@@ -193,7 +193,7 @@ export async function sendAndWaitForConfirmations({
   promiEvent.once("receipt", (r: any) => (sentBlock = r.blockNumber));
 
   promiEvent.once("transactionHash", (hash: string) => {
-    onTxHash?.(hash)
+    onTxHash?.(hash);
   });
 
   const result = await promiEvent;
@@ -479,4 +479,14 @@ export const getSwapModalTitle = (swapStatus: ActionStatus) => {
   if (swapStatus === "failed") return;
   if (swapStatus === "success") return "Swap Successfull";
   return "Review Swap";
+};
+
+export const isLHSwap = (lhAmountOut?: string, dexAmountOut?: string) => {
+  const lhControl = useLiquidityHubPersistedStore.getState().lhControl;
+  if (new BN(dexAmountOut || "0").lte(0) && new BN(lhAmountOut || "0").lte(0))
+    return;
+  if (lhControl === LH_CONTROL.FORCE) {
+    return true;
+  }
+  return new BN(lhAmountOut || "0").gt(new BN(dexAmountOut || "0"));
 };

@@ -11,7 +11,7 @@ import { networks } from "./lib/config/networks";
 import Web3 from "web3";
 
 export const useProvider = () => {
-  const { connector, address } = useAccount();
+  const { connector, address, isConnected } = useAccount();
 
   const [provider, setProvider] = useState<any>(undefined);
 
@@ -20,7 +20,7 @@ export const useProvider = () => {
       const res = await connector?.getProvider();
       setProvider(res);
     } catch (error) {}
-  }, [setProvider, connector]);
+  }, [setProvider, connector, isConnected]);
 
   useEffect(() => {
     setProviderFromConnector();
@@ -34,6 +34,7 @@ function Wrapped() {
   const provider = useProvider();
   const connectedChainId =
     provider?.chainId && Web3.utils.hexToNumber(provider.chainId);
+   
 
   const { openConnectModal } = useConnectModal();
   return (

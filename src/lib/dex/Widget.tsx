@@ -62,6 +62,7 @@ import {
 import _ from "lodash";
 import { useInitialTokens } from "./hooks/useInitialTokens";
 import { getSwapModalTitle } from "../util";
+import { useWrapOrUnwrapOnly } from "../hooks/hooks";
 
 export const theme = {
   colors: {
@@ -490,12 +491,15 @@ const FromTokenPanel = () => {
 };
 
 const ToTokenPanel = () => {
-  const outAmount = useWidgetContext().lhPayload?.outAmountUi;
+  const { outAmountUi, fromAmountUi, fromToken,toToken } = useWidgetContext().lhPayload;
   const { token, onTokenSelect } = useToTokenPanel();
+  const { isUnwrapOnly, isWrapOnly } = useWrapOrUnwrapOnly(fromToken?.address, toToken?.address);
 
   const { data: usdSingleToken, isLoading } = usePriceUsd({
     address: token?.address,
   });
+
+  const outAmount = isUnwrapOnly || isWrapOnly ? fromAmountUi : outAmountUi;
 
   const usd = useMemo(() => {
     if (!usdSingleToken || !outAmount) return "0";
@@ -665,7 +669,7 @@ const Watcher = (props: Props) => {
 
 export const TokenListItem = (props: TokenListItemProps) => {
   const balanceUi = useAmountUI(props.token.decimals, props.balance);
-  
+
   const balance = useFormatNumber({ value: balanceUi });
   const usdSingleToken = usePriceUsd({ address: props.token.address }).data;
   const usd = useFormatNumber({
