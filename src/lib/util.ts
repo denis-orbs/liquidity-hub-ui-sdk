@@ -468,11 +468,18 @@ export const getContract = (
   );
 };
 
-export const isTxRejected = (message: string) => {
-  return (
-    message?.toLowerCase()?.includes("rejected") ||
-    message?.toLowerCase()?.includes("denied")
-  );
+export const isTxRejected = (error: any) => {  
+  if (error?.message) {
+    return (
+      error.message?.toLowerCase()?.includes("rejected") ||
+      error.message?.toLowerCase()?.includes("denied")
+    );
+  }
+};
+export const isNativeBalanceError = (error: any) => {
+  if (error?.message) {
+    return error.message?.toLowerCase()?.includes("insufficient");
+  }
 };
 
 export const getSwapModalTitle = (swapStatus: ActionStatus) => {
@@ -485,14 +492,6 @@ export const isLHSwap = (lhAmountOut?: string, dexAmountOut?: string) => {
   if (useLiquidityHubPersistedStore.getState().lhControl === LH_CONTROL.FORCE) {
     return true;
   }
-  if (
-    !dexAmountOut ||
-    !lhAmountOut ||
-    !BN(dexAmountOut).gt(0) ||
-    !BN(lhAmountOut).gt(0)
-  ) {
-    return false;
-  }
- 
-  return BN(lhAmountOut).gt(dexAmountOut);
+
+  return BN(lhAmountOut || 0).gt(dexAmountOut || 0);
 };

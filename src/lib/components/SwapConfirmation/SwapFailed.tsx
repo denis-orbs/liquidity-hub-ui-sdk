@@ -4,18 +4,31 @@ import styled from "styled-components";
 import { Text } from "../Text";
 import { useChainConfig } from "../../hooks";
 import { useSwapConfirmationContext } from "./context";
+import { isNativeBalanceError } from "../../util";
+import { useMemo } from "react";
+
+const useGetError = (error: Error | null) => {
+  const chainConfig = useChainConfig();
+  return useMemo(() => {
+    if (isNativeBalanceError(error)) {
+      return `You don't have enough ${chainConfig?.native.symbol} balance`;
+    }
+    return "Swap failed on Liquidity Hub";
+  }, [error, chainConfig?.native.symbol]);
+};
 
 export const SwapFailed = () => {
   const chainConfig = useChainConfig();
-  const { isWrapped } = useSwapConfirmationContext();
+  const { isWrapped, swapError } = useSwapConfirmationContext();
+
+  const error = useGetError(swapError);
+
   return (
     <Container className="lh-failed">
       <MainLogo className="lh-failed-img">
         <AlertCircle />
       </MainLogo>
-      <Title className="lh-failed-title">
-        {"Swap failed on Liquidity Hub"}
-      </Title>
+      <Title className="lh-failed-title">{error}</Title>
       {isWrapped && chainConfig && (
         <Message>{`${chainConfig?.native.symbol} has been wrapped to ${chainConfig?.wToken?.symbol}`}</Message>
       )}

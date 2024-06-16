@@ -4,6 +4,7 @@ import {
   amountUi,
   delay,
   isNativeAddress,
+  isNativeBalanceError,
   isTxRejected,
   Logger,
   waitForTxReceipt,
@@ -30,7 +31,7 @@ export const useSubmitSwap = ({
   quote,
   updateState,
   sessionId,
-  failures
+  failures,
 }: {
   fromAmount?: string;
   fromToken?: Token;
@@ -84,8 +85,8 @@ export const useSubmitSwap = ({
       if (!fromAmount) {
         throw new Error("Missing from amount");
       }
-      
-      if(_.isUndefined(hasAllowance)) {
+
+      if (_.isUndefined(hasAllowance)) {
         throw new Error("Allowance not found");
       }
 
@@ -149,7 +150,9 @@ export const useSubmitSwap = ({
         account,
         chainId,
         apiUrl,
-      }).then().catch();
+      })
+        .then()
+        .catch();
       const txHash = await waitForSwap(chainId, apiUrl, sessionId, account);
       if (!txHash) {
         throw new Error("Swap failed");
@@ -183,10 +186,10 @@ export const useSubmitSwap = ({
     },
     onSettled: () => refetchAllowance(),
     onError: (error) => {
-    
       swapAnalytics.onClobFailure();
       // if user rejects the tx, we get back to confirmation step
-      if (isTxRejected((error as Error).message)) {
+
+      if (isTxRejected(error)) {
         updateState({ swapStatus: undefined, currentStep: undefined });
         throw error;
       }
@@ -195,10 +198,9 @@ export const useSubmitSwap = ({
         swapStatus: "failed",
         sessionId: undefined,
         currentStep: undefined,
-        failures: (failures || 0) + 1,
+        failures: isNativeBalanceError(error) ? 0 : (failures || 0) + 1,
       });
       swapAnalytics.clearState();
-      
     },
   });
 };

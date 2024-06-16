@@ -55,7 +55,7 @@ async function signEIP712(
   try {
     return await signAsync(signer, provider, "eth_signTypedData_v4", message);
   } catch (e: any) {
-    if (isTxRejected(e.message)) {
+    if (isTxRejected(e)) {
       throw e;
     }
     try {
