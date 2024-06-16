@@ -126,12 +126,6 @@ export const useSubmitSwap = ({
             updateState({ approveTxHash });
           },
         });
-        const res = await refetchAllowance()
-
-        // dont have allowance
-        if(!res.data) {
-          throw new Error('Something went wrong')
-        }
       } else {
         swapAnalytics.onApprovedBeforeTheTrade();
       }
@@ -187,7 +181,9 @@ export const useSubmitSwap = ({
         receipt: txDetails.receipt,
       };
     },
+    onSettled: refetchAllowance,
     onError: (error) => {
+    
       swapAnalytics.onClobFailure();
       // if user rejects the tx, we get back to confirmation step
       if (isTxRejected((error as Error).message)) {
@@ -202,7 +198,7 @@ export const useSubmitSwap = ({
         failures: (failures || 0) + 1,
       });
       swapAnalytics.clearState();
-      refetchAllowance();
+      
     },
   });
 };
