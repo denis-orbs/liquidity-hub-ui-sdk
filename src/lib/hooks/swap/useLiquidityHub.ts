@@ -35,14 +35,12 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     return BN(args.slippage).isNaN() ? 0 : args.slippage;
   }, [args.slippage]);
 
-
   const { fromAmount, dexMinAmountOut } = useMemo(() => {
     return {
       fromAmount: safeBN(debouncedFromAmount),
       dexMinAmountOut: safeBN(args.minAmountOut),
     };
   }, [debouncedFromAmount, args.minAmountOut]);
-
 
   const updateState = useCallback(
     (newState: Partial<UseLiquidityHubState>) => {
@@ -159,15 +157,21 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     currentStep: state.currentStep,
     isWrapped: !!state.isWrapped,
     fromAmount,
-    fromAmountUi: useAmountUI(args.fromToken?.decimals, fromAmount),
-    outAmountUi: useAmountUI(
-      args.toToken?.decimals,
-      quoteQuery.data?.quote?.outAmount
-    ),
-    gasAmountOutUi: useAmountUI(
-      args.toToken?.decimals,
-      quoteQuery.data?.quote.gasAmountOut
-    ),
+    ui: {
+      fromAmount: useAmountUI(args.fromToken?.decimals, fromAmount),
+      minAmountOut: useAmountUI(
+        args.toToken?.decimals,
+        quoteQuery.data?.quote.minAmountOut
+      ),
+      outAmount: useAmountUI(
+        args.toToken?.decimals,
+        quoteQuery.data?.quote?.outAmount
+      ),
+      gasAmountOut: useAmountUI(
+        args.toToken?.decimals,
+        quoteQuery.data?.quote.gasAmountOut
+      ),
+    },
     isSigned: state.isSigned,
     isDisabled: disabled,
     onShowConfirmation,

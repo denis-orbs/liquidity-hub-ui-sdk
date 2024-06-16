@@ -1,5 +1,4 @@
 import { ConnectButton, useConnectModal } from "@rainbow-me/rainbowkit";
-
 import { useCallback, useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import styled from "styled-components";
@@ -34,7 +33,6 @@ function Wrapped() {
   const provider = useProvider();
   const connectedChainId =
     provider?.chainId && Web3.utils.hexToNumber(provider.chainId);
-   
 
   const { openConnectModal } = useConnectModal();
   return (

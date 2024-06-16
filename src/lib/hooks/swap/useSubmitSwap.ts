@@ -126,6 +126,12 @@ export const useSubmitSwap = ({
             updateState({ approveTxHash });
           },
         });
+        const res = await refetchAllowance()
+
+        // dont have allowance
+        if(!res.data) {
+          throw new Error('Something went wrong')
+        }
       } else {
         swapAnalytics.onApprovedBeforeTheTrade();
       }

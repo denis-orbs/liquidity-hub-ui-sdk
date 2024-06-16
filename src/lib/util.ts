@@ -482,11 +482,17 @@ export const getSwapModalTitle = (swapStatus: ActionStatus) => {
 };
 
 export const isLHSwap = (lhAmountOut?: string, dexAmountOut?: string) => {
-  const lhControl = useLiquidityHubPersistedStore.getState().lhControl;
-  if (new BN(dexAmountOut || "0").lte(0) && new BN(lhAmountOut || "0").lte(0))
-    return;
-  if (lhControl === LH_CONTROL.FORCE) {
+  if (useLiquidityHubPersistedStore.getState().lhControl === LH_CONTROL.FORCE) {
     return true;
   }
-  return new BN(lhAmountOut || "0").gt(new BN(dexAmountOut || "0"));
+  if (
+    !dexAmountOut ||
+    !lhAmountOut ||
+    !BN(dexAmountOut).gt(0) ||
+    !BN(lhAmountOut).gt(0)
+  ) {
+    return false;
+  }
+ 
+  return BN(lhAmountOut).gt(dexAmountOut);
 };

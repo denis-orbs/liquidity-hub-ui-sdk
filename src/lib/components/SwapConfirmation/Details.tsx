@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import BN from "bignumber.js";
 import { FlexColumn, FlexRow } from "../../base-styles";
 import { useFormatNumber } from "../../hooks/useFormatNumber";
 import { Logo } from "../Logo";
@@ -13,8 +12,13 @@ const StyledSwapDetails = styled(FlexColumn)`
 `;
 
 export function SwapDetails() {
-  const { fromTokenUsd, toTokenUsd, fromToken, fromAmountUi, toToken, outAmountUi  } = useSwapConfirmationContext();
-
+  const {
+    fromTokenUsd,
+    toTokenUsd,
+    fromToken,
+    toToken,
+    ui
+  } = useSwapConfirmationContext();
 
   return (
     <StyledSwapDetails className="lh-details">
@@ -22,14 +26,14 @@ export function SwapDetails() {
         title="Swap from"
         usd={fromTokenUsd}
         token={fromToken}
-        amount={fromAmountUi}
+        amount={ui.fromAmount}
       />
       <Separator />
       <TokenDisplay
         title="Swap to"
         usd={toTokenUsd}
         token={toToken}
-        amount={outAmountUi}
+        amount={ui.outAmount}
       />
     </StyledSwapDetails>
   );
@@ -43,12 +47,10 @@ const TokenDisplay = ({
 }: {
   amount?: string;
   token?: Token;
-  usd?: string | number;
+  usd?: string;
   title: string;
 }) => {
   if (!token) return null;
-
-  const totalUsd = useFormatNumber({ value: usd });
 
   const _amount = useFormatNumber({ value: amount });
 
@@ -63,7 +65,7 @@ const TokenDisplay = ({
         <StyledLeft $alignItems="flex-start" className="lh-token-left">
           <TokenAmount className="lh-token-amount">{_amount}</TokenAmount>
           <USD className="lh-token-usd">
-            {BN(usd || "0").gt(0) ? `$${totalUsd}` : "-"}
+            {usd || "-"} 
           </USD>
         </StyledLeft>
         <StyledLogoAndSymbol className="lh-token-right">

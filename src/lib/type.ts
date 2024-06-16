@@ -254,6 +254,6 @@ export declare type PermitData = {
 export type LiquidityHubPayload = ReturnType<typeof useLiquidityHub>;
 
 export interface SwapConfirmationArgs extends LiquidityHubPayload {
-  fromTokenUsd?: string | number;
-  toTokenUsd?: string | number;
+  fromTokenUsd?: string;
+  toTokenUsd?: string;
 }

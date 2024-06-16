@@ -233,14 +233,15 @@ const SwapModal = () => {
     swapLoading,
     quote,
     initialQuote,
-    outAmountUi,
     fromToken,
     toToken,
     fromAmount,
-    fromAmountUi,
     isWrapped,
+    ui
   } = lhPayload;
 
+  const fromAmountUi = ui.fromAmount
+  const outAmountUi = ui.outAmount
   const updateStore = useDexState(useShallow((s) => s.updateStore));
 
   const wToken = useChainConfig()?.wToken;
@@ -491,13 +492,15 @@ const FromTokenPanel = () => {
 };
 
 const ToTokenPanel = () => {
-  const { outAmountUi, fromAmountUi, fromToken,toToken } = useWidgetContext().lhPayload;
+  const { ui, fromToken,toToken } = useWidgetContext().lhPayload;
   const { token, onTokenSelect } = useToTokenPanel();
   const { isUnwrapOnly, isWrapOnly } = useWrapOrUnwrapOnly(fromToken?.address, toToken?.address);
 
   const { data: usdSingleToken, isLoading } = usePriceUsd({
     address: token?.address,
   });
+  const fromAmountUi = ui?.fromAmount;
+  const outAmountUi = ui?.outAmount;
 
   const outAmount = isUnwrapOnly || isWrapOnly ? fromAmountUi : outAmountUi;
 
@@ -773,9 +776,9 @@ const StyledTokenListContainer = styled(FlexColumn)`
 `;
 
 const SwapDetails = () => {
-  const { quote, outAmountUi, fromToken, toToken, fromAmount } =
+  const { quote, fromToken, toToken, fromAmount, ui } =
     useWidgetContext().lhPayload;
-  const minAmountOut = useFormatNumber({ value: outAmountUi });
+  const minAmountOut = useFormatNumber({ value: ui.outAmount });
 
   const gasCost = useAmountUI(toToken?.decimals, quote?.gasAmountOut);
 

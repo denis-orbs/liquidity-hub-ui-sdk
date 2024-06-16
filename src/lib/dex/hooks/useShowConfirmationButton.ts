@@ -64,8 +64,9 @@ export const useShowConfirmationButton = (props: LiquidityHubPayload) => {
     fromToken,
     toToken,
     fromAmount,
-    outAmountUi,
+    ui
   } = props;
+  const outAmountUi = ui?.outAmount;
 
   const { mutate: switchNetwork, isPending: switchNetworkLoading } =
     useSwitchNetwork();
