@@ -181,7 +181,7 @@ export const useSubmitSwap = ({
         receipt: txDetails.receipt,
       };
     },
-    onSettled: refetchAllowance,
+    onSettled: () => refetchAllowance(),
     onError: (error) => {
     
       swapAnalytics.onClobFailure();
