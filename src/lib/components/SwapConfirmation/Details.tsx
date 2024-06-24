@@ -17,7 +17,8 @@ export function SwapDetails() {
     toTokenUsd,
     fromToken,
     toToken,
-    ui
+    ui,
+    outAmount
   } = useSwapConfirmationContext();
 
   return (
@@ -33,7 +34,7 @@ export function SwapDetails() {
         title="Swap to"
         usd={toTokenUsd}
         token={toToken}
-        amount={ui.outAmount}
+        amount={outAmount}
       />
     </StyledSwapDetails>
   );

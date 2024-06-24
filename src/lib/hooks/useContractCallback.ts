@@ -20,5 +20,5 @@ export const useContract = (address?: string) => {
 
   return useMemo(() => {
     return getContract(address, web3, chainId);
-  }, [web3, wethAddress]);
+  }, [web3, wethAddress, chainId, address]);
 };

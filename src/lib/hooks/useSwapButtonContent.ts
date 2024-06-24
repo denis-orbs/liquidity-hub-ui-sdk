@@ -7,7 +7,7 @@ export function useSwapButtonContent(
   fromAmount?: string
 ) {
   const { data: hasAllowance } = useAllowance(fromTokenAddress, fromAmount);
-
+  
   return useMemo(() => {
     if (isNativeAddress(fromTokenAddress || "")) return "Wrap and Swap";
     if (!hasAllowance) return "Approve and Swap";

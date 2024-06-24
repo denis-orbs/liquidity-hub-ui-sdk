@@ -256,4 +256,5 @@ export type LiquidityHubPayload = ReturnType<typeof useLiquidityHub>;
 export interface SwapConfirmationArgs extends LiquidityHubPayload {
   fromTokenUsd?: string;
   toTokenUsd?: string;
+  outAmount?: string;
 }

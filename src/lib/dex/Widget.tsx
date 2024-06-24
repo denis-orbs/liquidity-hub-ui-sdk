@@ -41,6 +41,7 @@ import {
   useLiquidityHub,
   usePriceChanged,
   useSwapButtonContent,
+  useTokenBalance,
 } from "../hooks";
 import { Text } from "../components/Text";
 import { Logo } from "../components/Logo";
@@ -301,6 +302,9 @@ const SwapModal = () => {
     isWrapped,
   ]);
 
+  const {error, data} = useTokenBalance(fromToken?.address);
+  console.log({error, data});
+  
   const modalTitle = useMemo(() => {
     return getSwapModalTitle(swapStatus);
   }, [swapStatus]);
@@ -333,6 +337,7 @@ const SwapModal = () => {
           fromTokenUsd={fromTokenUsd}
           toTokenUsd={toTokenUsd}
           {...lhPayload}
+          outAmount='10'
         >
           {swapStatus === "success" ? (
             <SwapConfirmation.Success />
