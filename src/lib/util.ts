@@ -478,7 +478,9 @@ export const isTxRejected = (error: any) => {
 };
 export const isNativeBalanceError = (error: any) => {
   if (error?.message) {
-    return error.message?.toLowerCase()?.includes("insufficient");
+    return error.message?.toLowerCase()?.includes("insufficient") || 
+    error.message?.toLowerCase()?.includes("gas required exceeds allowance");
+    ;
   }
 };
 

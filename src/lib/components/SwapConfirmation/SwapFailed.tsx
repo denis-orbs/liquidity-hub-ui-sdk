@@ -11,7 +11,7 @@ const useGetError = (error: Error | null) => {
   const chainConfig = useChainConfig();
   return useMemo(() => {
     if (isNativeBalanceError(error)) {
-      return `You don't have enough ${chainConfig?.native.symbol} balance`;
+      return `insufficient ${chainConfig?.native.symbol} balance`;
     }
     return "Swap failed on Liquidity Hub";
   }, [error, chainConfig?.native.symbol]);
@@ -20,7 +20,7 @@ const useGetError = (error: Error | null) => {
 export const SwapFailed = () => {
   const chainConfig = useChainConfig();
   const { isWrapped, swapError } = useSwapConfirmationContext();
-
+  
   const error = useGetError(swapError);
 
   return (
