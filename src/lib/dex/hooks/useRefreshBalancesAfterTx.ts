@@ -7,10 +7,10 @@ import { useTokenListBalances } from "./useTokenListBalances";
 import { useTokensList } from "./useTokenList";
 import { QUERY_KEYS } from "../../config/consts";
 import { getBalances } from "../../multicall";
-import { useMainContext } from "../../provider";
 import { useDexState } from "../../store/dex";
 import { Token, Balances } from "../../type";
 import { delay } from "../../util";
+import { useMainContext } from "../../context/MainContext";
 export function useRefreshBalancesAfterTx() {
   const { data: balances } = useTokenListBalances();
   const {account, web3, chainId} = useMainContext();

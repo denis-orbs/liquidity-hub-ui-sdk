@@ -5,7 +5,7 @@ import { ActionStatus, Step } from "../../type";
 import { FlexColumn, FlexRow } from "../../base-styles";
 import { Spinner } from "../Spinner";
 import _ from "lodash";
-import { useSwapConfirmationContext } from "./context";
+import { useMainContext } from "../../context/MainContext";
 
 interface Props {
   step: Step;
@@ -13,7 +13,7 @@ interface Props {
 }
 
 export function StepComponent({ step}: Props) {
-  const {currentStep, swapStatus} = useSwapConfirmationContext();
+  const {currentStep, swapStatus} = useMainContext();
 
   const status = useMemo((): ActionStatus => {
     if (_.isUndefined(currentStep)) return;

@@ -6,20 +6,17 @@ import { Token } from "../../type";
 import { Text } from "../Text";
 import { Separator } from "./Components";
 import { useSwapConfirmationContext } from "./context";
+import { useMainContext } from "../../context/MainContext";
 const StyledSwapDetails = styled(FlexColumn)`
   width: 100%;
   gap: 15px;
 `;
 
 export function SwapDetails() {
-  const {
-    fromTokenUsd,
-    toTokenUsd,
-    fromToken,
-    toToken,
-    ui,
-    outAmount
-  } = useSwapConfirmationContext();
+  const { fromTokenUsd, toTokenUsd, outAmount, fromAmount } =
+    useSwapConfirmationContext();
+
+  const {fromToken, toToken} = useMainContext();
 
   return (
     <StyledSwapDetails className="lh-details">
@@ -27,7 +24,7 @@ export function SwapDetails() {
         title="Swap from"
         usd={fromTokenUsd}
         token={fromToken}
-        amount={ui.fromAmount}
+        amount={fromAmount}
       />
       <Separator />
       <TokenDisplay
@@ -65,9 +62,7 @@ const TokenDisplay = ({
       >
         <StyledLeft $alignItems="flex-start" className="lh-token-left">
           <TokenAmount className="lh-token-amount">{_amount}</TokenAmount>
-          <USD className="lh-token-usd">
-            {usd || "-"} 
-          </USD>
+          <USD className="lh-token-usd">{usd || "-"}</USD>
         </StyledLeft>
         <StyledLogoAndSymbol className="lh-token-right">
           <StyledLogo src={token.logoUrl} className="lh-token-logo" />

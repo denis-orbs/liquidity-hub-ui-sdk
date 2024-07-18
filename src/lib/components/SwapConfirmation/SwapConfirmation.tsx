@@ -3,7 +3,6 @@ import { SwapConfirmationArgs } from "../..";
 import { ExplorerLink } from "../ExplorerLink";
 import {
   SwapConfirmationProvider,
-  useSwapConfirmationContext,
 } from "./context";
 import { SwapDetails } from "./Details";
 import { StepsComponent } from "./Steps";
@@ -12,11 +11,16 @@ import { SwapSuccess } from "./SwapSuccess";
 import { PoweredBy } from "./PoweredBy";
 import { FlexColumn } from "../../base-styles";
 import { Fragment, ReactNode } from "react";
+import { useMainContext } from "../../context/MainContext";
+
+
+
 
 interface Props extends SwapConfirmationArgs {
   className?: string;
   style?: CSSObject;
   children: React.ReactNode;
+  
 }
 
 const SwapConfirmation = ({
@@ -35,7 +39,7 @@ const SwapConfirmation = ({
 };
 
 const Main = ({ SubmitButton }: { SubmitButton: ReactNode }) => {
-  const { swapStatus } = useSwapConfirmationContext();
+  const { swapStatus } = useMainContext();
 
   return (
     <Fragment>
@@ -56,7 +60,7 @@ const Main = ({ SubmitButton }: { SubmitButton: ReactNode }) => {
 };
 
 const SubmitButton = ({ children }: { children: ReactNode }) => {
-  const {swapStatus} = useSwapConfirmationContext();
+  const {swapStatus} = useMainContext();
 
   if (swapStatus) return null;
 
@@ -70,7 +74,7 @@ const ExplorerLinkComponent = ({
   className?: string;
   styles?: CSSObject;
 }) => {
-  const { txHash } = useSwapConfirmationContext();
+  const { txHash } = useMainContext();
 
   return (
     <ExplorerLink

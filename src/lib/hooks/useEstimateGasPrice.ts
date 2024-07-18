@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { useMainContext } from "../provider";
 import BN from "bignumber.js";
 import { QUERY_KEYS } from "../config/consts";
+import { useMainContext } from "../context/MainContext";
 import { estimateGasPrice } from "../util";
 
 export const useEstimateGasPrice = () => {

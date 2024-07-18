@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import _ from "lodash";
 import { QUERY_KEYS } from "../../config/consts";
+import { useMainContext } from "../../context/MainContext";
 import { getBalances } from "../../multicall";
-import { useMainContext } from "../../provider";
 import { useIsInvalidChain } from "./useIsInvalidChain";
 import { useTokensList } from "./useTokenList";
 

@@ -4,14 +4,15 @@ import styled from "styled-components";
 import { Logo } from "../Logo";
 import { Text } from "../Text";
 import { Separator } from "./Components";
-import { useFormatNumber } from "../../hooks";
 import SuccessImg from "../../assets/okay.png";
 import { ExplorerLink } from "../ExplorerLink";
 import { useSwapConfirmationContext } from "./context";
+import { useMainContext } from "../../context/MainContext";
 
 export const SwapSuccess = () => {
-  const { fromToken, toToken,ui, txHash } =
-    useSwapConfirmationContext();
+  const { fromToken, toToken, txHash } = useMainContext();
+  const { outAmount, fromAmount } = useSwapConfirmationContext();
+
   return (
     <StyledSuccess className="lh-success">
       <StyledTop>
@@ -25,9 +26,9 @@ export const SwapSuccess = () => {
       </StyledTop>
 
       <StyledTokensContainer>
-        <SuccessToken token={fromToken} amount={ui.fromAmount} />
+        <SuccessToken token={fromToken} amount={fromAmount} />
         <Separator />
-        <SuccessToken token={toToken} amount={ui.outAmount} />
+        <SuccessToken token={toToken} amount={outAmount} />
       </StyledTokensContainer>
       <ExplorerLink styles={{ marginTop: 50 }} txHash={txHash} />
     </StyledSuccess>
@@ -80,11 +81,10 @@ const SuccessToken = ({
   token?: Token;
   amount?: string;
 }) => {
-  const formattedAmount = useFormatNumber({ value: amount });
   return (
     <StyledTokenDisplay className="lh-success-token">
       <StyledTokenAmount className="lh-success-token-text">
-        {formattedAmount}
+        {amount}
       </StyledTokenAmount>
       <StyledLogoAndSymbol>
         <StyledLogo src={token?.logoUrl} className="lh-success-token-logo" />

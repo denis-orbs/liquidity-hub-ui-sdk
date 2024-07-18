@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { useMainContext } from "../provider";
+import { useMainContext } from "../context/MainContext";
 import { useOrdersStore } from "../store/main";
 import { AddOrderArgs, Order } from "../type";
 

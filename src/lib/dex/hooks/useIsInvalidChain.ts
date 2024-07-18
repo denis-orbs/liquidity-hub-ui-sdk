@@ -2,8 +2,8 @@
 import { useMemo } from "react";
 
 import _ from "lodash";
-import { useMainContext } from "../../provider";
 import { Logger } from "../../util";
+import { useMainContext } from "../../context/MainContext";
 
 export const useIsInvalidChain = () => {
   const { chainId, supportedChains } = useMainContext();

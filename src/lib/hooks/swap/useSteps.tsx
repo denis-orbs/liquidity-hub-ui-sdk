@@ -6,10 +6,11 @@ import { isNativeAddress } from "../../util";
 import { useChainConfig } from "../useChainConfig";
 import { useAllowance } from "./useAllowance";
 import { useSwapConfirmationContext } from "../../components/SwapConfirmation/context";
+import { useMainContext } from "../../context/MainContext";
 
 export const useSteps = () => {
-  const { fromToken, currentStep, isSigned, fromAmount } =
-    useSwapConfirmationContext();
+  const { fromAmount } = useSwapConfirmationContext();
+  const { fromToken, currentStep, isSigned } = useMainContext();
   const explorer = useChainConfig()?.explorer;
   const { data: hasAllowance, isLoading: allowanceLoading } = useAllowance(
     fromToken?.address,

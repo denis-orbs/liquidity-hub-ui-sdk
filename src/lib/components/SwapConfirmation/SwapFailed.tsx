@@ -3,11 +3,11 @@ import { AlertCircle } from "react-feather";
 import styled from "styled-components";
 import { Text } from "../Text";
 import { useChainConfig } from "../../hooks";
-import { useSwapConfirmationContext } from "./context";
 import { isNativeBalanceError } from "../../util";
 import { useMemo } from "react";
+import { useMainContext } from "../../context/MainContext";
 
-const useGetError = (error: Error | null) => {
+const useGetError = (error?: string) => {
   const chainConfig = useChainConfig();
   return useMemo(() => {
     if (isNativeBalanceError(error)) {
@@ -19,7 +19,7 @@ const useGetError = (error: Error | null) => {
 
 export const SwapFailed = () => {
   const chainConfig = useChainConfig();
-  const { isWrapped, swapError } = useSwapConfirmationContext();
+  const { isWrapped, swapError } = useMainContext();
   
   const error = useGetError(swapError);
 

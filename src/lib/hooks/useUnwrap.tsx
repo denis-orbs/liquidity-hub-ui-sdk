@@ -1,10 +1,10 @@
-import { useMainContext } from "../provider";
 import { useContractCallback } from "./useContractCallback";
 import BN from "bignumber.js";
 import { Logger, sendAndWaitForConfirmations } from "../util";
 import { zeroAddress } from "../config/consts";
 import { useEstimateGasPrice } from "./useEstimateGasPrice";
 import { useMutation } from "@tanstack/react-query";
+import { useMainContext } from "../context/MainContext";
 
 export const useUnwrap = () => {
   const { account, web3, chainId } = useMainContext();

@@ -1,38 +1,30 @@
 import { useCallback, useMemo } from "react";
 import { swapAnalytics } from "../analytics";
-import { useMainContext } from "../provider";
 import BN from "bignumber.js";
-import { QuoteResponse, Token } from "..";
-export function useAnalytics({
-  fromToken,
-  toToken,
-  dexMinAmountOut,
-  fromAmount,
-  quote,
-  slippage,
-  sessionId
-}: {
-  fromToken?: Token;
-  toToken?: Token;
-  dexMinAmountOut?: string;
-  fromAmount?: string;
-  quote?: QuoteResponse,
-  slippage: number;
-  sessionId?: string;
-}) {
+import { useMainContext } from "../context/MainContext";
+import { useGetQuoteQuery } from "./swap/useGetQuoteQuery";
+export function useAnalytics() {
+  const getQuoteQuery = useGetQuoteQuery();
 
-
-  const { provider } = useMainContext();
-  const quoteAmountOut = quote?.minAmountOut;
+  const {
+    provider,
+    sessionId,
+    slippage,
+    fromAmount,
+    dexMinAmountOut,
+    fromToken,
+    toToken,
+  } = useMainContext();
 
   const dexOutAmountWS = useMemo(() => {
-    const slippageAmount = BN(dexMinAmountOut || "0").times(slippage / 100);
+    const slippageAmount = !slippage ? 0 :  BN(dexMinAmountOut || "0").times(slippage / 100);
     return BN(dexMinAmountOut || "0")
       .plus(slippageAmount)
       .toString();
   }, [slippage, dexMinAmountOut]);
 
   const initTrade = useCallback(() => {
+    const quote = getQuoteQuery()?.data;
     swapAnalytics.onInitSwap({
       fromToken,
       toToken,
@@ -41,9 +33,9 @@ export function useAnalytics({
       srcAmount: fromAmount,
       slippage,
       tradeType: "BEST_TRADE",
-      quoteAmountOut,
+      quoteAmountOut: quote?.quote.outAmount,
       provider,
-      sessionId
+      sessionId,
     });
   }, [
     dexOutAmountWS,
@@ -52,9 +44,9 @@ export function useAnalytics({
     dexMinAmountOut,
     fromAmount,
     slippage,
-    quoteAmountOut,
     provider,
-    sessionId
+    sessionId,
+    getQuoteQuery,
   ]);
 
   return {

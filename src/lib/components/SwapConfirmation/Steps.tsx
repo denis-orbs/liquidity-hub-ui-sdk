@@ -1,13 +1,13 @@
 import styled from "styled-components";
 import { useSteps } from "../..";
 import { FlexColumn, FlexRow } from "../../base-styles";
+import { useMainContext } from "../../context/MainContext";
 import { SkeletonLoader } from "../SkeletonLoader";
-import { useSwapConfirmationContext } from "./context";
 import { StepComponent } from "./Step";
 
 export const StepsComponent = () => {
   const { swapStatus } =
-    useSwapConfirmationContext();
+    useMainContext();
   const { steps, isLoading } = useSteps();
   if (swapStatus !== "loading") return null;
 

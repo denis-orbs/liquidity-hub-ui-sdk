@@ -13,6 +13,7 @@ import {
   TokenListItemProps,
   ProviderArgs,
   Token,
+  QuoteResponse,
 } from "../type";
 import {
   StyledChangeTokens,
@@ -34,12 +35,12 @@ import { TokenSearchInput } from "../components/SearchInput";
 import { useShallow } from "zustand/react/shallow";
 import BN from "bignumber.js";
 import {
-  useAmountBN,
   useAmountUI,
   useChainConfig,
   useFormatNumber,
-  useLiquidityHub,
   usePriceChanged,
+  useQuote,
+  useSubmitSwap,
   useSwapButtonContent,
 } from "../hooks";
 import { Text } from "../components/Text";
@@ -47,7 +48,7 @@ import { Logo } from "../components/Logo";
 import { PoweredByOrbs, SwapConfirmation } from "../components";
 import { FlexRow, FlexColumn } from "../base-styles";
 import { useTokenListBalance } from "./hooks/useTokenListBalance";
-import { LiquidityHubProvider, useMainContext } from "../provider";
+import { LiquidityHubProvider } from "../provider";
 import { useDexState } from "../store/dex";
 import {
   usePercentSelect,
@@ -63,6 +64,8 @@ import _ from "lodash";
 import { useInitialTokens } from "./hooks/useInitialTokens";
 import { getSwapModalTitle } from "../util";
 import { useWrapOrUnwrapOnly } from "../hooks/hooks";
+import { useMainContext } from "../context/MainContext";
+import { useConfirmation } from "../hooks/swap/useConfirmation";
 
 export const theme = {
   colors: {
@@ -90,7 +93,6 @@ type ModalType = FC<{
 interface ContenxtType extends WidgetConfig {
   UIconfig?: WidgetConfig;
   Modal: ModalType;
-  lhPayload: ReturnType<typeof useLiquidityHub>;
 }
 
 const Context = createContext({} as ContenxtType);
@@ -107,24 +109,11 @@ interface ContextProps {
 }
 
 const ContextProvider = (props: ContextProps) => {
-  const store = useDexState();
-
-  const fromAmount = useAmountBN(store.fromToken?.decimals, store.fromAmount);
-
-  const lhPayload = useLiquidityHub({
-    fromToken: store.fromToken,
-    toToken: store.toToken,
-    fromAmount,
-    debounceFromAmountMillis: 300,
-    slippage: props.slippage || 0.5,
-  });
-
   return (
     <Context.Provider
       value={{
         UIconfig: props.UIconfig,
         Modal: props.Modal,
-        lhPayload,
       }}
     >
       {props.children}
@@ -223,25 +212,25 @@ const TokenSelect = ({
   );
 };
 
-const SwapModal = () => {
-  const { lhPayload } = useWidgetContext();
-  const {
-    closeConfirmationModal,
-    swapStatus,
-    showConfirmationModal,
-    submitSwap,
-    swapLoading,
-    quote,
-    initialQuote,
-    fromToken,
-    toToken,
-    fromAmount,
-    isWrapped,
-    ui
-  } = lhPayload;
-
-  const fromAmountUi = ui.fromAmount
-  const outAmountUi = ui.outAmount
+const SwapModal = ({
+  submitSwap,
+  outAmount,
+  isLoading,
+  quote,
+  isOpen,
+  onClose,
+  initialQuote,
+}: {
+  submitSwap: () => Promise<void>;
+  outAmount?: string;
+  isLoading?: boolean;
+  quote?: QuoteResponse;
+  isOpen: boolean;
+  onClose: () => void;
+  initialQuote?: QuoteResponse;
+}) => {
+  const { fromAmount, fromToken, toToken } = useDexState();
+  const { swapStatus, isWrapped } = useConfirmation(isOpen);
   const updateStore = useDexState(useShallow((s) => s.updateStore));
 
   const wToken = useChainConfig()?.wToken;
@@ -250,15 +239,15 @@ const SwapModal = () => {
 
   const fromTokenUsd = useMemo(() => {
     return BN(fromTokenUsdSN || 0)
-      .multipliedBy(fromAmountUi || 0)
+      .multipliedBy(fromAmount || 0)
       .toString();
-  }, [fromTokenUsdSN, fromAmountUi]);
+  }, [fromTokenUsdSN, fromAmount]);
 
   const toTokenUsd = useMemo(() => {
     return BN(toTokenUsdSN || 0)
-      .multipliedBy(outAmountUi || 0)
+      .multipliedBy(outAmount || 0)
       .toString();
-  }, [toTokenUsdSN, outAmountUi]);
+  }, [toTokenUsdSN, outAmount]);
 
   const onWrapSuccess = useCallback(() => {
     updateStore({ fromToken: wToken });
@@ -267,11 +256,7 @@ const SwapModal = () => {
   const resetDexState = useDexState((s) => s.onReserAfterSwap);
 
   const TryAgainButton = () => {
-    return (
-      <StyledSubmitButton onClick={closeConfirmationModal}>
-        Try again
-      </StyledSubmitButton>
-    );
+    return <StyledSubmitButton onClick={onClose}>Try again</StyledSubmitButton>;
   };
 
   const onClick = useCallback(async () => {
@@ -291,16 +276,9 @@ const SwapModal = () => {
     if (swapStatus === "failed" && isWrapped) {
       onWrapSuccess();
     }
+    onClose();
+  }, [resetDexState, swapStatus, onWrapSuccess, isWrapped, onClose]);
 
-    closeConfirmationModal();
-  }, [
-    resetDexState,
-    swapStatus,
-    closeConfirmationModal,
-    onWrapSuccess,
-    isWrapped,
-  ]);
-  
   const modalTitle = useMemo(() => {
     return getSwapModalTitle(swapStatus);
   }, [swapStatus]);
@@ -313,16 +291,12 @@ const SwapModal = () => {
   const priceChangeWarning = usePriceChanged({
     quote,
     initialQuote,
-    enabled: showConfirmationModal && !swapStatus,
+    isOpen,
     toToken,
   });
 
   return (
-    <WidgetModal
-      title={modalTitle}
-      open={showConfirmationModal}
-      onClose={closeModal}
-    >
+    <WidgetModal title={modalTitle} open={isOpen} onClose={closeModal}>
       {priceChangeWarning.shouldAccept ? (
         <AcceptAmountOut
           amountToAccept={priceChangeWarning.newPrice}
@@ -332,8 +306,8 @@ const SwapModal = () => {
         <SwapConfirmation
           fromTokenUsd={fromTokenUsd}
           toTokenUsd={toTokenUsd}
-          {...lhPayload}
-          outAmount='10'
+          outAmount={outAmount}
+          fromAmount={fromAmount}
         >
           {swapStatus === "success" ? (
             <SwapConfirmation.Success />
@@ -349,8 +323,8 @@ const SwapModal = () => {
               <SwapConfirmation.SubmitButton>
                 <StyledSubmitButton
                   onClick={onClick}
-                  isLoading={swapLoading}
-                  $disabled={swapLoading}
+                  isLoading={isLoading}
+                  $disabled={isLoading}
                 >
                   {swapButtonContent}
                 </StyledSubmitButton>
@@ -400,11 +374,17 @@ const StyledPoweredByOrbs = styled(PoweredByOrbs)`
   margin-top: 30px;
 `;
 
-export const SwapSubmitButton = () => {
-  const lhPayload = useWidgetContext().lhPayload;
-
-  const { disabled, text, onClick, isLoading } =
-    useShowConfirmationButton(lhPayload);
+export const SwapSubmitButton = ({
+  onClick: onShowConfirmation,
+  quoteQuery,
+}: {
+  onClick: () => void;
+  quoteQuery: ReturnType<typeof useQuote>;
+}) => {
+  const { disabled, text, onClick, isLoading } = useShowConfirmationButton({
+    quoteQuery,
+    onClick: onShowConfirmation,
+  });
 
   return (
     <StyledSubmitButton
@@ -492,18 +472,21 @@ const FromTokenPanel = () => {
   );
 };
 
-const ToTokenPanel = () => {
-  const { ui, fromToken,toToken } = useWidgetContext().lhPayload;
+const ToTokenPanel = ({ outAmountUi }: { outAmountUi?: string }) => {
+  const { fromToken, toToken, fromAmount } = useDexState();
   const { token, onTokenSelect } = useToTokenPanel();
-  const { isUnwrapOnly, isWrapOnly } = useWrapOrUnwrapOnly(fromToken?.address, toToken?.address);
+  const { isUnwrapOnly, isWrapOnly } = useWrapOrUnwrapOnly(
+    fromToken?.address,
+    toToken?.address
+  );
 
   const { data: usdSingleToken, isLoading } = usePriceUsd({
     address: token?.address,
   });
-  const fromAmountUi = ui?.fromAmount;
-  const outAmountUi = ui?.outAmount;
 
-  const outAmount = isUnwrapOnly || isWrapOnly ? fromAmountUi : outAmountUi;
+  
+
+  const outAmount = isUnwrapOnly || isWrapOnly ? fromAmount : outAmountUi;
 
   const usd = useMemo(() => {
     if (!usdSingleToken || !outAmount) return "0";
@@ -639,29 +622,78 @@ export interface Props extends ProviderArgs {
   chains?: number[];
 }
 
+export const Content = (props: Props) => {
+  const { Modal } = props;
+  const [initialQuote, setInitialQuote] = useState<QuoteResponse | undefined>(
+    undefined
+  );
+
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const store = useDexState();
+  
+  const quoteQuery = useQuote({
+    fromToken: store.fromToken,
+    toToken: store.toToken,
+    fromAmount: store.fromAmount,
+    slippage: props.slippage || 0.5,
+  });
+
+  const outAmountUI = useAmountUI(store.toToken?.decimals, quoteQuery.quote?.outAmount);
+
+  const { mutateAsync, isPending } = useSubmitSwap();
+
+  const submitSwap = useCallback(async () => {
+    try {
+      await mutateAsync(quoteQuery.quote);
+    } catch (error) {
+      console.log(error);
+    }
+  }, [quoteQuery.quote, mutateAsync]);
+
+  const onShowConfirmation = useCallback(() => {
+    setShowConfirmation(true);
+    setInitialQuote(quoteQuery.quote);
+  }, [quoteQuery.quote]);
+
+  return (
+    <ThemeProvider theme={theme}>
+      <ContextProvider
+        Modal={Modal}
+        UIconfig={props.UIconfig}
+        slippage={props.slippage}
+      >
+        <Watcher {...props} />
+        <Container>
+          <FromTokenPanel />
+          <ChangeTokens />
+          <ToTokenPanel outAmountUi={outAmountUI} />
+          <SwapDetails quote={quoteQuery.quote} />
+          <SwapSubmitButton
+            quoteQuery={quoteQuery}
+            onClick={onShowConfirmation}
+          />
+          <SwapModal
+            onClose={() => setShowConfirmation(false)}
+            isOpen={showConfirmation}
+            submitSwap={submitSwap}
+            isLoading={isPending}
+            outAmount={outAmountUI}
+            quote={quoteQuery.quote}
+            initialQuote={initialQuote}
+          />
+          <StyledPoweredByOrbs />
+        </Container>
+      </ContextProvider>
+    </ThemeProvider>
+  );
+};
+
 export const Widget = (props: Props) => {
-  const { UIconfig, Modal, ...rest } = props;
+  const { Modal, ...rest } = props;
 
   return (
     <LiquidityHubProvider {...rest}>
-      <ThemeProvider theme={theme}>
-        <ContextProvider
-          Modal={Modal}
-          UIconfig={props.UIconfig}
-          slippage={props.slippage}
-        >
-          <Watcher {...props} />
-          <Container>
-            <FromTokenPanel />
-            <ChangeTokens />
-            <ToTokenPanel />
-            <SwapDetails />
-            <SwapSubmitButton />
-            <SwapModal />
-            <StyledPoweredByOrbs />
-          </Container>
-        </ContextProvider>
-      </ThemeProvider>
+      <Content {...props} />
     </LiquidityHubProvider>
   );
 };
@@ -776,11 +808,9 @@ const StyledTokenListContainer = styled(FlexColumn)`
   width: 100%;
 `;
 
-const SwapDetails = () => {
-  const { quote, fromToken, toToken, fromAmount, ui } =
-    useWidgetContext().lhPayload;
-  const minAmountOut = useFormatNumber({ value: ui.outAmount });
-
+const SwapDetails = ({ quote }: { quote?: QuoteResponse }) => {
+  const { fromToken, toToken, fromAmount } = useDexState();
+  const minAmountOut = useFormatNumber({ value: quote?.amountOutUI });
   const gasCost = useAmountUI(toToken?.decimals, quote?.gasAmountOut);
 
   const usd = usePriceUsd({ address: toToken?.address }).data;

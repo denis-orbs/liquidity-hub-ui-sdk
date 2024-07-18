@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useChainConfig } from "../..";
-import { useMainContext } from "../../provider";
 import { useContractCallback } from "../useContractCallback";
 import { permit2Address, QUERY_KEYS } from "../../config/consts";
 import BN from "bignumber.js";
 import { isNativeAddress } from "../../util";
+import { useMainContext } from "../../context/MainContext";
 const useApproved = (address?: string) => {
   const account = useMainContext().account;
   const getContract = useContractCallback();

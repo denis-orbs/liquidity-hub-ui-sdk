@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import Web3 from "web3";
-import { useMainContext } from "../provider";
+import { useMainContext } from "../context/MainContext";
 import { network } from "../util";
 
 export const useSwitchNetwork = () => {

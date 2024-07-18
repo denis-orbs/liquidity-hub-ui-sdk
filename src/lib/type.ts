@@ -5,7 +5,6 @@ import {
 } from "@ethersproject/abstract-signer";
 import { CSSObject } from "styled-components";
 import { ReactNode } from "react";
-import { useLiquidityHub } from ".";
 
 export interface TokenPanelProps {
   inputValue?: string;
@@ -72,6 +71,7 @@ export interface ProviderArgs {
     fetchLimit?: number;
     pauseOnConfirmation?: boolean;
   };
+ 
 }
 
 export interface QuoteArgs {
@@ -129,22 +129,6 @@ export interface OriginalQuote {
   gasAmountOut?: string;
 }
 
-export interface UseLiquidityHubState {
-  showConfirmation: boolean;
-  swapStatus: ActionStatus | undefined;
-  currentStep: STEPS | undefined;
-  initialQuote: QuoteResponse | undefined;
-  swapError: string | undefined;
-  failures: number;
-  txHash: string | undefined;
-  isWrapped: boolean;
-  isSigned: boolean;
-  sessionId?: string;
-  approveTxHash?: string;
-  wrapTxHash?: string;
-  unwrapTxHash?: string;
-  quoteCount: number;
-}
 
 export interface QuoteResponse extends OriginalQuote {
   disableRefetch?: boolean;
@@ -251,10 +235,15 @@ export declare type PermitData = {
   values: any;
 };
 
-export type LiquidityHubPayload = ReturnType<typeof useLiquidityHub>;
 
-export interface SwapConfirmationArgs extends LiquidityHubPayload {
+export interface SwapConfirmationArgs {
   fromTokenUsd?: string;
   toTokenUsd?: string;
   outAmount?: string;
+  fromAmount?: string;
+}
+
+
+export interface SDKProps extends ProviderArgs {
+  children: ReactNode;
 }

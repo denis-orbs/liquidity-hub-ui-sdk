@@ -1,7 +1,6 @@
 import { swapAnalytics } from "../../analytics";
 import { useChainConfig } from "../useChainConfig";
 import {
-  amountUi,
   delay,
   isNativeAddress,
   isNativeBalanceError,
@@ -9,11 +8,9 @@ import {
   Logger,
   waitForTxReceipt,
 } from "../../util";
-import BN from "bignumber.js";
-import { zeroAddress } from "../../config/consts";
+import { USE_SUBMIT_SWAP_KEY, zeroAddress } from "../../config/consts";
 import { useOrders } from "../useOrders";
-import { QuoteResponse, STEPS, Token, UseLiquidityHubState } from "../../type";
-import { useMainContext } from "../../provider";
+import { QuoteResponse, STEPS } from "../../type";
 import { sign } from "../../swap/sign";
 import { approve } from "../../swap/approve";
 import { wrap } from "../../swap/wrap";
@@ -23,39 +20,42 @@ import { useApiUrl } from "./useApiUrl";
 import { useMutation } from "@tanstack/react-query";
 import { useAllowance } from "./useAllowance";
 import _ from "lodash";
+import { useMainContext } from "../../context/MainContext";
+import { useAnalytics } from "../useAnalytics";
+import { useCallback } from "react";
 
-export const useSubmitSwap = ({
-  fromAmount,
-  fromToken,
-  toToken,
-  quote,
-  updateState,
-  sessionId,
-  failures,
-}: {
-  fromAmount?: string;
-  fromToken?: Token;
-  toToken?: Token;
-  quote?: QuoteResponse;
-  updateState: (value: Partial<UseLiquidityHubState>) => void;
-  sessionId?: string;
-  failures: number;
-}) => {
-  const { web3, provider, account, chainId } = useMainContext();
+export const useSubmitSwap = () => {
+  const {
+    web3,
+    provider,
+    account,
+    chainId,
+    fromAmount,
+    fromToken,
+    toToken,
+    sessionId,
+    actions: { updateState },
+  } = useMainContext();
+
+  console.log({fromAmount});
+  
+
   const chainConfig = useChainConfig();
   const wTokenAddress = chainConfig?.wToken?.address;
   const explorerUrl = chainConfig?.explorer;
   const addOrder = useOrders().addOrder;
   const gas = useEstimateGasPrice();
   const apiUrl = useApiUrl();
-
+  const analytics = useAnalytics();
+  const onError = useOnError();
   const { data: hasAllowance, refetch: refetchAllowance } = useAllowance(
     fromToken?.address,
     fromAmount
   );
 
   return useMutation({
-    mutationFn: async () => {
+    mutationKey: [USE_SUBMIT_SWAP_KEY],
+    mutationFn: async (quote?: QuoteResponse) => {
       if (!sessionId) {
         throw new Error("No session ID found");
       }
@@ -89,7 +89,7 @@ export const useSubmitSwap = ({
       if (_.isUndefined(hasAllowance)) {
         throw new Error("Allowance not found");
       }
-
+      analytics.initTrade();
       const isNativeIn = isNativeAddress(fromToken.address);
       const isNativeOut = isNativeAddress(toToken.address);
 
@@ -152,7 +152,9 @@ export const useSubmitSwap = ({
         apiUrl,
       })
         .then()
-        .catch();
+        .catch((err) => {
+          onError(err);
+        });
       const txHash = await waitForSwap(chainId, apiUrl, sessionId, account);
       if (!txHash) {
         throw new Error("Swap failed");
@@ -171,8 +173,8 @@ export const useSubmitSwap = ({
       addOrder({
         fromToken: fromToken,
         toToken: toToken,
-        fromAmount: amountUi(fromToken.decimals, BN(fromAmount)),
-        toAmount: amountUi(toToken.decimals, BN(quote.outAmount)) || "",
+        fromAmount,
+        toAmount: quote.outAmount,
         txHash,
         explorerLink: `${explorerUrl}/tx/${txHash}`,
       });
@@ -186,23 +188,36 @@ export const useSubmitSwap = ({
     },
     onSettled: () => refetchAllowance(),
     onError: (error) => {
+      onError(error);
+    },
+  });
+};
+
+const useOnError = () => {
+  const {
+    actions: { updateState },
+    failures,
+  } = useMainContext();
+
+  return useCallback(
+    (error: any) => {
       swapAnalytics.onClobFailure();
       // if user rejects the tx, we get back to confirmation step
 
-      if (isTxRejected(error)) {
+      if (isTxRejected(error.message)) {
         updateState({ swapStatus: undefined, currentStep: undefined });
         throw error;
       }
       Logger(`Swap error: ${error.message}`);
       updateState({
         swapStatus: "failed",
-        sessionId: undefined,
         currentStep: undefined,
-        failures: isNativeBalanceError(error) ? 0 : (failures || 0) + 1,
+        failures: isNativeBalanceError(error.message) ? 0 : (failures || 0) + 1,
       });
       swapAnalytics.clearState();
     },
-  });
+    [updateState, failures]
+  );
 };
 
 async function waitForSwap(

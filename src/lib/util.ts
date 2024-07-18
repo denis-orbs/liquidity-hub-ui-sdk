@@ -14,10 +14,10 @@ export const amountBN = (decimals?: number, amount?: string) =>
     .times(new BN(10).pow(decimals || 0))
     .decimalPlaces(0);
 
-export const amountUi = (decimals?: number, amount?: BN) => {
+export const amountUi = (decimals?: number, amount?: BN | string) => {
   if (!amount) return "";
   const percision = new BN(10).pow(decimals || 0);
-  return amount.times(percision).idiv(percision).div(percision).toString();
+  return BN(amount).times(percision).idiv(percision).div(percision).toString();
 };
 
 export function delay(ms: number) {
@@ -190,22 +190,48 @@ export async function sendAndWaitForConfirmations({
   const promiEvent = tx ? tx.send(options) : web3.eth.sendTransaction(options);
 
   let sentBlock = Number.POSITIVE_INFINITY;
-  promiEvent.once("receipt", (r: any) => (sentBlock = r.blockNumber));
+  let txHash = "";
 
   promiEvent.once("transactionHash", (hash: string) => {
     onTxHash?.(hash);
+    txHash = hash;
   });
 
-  const result = await promiEvent;
+  let receipt;
 
-  while (
-    (await web3.eth.getTransactionCount(opts.from)) === nonce ||
-    (await web3.eth.getBlockNumber()) < sentBlock + confirmations
-  ) {
-    await new Promise((r) => setTimeout(r, 1000));
+  try {
+    receipt = await promiEvent;
+  } catch (error) {
+    if (
+      !(error as Error).message
+        .toLowerCase()
+        .includes("failed to check for transaction receipt")
+    ) {
+      throw error;
+    }
   }
 
-  return result;
+  if (!receipt) {
+    console.log({waitForReceipt: true});
+    receipt = await waitForReceipt({ web3, txHash });
+    console.log({receipt});
+  
+  }
+
+  if(!receipt) {
+    return undefined
+  }
+  
+  if (confirmations > 1) {
+    while (
+      (await web3.eth.getTransactionCount(opts.from)) === nonce ||
+      (await web3.eth.getBlockNumber()) < sentBlock + confirmations
+    ) {
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+  }
+
+  return receipt;
 }
 
 export async function estimateGasPrice(
@@ -468,20 +494,17 @@ export const getContract = (
   );
 };
 
-export const isTxRejected = (error: any) => {  
-  if (error?.message) {
-    return (
-      error.message?.toLowerCase()?.includes("rejected") ||
-      error.message?.toLowerCase()?.includes("denied")
-    );
-  }
+export const isTxRejected = (message?: string) => {
+  return (
+    message?.toLowerCase()?.includes("rejected") ||
+    message?.toLowerCase()?.includes("denied")
+  );
 };
-export const isNativeBalanceError = (error: any) => {
-  if (error?.message) {
-    return error.message?.toLowerCase()?.includes("insufficient") || 
-    error.message?.toLowerCase()?.includes("gas required exceeds allowance");
-    ;
-  }
+export const isNativeBalanceError = (message?: string) => {
+  return (
+    message?.toLowerCase()?.includes("insufficient") ||
+    message?.toLowerCase()?.includes("gas required exceeds allowance")
+  );
 };
 
 export const getSwapModalTitle = (swapStatus: ActionStatus) => {
@@ -497,3 +520,27 @@ export const isLHSwap = (lhAmountOut?: string, dexAmountOut?: string) => {
 
   return BN(lhAmountOut || 0).gt(dexAmountOut || 0);
 };
+
+export async function waitForReceipt({
+  web3,
+  txHash,
+  delay: dellayMillis = 3_000,
+  attempts = 20,
+}: {
+  web3: Web3;
+  txHash: string;
+  delay?: number;
+  attempts?: number;
+}) {
+  for (let i = 0; i < attempts; ++i) {
+    await delay(dellayMillis);
+    try {
+      const receipt = await web3.eth.getTransactionReceipt(txHash);
+      if (receipt) {
+        return receipt;
+      }
+    } catch (error: any) {
+      console.error("waitForReceipt error", error);
+    }
+  }
+}

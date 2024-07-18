@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useMainContext } from "../provider";
+import { useMainContext } from "../context/MainContext";
 import { isNativeAddress } from "../util";
 import { useContract } from "./useContractCallback";
 

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../../api";
 import { QUERY_KEYS } from "../../config/consts";
-import { useMainContext } from "../../provider";
+import { useMainContext } from "../../context/MainContext";
 import { getChainConfig, isNativeAddress } from "../../util";
 
 export const usePriceUsd = ({

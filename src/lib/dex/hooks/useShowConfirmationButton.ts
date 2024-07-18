@@ -1,16 +1,16 @@
 import BN from "bignumber.js";
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useTokenListBalance } from "./useTokenListBalance";
 import { useTokenListBalances } from "./useTokenListBalances";
-import { LiquidityHubPayload, useSwitchNetwork, useUnwrap } from "../..";
-import { useAmountBN, useChainConfig } from "../../hooks";
-import { useMainContext } from "../../provider";
+import { useSwitchNetwork, useUnwrap } from "../..";
+import { useAmountBN, useChainConfig, useQuote } from "../../hooks";
 import { useDexState } from "../../store/dex";
 import { getChainConfig } from "../../util";
 import { useIsInvalidChain } from "./useIsInvalidChain";
 import { useWrapOrUnwrapOnly } from "../../hooks/hooks";
 import { useWrap } from "../../hooks/useWrap";
+import { useMainContext } from "../../context/MainContext";
 
 export const useUnwrapMF = () => {
   const { refetch } = useTokenListBalances();
@@ -54,19 +54,16 @@ export const useWrapMF = () => {
   };
 };
 
-export const useShowConfirmationButton = (props: LiquidityHubPayload) => {
+export const useShowConfirmationButton = (props: {
+  quoteQuery: ReturnType<typeof useQuote>;
+  onClick: () => void;
+}) => {
   const {
-    quote,
-    quoteLoading,
-    quoteError,
-    analyticsInit,
-    onShowConfirmation,
-    fromToken,
-    toToken,
-    fromAmount,
-    ui
+    quoteQuery: { quote, isLoading: quoteLoading, error: quoteError },
+    onClick,
   } = props;
-  const outAmountUi = ui?.outAmount;
+  const { fromAmount, fromToken, toToken } = useDexState();
+  const outAmountUi = quote?.amountOutUI;
 
   const { mutate: switchNetwork, isPending: switchNetworkLoading } =
     useSwitchNetwork();
@@ -79,11 +76,6 @@ export const useShowConfirmationButton = (props: LiquidityHubPayload) => {
   const { mutate: wrap, isPending: wrapLoading } = useWrapMF();
 
   const { connectWallet, account, supportedChains } = useMainContext();
-
-  const onSumbit = useCallback(() => {
-    analyticsInit();
-    onShowConfirmation();
-  }, [onShowConfirmation, analyticsInit]);
 
   const { isUnwrapOnly, isWrapOnly } = useWrapOrUnwrapOnly(
     fromToken?.address,
@@ -180,7 +172,7 @@ export const useShowConfirmationButton = (props: LiquidityHubPayload) => {
     return {
       disabled: false,
       text: "Swap",
-      onClick: onSumbit,
+      onClick: onClick,
     };
   }, [
     wrongChain,
@@ -191,7 +183,6 @@ export const useShowConfirmationButton = (props: LiquidityHubPayload) => {
     fromTokenBalance,
     switchNetwork,
     switchNetworkLoading,
-    onSumbit,
     isLoading,
     account,
     connectWallet,
@@ -205,6 +196,7 @@ export const useShowConfirmationButton = (props: LiquidityHubPayload) => {
     quote?.outAmount,
     isUnwrapOnly,
     isWrapOnly,
-    wrap
+    wrap,
+    onClick,
   ]);
 };

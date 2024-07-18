@@ -1,6 +1,6 @@
 import { getChainConfig } from '../util';
 import  { useMemo } from 'react'
-import { useMainContext } from '../provider';
+import { useMainContext } from '../context/MainContext';
 
 
 export function useChainConfig() {

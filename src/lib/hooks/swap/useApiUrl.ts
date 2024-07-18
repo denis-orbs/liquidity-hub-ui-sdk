@@ -1,6 +1,6 @@
 import _ from "lodash";
 import { useMemo } from "react";
-import { useMainContext } from "../../provider";
+import { useMainContext } from "../../context/MainContext";
 import { getChainConfig } from "../../util";
 import { useChainConfig } from "../useChainConfig";
 

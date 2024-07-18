@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
-import { useMainContext } from "../../provider";
+import { useMainContext } from "../../context/MainContext";
 import { approve } from "../../swap/approve";
 import { isNativeAddress } from "../../util";
 import { useChainConfig } from "../useChainConfig";

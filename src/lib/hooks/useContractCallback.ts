@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react";
-import { useMainContext } from "../provider";
 import { useChainConfig } from "./useChainConfig";
 import { getContract } from "../util";
+import { useMainContext } from "../context/MainContext";
 
 export const useContractCallback = () => {
   const { web3, chainId } = useMainContext();

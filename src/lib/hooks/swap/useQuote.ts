@@ -1,71 +1,84 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMainContext } from "../../provider";
 import { QUERY_KEYS, QUOTE_REFETCH_THROTTLE } from "../../config/consts";
 import { useApiUrl } from "./useApiUrl";
 import BN from "bignumber.js";
 import _ from "lodash";
-import { useChainConfig } from "..";
+import { useChainConfig, useIsDisabled } from "..";
 import { quote } from "../../swap/quote";
-import {
-  ActionStatus,
-  Token,
-  UseLiquidityHubState,
-  UseQueryData,
-} from "../../type";
+import { Token, UseQueryData } from "../../type";
 import { useWrapOrUnwrapOnly } from "../hooks";
+import { useMainContext } from "../../context/MainContext";
+import { amountBN, safeBN } from "../../util";
+import { useMemo } from "react";
 
-export const useQuote = ({
-  fromToken,
-  toToken,
-  fromAmount,
-  dexMinAmountOut,
-  swapStatus,
-  showConfirmation,
-  disabled,
-  slippage,
-  sessionId,
-  updateState,
-}: {
+interface Props {
   fromToken?: Token;
   toToken?: Token;
   fromAmount?: string;
-  dexMinAmountOut?: string;
-  swapStatus?: ActionStatus;
-  showConfirmation?: boolean;
+  minAmountOut?: string;
   disabled?: boolean;
   slippage: number;
-  updateState: (value: Partial<UseLiquidityHubState>) => void;
-  sessionId?: string;
-}) => {
+  pauseOnConfirmation?: boolean;
+}
+
+export const useQuote = (props: Props) => {
+  const res = useQuoteQuery(props);
+
+  return useMemo(() => {
+    return {
+      quote: res.data?.quote,
+      isLoading: res.isLoading,
+      error: res.error,
+      isError: res.isError,
+    };
+  }, [res.data?.quote, res.isLoading, res.error, res.isError]);
+};
+
+export const useQuoteQuery = (props: Props) => {
   const context = useMainContext();
+
   const apiUrl = useApiUrl();
   const chainId = context.chainId;
   const wTokenAddress = useChainConfig()?.wToken?.address;
-  const pause = showConfirmation && context.quote?.pauseOnConfirmation;
+  const pause = context.showConfirmation && props.pauseOnConfirmation;
   const fetchLimit = context.quote?.fetchLimit!;
-  const {isUnwrapOnly, isWrapOnly} = useWrapOrUnwrapOnly(fromToken?.address, toToken?.address)
+  const { isUnwrapOnly, isWrapOnly } = useWrapOrUnwrapOnly(
+    props.fromToken?.address,
+    props.toToken?.address
+  );
+
+  const { fromAmount, dexMinAmountOut } = useMemo(() => {
+    return {
+      fromAmount: safeBN(amountBN(props.fromToken?.decimals,  props.fromAmount).toString()),
+      dexMinAmountOut: safeBN(props.minAmountOut),
+    };
+  }, [props.fromAmount, props.minAmountOut, props.fromToken?.decimals]);
+
+  const disabled = useIsDisabled();
+  
 
   const enabled =
     !!chainId &&
     !!wTokenAddress &&
     !!context.partner &&
-    !!fromToken &&
-    !!toToken &&
+    !!props.fromToken &&
+    !!props.toToken &&
     BN(fromAmount || "0").gt(0) &&
     !!apiUrl &&
+    !props.disabled &&
     !disabled &&
-    swapStatus !== "loading" &&
+    context.swapStatus !== "loading" &&
     !pause &&
     !isUnwrapOnly &&
     !isWrapOnly;
 
-
+  
   const queryKey = [
     QUERY_KEYS.QUOTE,
-    fromToken?.address,
-    toToken?.address,
+    props.fromToken?.address,
+    props.toToken?.address,
     fromAmount,
-    slippage,
+    props.slippage,
     apiUrl,
     chainId,
   ];
@@ -73,28 +86,36 @@ export const useQuote = ({
 
   return useQuery({
     queryKey,
-    queryFn: async ({ signal }) => {
+    queryFn: async ({ signal }) => {      
+      context.actions.updateState({
+        quoteQueryKey: queryKey,
+        fromToken: props.fromToken,
+        toToken: props.toToken,
+        slippage: props.slippage,
+        fromAmount,
+        dexMinAmountOut,
+      });
       const quoteResponse = await quote({
-        fromToken: fromToken!,
-        toToken: toToken!,
+        fromToken: props.fromToken!,
+        toToken: props.toToken!,
         wTokenAddress: wTokenAddress!,
         fromAmount: fromAmount!,
         apiUrl: apiUrl!,
         dexMinAmountOut,
         account: context.account,
         partner: context.partner,
-        sessionId,
-        slippage,
+        sessionId: context.sessionId,
+        slippage: props.slippage,
         signal,
         quoteInterval: context.quote?.refetchInterval,
         chainId: chainId!,
       });
 
       if (quoteResponse.sessionId) {
-        updateState({ sessionId: quoteResponse.sessionId });
+        context.actions.updateState({ sessionId: quoteResponse.sessionId });
       }
 
-      const refetchCount = showConfirmation
+      const refetchCount = context.showConfirmation
         ? 0
         : ((queryClient.getQueryData(queryKey) as UseQueryData)?.refetchCount ||
             0) + 1;
@@ -117,7 +138,7 @@ export const useQuote = ({
       if (data?.quote.disableRefetch) {
         return false;
       }
-      if (showConfirmation) {
+      if (context.showConfirmation) {
         return context.quote?.refetchInterval;
       }
 

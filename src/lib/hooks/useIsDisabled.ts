@@ -1,11 +1,11 @@
 import _ from "lodash";
 import { useMemo } from "react";
 import { networks } from "../config/networks";
-import { useMainContext } from "../provider";
+import { useMainContext } from "../context/MainContext";
 import { useLiquidityHubPersistedStore } from "../store/main";
 import { LH_CONTROL } from "../type";
 
-export function useIsDisabled({failures, disabledByDex}: {failures?: number; disabledByDex?: boolean}) {
+export function useIsDisabled() {
   const context = useMainContext()
   const maxFailures = context.swap?.maxFailures;
   const { liquidityHubEnabled, lhControl } = useLiquidityHubPersistedStore(
@@ -23,18 +23,17 @@ export function useIsDisabled({failures, disabledByDex}: {failures?: number; dis
 
   const failedMaxFailures = !maxFailures
     ? false
-    : (failures || 0) >= maxFailures;
+    : (context.failures || 0) >= maxFailures;
 
   return useMemo(() => {
     if(!isValidChain) return true;
     if (!liquidityHubEnabled) return true;
     if (lhControl === LH_CONTROL.SKIP) return true;
     return (
-      failedMaxFailures || disabledByDex || !liquidityHubEnabled
+      failedMaxFailures || !liquidityHubEnabled
     );
   }, [
     failedMaxFailures,
-    disabledByDex,
     lhControl,
     liquidityHubEnabled,
     isValidChain,

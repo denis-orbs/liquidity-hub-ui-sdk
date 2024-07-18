@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { useMainContext } from "../provider";
+import { useMainContext } from "../context/MainContext";
 import { wrap } from "../swap/wrap";
 import { useEstimateGasPrice } from "./useEstimateGasPrice";
 
