@@ -26,22 +26,22 @@ export const useQuote = (props: Props) => {
 
   return useMemo(() => {
     return {
-      quote: res.data?.quote,
+      quote: res.data?.quoteResponse.quote,
       isLoading: res.isLoading,
       error: res.error,
       isError: res.isError,
     };
-  }, [res.data?.quote, res.isLoading, res.error, res.isError]);
+  }, [res]);
 };
 
 export const useQuoteQuery = (props: Props) => {
   const context = useMainContext();
-
+  const { showConfirmation } = context.state;
   const apiUrl = useApiUrl();
   const chainId = context.chainId;
   const wTokenAddress = useChainConfig()?.wToken?.address;
-  const pause = context.showConfirmation && props.pauseOnConfirmation;
-  const fetchLimit = context.quote?.fetchLimit!;
+  const pause = showConfirmation && props.pauseOnConfirmation;
+  const fetchLimit = context.quoteConfig?.fetchLimit!;
   const { isUnwrapOnly, isWrapOnly } = useWrapOrUnwrapOnly(
     props.fromToken?.address,
     props.toToken?.address
@@ -49,13 +49,14 @@ export const useQuoteQuery = (props: Props) => {
 
   const { fromAmount, dexMinAmountOut } = useMemo(() => {
     return {
-      fromAmount: safeBN(amountBN(props.fromToken?.decimals,  props.fromAmount).toString()),
+      fromAmount: safeBN(
+        amountBN(props.fromToken?.decimals, props.fromAmount).toString()
+      ),
       dexMinAmountOut: safeBN(props.minAmountOut),
     };
   }, [props.fromAmount, props.minAmountOut, props.fromToken?.decimals]);
 
   const disabled = useIsDisabled();
-  
 
   const enabled =
     !!chainId &&
@@ -67,12 +68,11 @@ export const useQuoteQuery = (props: Props) => {
     !!apiUrl &&
     !props.disabled &&
     !disabled &&
-    context.swapStatus !== "loading" &&
+    context.state.swapStatus !== "loading" &&
     !pause &&
     !isUnwrapOnly &&
     !isWrapOnly;
 
-  
   const queryKey = [
     QUERY_KEYS.QUOTE,
     props.fromToken?.address,
@@ -86,8 +86,8 @@ export const useQuoteQuery = (props: Props) => {
 
   return useQuery({
     queryKey,
-    queryFn: async ({ signal }) => {      
-      context.actions.updateState({
+    queryFn: async ({ signal }) => {
+      context.updateState({
         quoteQueryKey: queryKey,
         fromToken: props.fromToken,
         toToken: props.toToken,
@@ -104,24 +104,24 @@ export const useQuoteQuery = (props: Props) => {
         dexMinAmountOut,
         account: context.account,
         partner: context.partner,
-        sessionId: context.sessionId,
+        sessionId: context.state.sessionId,
         slippage: props.slippage,
         signal,
-        quoteInterval: context.quote?.refetchInterval,
+        quoteInterval: context.quoteConfig?.refetchInterval,
         chainId: chainId!,
       });
 
-      if (quoteResponse.sessionId) {
-        context.actions.updateState({ sessionId: quoteResponse.sessionId });
+      if (quoteResponse.quote?.sessionId) {
+        context.updateState({ sessionId: quoteResponse.quote.sessionId });
       }
 
-      const refetchCount = context.showConfirmation
+      const refetchCount = context.state.showConfirmation
         ? 0
         : ((queryClient.getQueryData(queryKey) as UseQueryData)?.refetchCount ||
             0) + 1;
 
       return {
-        quote: quoteResponse,
+        quoteResponse,
         refetchCount,
         isPassedLimit: refetchCount > fetchLimit,
         resetCount: () =>
@@ -135,17 +135,17 @@ export const useQuoteQuery = (props: Props) => {
       };
     },
     refetchInterval: ({ state: { data } }) => {
-      if (data?.quote.disableRefetch) {
+      if (data?.quoteResponse.disableRefetch) {
         return false;
       }
-      if (context.showConfirmation) {
-        return context.quote?.refetchInterval;
+      if (context.state.showConfirmation) {
+        return context.quoteConfig?.refetchInterval;
       }
 
       if (data?.refetchCount && data?.refetchCount > fetchLimit) {
         return QUOTE_REFETCH_THROTTLE;
       }
-      return context.quote?.refetchInterval;
+      return context.quoteConfig?.refetchInterval;
     },
     staleTime: Infinity,
     enabled,

@@ -1,6 +1,6 @@
 import BN from "bignumber.js";
 import Web3 from "web3";
-import { OriginalQuote } from "../type";
+import { Quote } from "../type";
 import { amountUi, Logger, waitForTxReceipt } from "../util";
 
 import { AnalyticsData, InitDexTrade, InitTrade } from "./types";
@@ -164,22 +164,22 @@ export class Analytics {
     };
   }
 
-  onQuoteSuccess(quoteMillis: number, quoteResponse: OriginalQuote) {
+  onQuoteSuccess(quoteMillis: number, quote: Quote) {
     this.data = {
       ...this.data,
       quoteState: "success",
       quoteMillis,
       quoteError: undefined,
       isNotClobTradeReason: undefined,
-      quoteAmountOut: quoteResponse?.outAmount,
-      quoteSerializedOrder: quoteResponse?.serializedOrder,
+      quoteAmountOut: quote?.outAmount,
+      quoteSerializedOrder: quote?.serializedOrder,
     };
   }
 
   onQuoteFailed(
     error: string,
     quoteMillis: number,
-    quoteResponse?: OriginalQuote
+    quote?: Quote
   ) {
     // we not treat DEX_PRICE_BETTER_ERROR as a failure
     if (error == DEX_PRICE_BETTER_ERROR) {
@@ -188,8 +188,8 @@ export class Analytics {
         isNotClobTradeReason: DEX_PRICE_BETTER_ERROR,
         quoteState: "success",
         quoteMillis,
-        quoteAmountOut: quoteResponse?.outAmount,
-        quoteSerializedOrder: quoteResponse?.serializedOrder,
+        quoteAmountOut: quote?.outAmount,
+        quoteSerializedOrder: quote?.serializedOrder,
       };
     } else {
       this.data = {
@@ -198,8 +198,8 @@ export class Analytics {
         quoteState: "failed",
         isNotClobTradeReason: `quote-failed`,
         quoteMillis,
-        quoteAmountOut: quoteResponse?.outAmount,
-        quoteSerializedOrder: quoteResponse?.serializedOrder,
+        quoteAmountOut: quote?.outAmount,
+        quoteSerializedOrder: quote?.serializedOrder,
       };
     }
   }

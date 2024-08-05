@@ -39,7 +39,7 @@ const SwapConfirmation = ({
 };
 
 const Main = ({ SubmitButton }: { SubmitButton: ReactNode }) => {
-  const { swapStatus } = useMainContext();
+  const { state:{swapStatus} } = useMainContext();
 
   return (
     <Fragment>
@@ -60,7 +60,7 @@ const Main = ({ SubmitButton }: { SubmitButton: ReactNode }) => {
 };
 
 const SubmitButton = ({ children }: { children: ReactNode }) => {
-  const {swapStatus} = useMainContext();
+  const {state:{swapStatus}} = useMainContext();
 
   if (swapStatus) return null;
 
@@ -74,7 +74,7 @@ const ExplorerLinkComponent = ({
   className?: string;
   styles?: CSSObject;
 }) => {
-  const { txHash } = useMainContext();
+  const { txHash } = useMainContext().state;
 
   return (
     <ExplorerLink

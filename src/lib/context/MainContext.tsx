@@ -11,7 +11,6 @@ import Web3 from "web3";
 import {
   ActionStatus,
   ProviderArgs,
-  QuoteResponse,
   SDKProps,
   STEPS,
   Token,
@@ -27,7 +26,6 @@ interface State {
   dexMinAmountOut?: string;
   swapStatus?: ActionStatus;
   currentStep?: STEPS;
-  initialQuote?: QuoteResponse;
   swapError?: string;
   failures?: number;
   txHash?: string;
@@ -42,9 +40,10 @@ interface State {
   slippage?: number;
 }
 
-interface ContextArgs extends State, ProviderArgs {
+interface ContextArgs extends  ProviderArgs {
   web3?: Web3;
-  actions: ReturnType<typeof useContextActions>;
+  updateState: (payload: Partial<State>) => void;
+  state: State;
 }
 
 const Context = createContext({} as ContextArgs);
@@ -64,13 +63,20 @@ export const MainContextProvider = (props: SDKProps) => {
   const { children, ...rest } = props;
   const { partner, provider, chainId } = rest;
   const [state, dispatch] = useReducer(reducer, initialState);
-
-  const actions = useContextActions(dispatch);
   useLhControllListener();
 
   const web3 = useMemo(
     () => (provider ? new Web3(provider) : undefined),
     [provider]
+  );
+
+  const updateState = useCallback(
+    (payload: Partial<State>) => {
+      console.log({ payload });
+
+      dispatch({ type: "UPDATE_STATE", payload });
+    },
+    [dispatch]
   );
 
   useEffect(() => {
@@ -81,26 +87,10 @@ export const MainContextProvider = (props: SDKProps) => {
   }, [chainId, partner]);
 
   return (
-    <Context.Provider value={{ actions, ...state, ...rest, web3 }}>
+    <Context.Provider value={{ ...rest, web3, updateState, state }}>
       {children}
     </Context.Provider>
   );
-};
-
-const useContextActions = (dispatch: React.Dispatch<Action>) => {
-  const updateState = useCallback(
-    (payload: Partial<State>) => {
-        console.log({payload});
-        
-      dispatch({ type: "UPDATE_STATE", payload });
-    },
-    [dispatch]
-  );
-
-
-  return {
-    updateState,
-  };
 };
 
 export const useMainContext = () => {

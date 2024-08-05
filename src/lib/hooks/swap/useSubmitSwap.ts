@@ -9,8 +9,8 @@ import {
   waitForTxReceipt,
 } from "../../util";
 import { USE_SUBMIT_SWAP_KEY, zeroAddress } from "../../config/consts";
-import { useOrders } from "../useOrders";
-import { QuoteResponse, STEPS } from "../../type";
+import { useAddOrderCallback } from "../useOrders";
+import { Quote, STEPS } from "../../type";
 import { sign } from "../../swap/sign";
 import { approve } from "../../swap/approve";
 import { wrap } from "../../swap/wrap";
@@ -25,25 +25,14 @@ import { useAnalytics } from "../useAnalytics";
 import { useCallback } from "react";
 
 export const useSubmitSwap = () => {
-  const {
-    web3,
-    provider,
-    account,
-    chainId,
-    fromAmount,
-    fromToken,
-    toToken,
-    sessionId,
-    actions: { updateState },
-  } = useMainContext();
+  const { web3, provider, account, chainId, state, updateState } =
+    useMainContext();
 
-  console.log({fromAmount});
-  
+  const { fromAmount, fromToken, toToken, sessionId } = state;
 
   const chainConfig = useChainConfig();
   const wTokenAddress = chainConfig?.wToken?.address;
-  const explorerUrl = chainConfig?.explorer;
-  const addOrder = useOrders().addOrder;
+  const addOrder = useAddOrderCallback();
   const gas = useEstimateGasPrice();
   const apiUrl = useApiUrl();
   const analytics = useAnalytics();
@@ -55,7 +44,7 @@ export const useSubmitSwap = () => {
 
   return useMutation({
     mutationKey: [USE_SUBMIT_SWAP_KEY],
-    mutationFn: async (quote?: QuoteResponse) => {
+    mutationFn: async (quote?: Quote) => {
       if (!sessionId) {
         throw new Error("No session ID found");
       }
@@ -86,17 +75,12 @@ export const useSubmitSwap = () => {
         throw new Error("Missing from amount");
       }
 
-      if (_.isUndefined(hasAllowance)) {
-        throw new Error("Allowance not found");
-      }
       analytics.initTrade();
       const isNativeIn = isNativeAddress(fromToken.address);
       const isNativeOut = isNativeAddress(toToken.address);
-
       let inTokenAddress = isNativeIn ? zeroAddress : fromToken.address;
       const outTokenAddress = isNativeOut ? zeroAddress : toToken.address;
-      Logger({ inTokenAddress, outTokenAddress });
-      Logger({ quote });
+      Logger({ inTokenAddress, outTokenAddress, quote });
       updateState({ swapStatus: "loading" });
       if (isNativeIn) {
         updateState({ currentStep: STEPS.WRAP });
@@ -146,7 +130,7 @@ export const useSubmitSwap = () => {
         inTokenAddress,
         outTokenAddress,
         fromAmount,
-        quote: quote.originalQuote,
+        quote,
         account,
         chainId,
         apiUrl,
@@ -170,14 +154,7 @@ export const useSubmitSwap = () => {
       swapAnalytics.onClobOnChainSwapSuccess();
       updateState({ swapStatus: "success", failures: 0, sessionId: undefined });
 
-      addOrder({
-        fromToken: fromToken,
-        toToken: toToken,
-        fromAmount,
-        toAmount: quote.outAmount,
-        txHash,
-        explorerLink: `${explorerUrl}/tx/${txHash}`,
-      });
+      addOrder(quote, txHash);
 
       Logger("Swap success");
       swapAnalytics.clearState();
@@ -195,8 +172,8 @@ export const useSubmitSwap = () => {
 
 const useOnError = () => {
   const {
-    actions: { updateState },
-    failures,
+    updateState,
+    state: { failures },
   } = useMainContext();
 
   return useCallback(
@@ -246,7 +223,6 @@ async function waitForSwap(
         return result.txHash as string;
       }
     } catch (error: any) {
-      // TODO, do we need to fail swap, in this api failure case?
       throw new Error(error.message);
     }
   }

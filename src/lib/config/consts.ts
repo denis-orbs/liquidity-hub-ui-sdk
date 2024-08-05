@@ -15,8 +15,8 @@ export enum QUERY_KEYS {
   TOKENS_LIST = "TOKENS_LIST",
 }
 
-export const LH_CONTROL_PARAM = 'lh-control'
-export const DEBUG_PARAM = 'lh-debug'
+export const LH_CONTROL_PARAM = "lh-control";
+export const DEBUG_PARAM = "lh-debug";
 
 export const DEFAULT_SLIPPAGE = 0.3;
 
@@ -46,18 +46,24 @@ export const THENA_TOKENS_LIST_API =
 export const FROM_AMOUNT_DEBOUNCE = 300;
 
 export const EMPTY_QUOTE_RESPONSE = {
-  outAmount: "0",
-  outAmountUI: "0",
-  disableRefetch: true,
-  serializedOrder: "",
-  permitData: "",
-  callData: "",
-  rawData: "",
-  ui: {},
-} as any as QuoteResponse;
+  inToken: "",
+  outToken: "",
+  inAmount: "string",
+  outAmount: "string",
+  user: "string",
+  slippage: 0,
+  qs: "string",
+  partner: "string",
+  exchange: "string",
+  sessionId: "string",
+  serializedOrder: "string",
+  permitData: '',
+  minAmountOut: "string",
+  amountOutUI: "string",
+  error: "string",
+  gasAmountOut: "string",
+} as QuoteResponse;
 
-
-
-export const QUOTE_REFETCH_THROTTLE = 60_000
-export const DEFAULT_QUOTE_REFETCH_LIMIT = 10
-export const USE_SUBMIT_SWAP_KEY = 'use-submit-lh-swap'
+export const QUOTE_REFETCH_THROTTLE = 60_000;
+export const DEFAULT_QUOTE_REFETCH_LIMIT = 10;
+export const USE_SUBMIT_SWAP_KEY = "use-submit-lh-swap";

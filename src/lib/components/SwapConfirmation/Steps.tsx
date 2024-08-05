@@ -6,7 +6,7 @@ import { SkeletonLoader } from "../SkeletonLoader";
 import { StepComponent } from "./Step";
 
 export const StepsComponent = () => {
-  const { swapStatus } =
+  const { state:{swapStatus} } =
     useMainContext();
   const { steps, isLoading } = useSteps();
   if (swapStatus !== "loading") return null;

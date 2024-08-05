@@ -13,7 +13,7 @@ import {
   TokenListItemProps,
   ProviderArgs,
   Token,
-  QuoteResponse,
+  Quote,
 } from "../type";
 import {
   StyledChangeTokens,
@@ -224,10 +224,10 @@ const SwapModal = ({
   submitSwap: () => Promise<void>;
   outAmount?: string;
   isLoading?: boolean;
-  quote?: QuoteResponse;
+  quote?: Quote;
   isOpen: boolean;
   onClose: () => void;
-  initialQuote?: QuoteResponse;
+  initialQuote?: Quote;
 }) => {
   const { fromAmount, fromToken, toToken } = useDexState();
   const { swapStatus, isWrapped } = useConfirmation(isOpen);
@@ -376,14 +376,20 @@ const StyledPoweredByOrbs = styled(PoweredByOrbs)`
 
 export const SwapSubmitButton = ({
   onClick: onShowConfirmation,
-  quoteQuery,
+  quoteLoading,
+  quoteError,
+  quote,
 }: {
   onClick: () => void;
-  quoteQuery: ReturnType<typeof useQuote>;
+  quoteLoading: boolean;
+  quoteError?: boolean;
+  quote?: Quote;
 }) => {
   const { disabled, text, onClick, isLoading } = useShowConfirmationButton({
-    quoteQuery,
     onClick: onShowConfirmation,
+    quoteLoading,
+    quoteError,
+    quote,
   });
 
   return (
@@ -483,8 +489,6 @@ const ToTokenPanel = ({ outAmountUi }: { outAmountUi?: string }) => {
   const { data: usdSingleToken, isLoading } = usePriceUsd({
     address: token?.address,
   });
-
-  
 
   const outAmount = isUnwrapOnly || isWrapOnly ? fromAmount : outAmountUi;
 
@@ -624,36 +628,40 @@ export interface Props extends ProviderArgs {
 
 export const Content = (props: Props) => {
   const { Modal } = props;
-  const [initialQuote, setInitialQuote] = useState<QuoteResponse | undefined>(
+  const [initialQuote, setInitialQuote] = useState<Quote | undefined>(
     undefined
   );
 
   const [showConfirmation, setShowConfirmation] = useState(false);
   const store = useDexState();
-  
-  const quoteQuery = useQuote({
+
+  const {
+    quote,
+    isLoading: quoteLoading,
+    isError: quoteError,
+  } = useQuote({
     fromToken: store.fromToken,
     toToken: store.toToken,
     fromAmount: store.fromAmount,
     slippage: props.slippage || 0.5,
   });
 
-  const outAmountUI = useAmountUI(store.toToken?.decimals, quoteQuery.quote?.outAmount);
+  const outAmountUI = useAmountUI(store.toToken?.decimals, quote?.outAmount);
 
   const { mutateAsync, isPending } = useSubmitSwap();
 
   const submitSwap = useCallback(async () => {
     try {
-      await mutateAsync(quoteQuery.quote);
+      await mutateAsync(quote);
     } catch (error) {
       console.log(error);
     }
-  }, [quoteQuery.quote, mutateAsync]);
+  }, [quote, mutateAsync]);
 
   const onShowConfirmation = useCallback(() => {
     setShowConfirmation(true);
-    setInitialQuote(quoteQuery.quote);
-  }, [quoteQuery.quote]);
+    quote && setInitialQuote(quote);
+  }, [quote]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -667,9 +675,10 @@ export const Content = (props: Props) => {
           <FromTokenPanel />
           <ChangeTokens />
           <ToTokenPanel outAmountUi={outAmountUI} />
-          <SwapDetails quote={quoteQuery.quote} />
+          <SwapDetails quote={quote} />
           <SwapSubmitButton
-            quoteQuery={quoteQuery}
+            quoteLoading={quoteLoading}
+            quoteError={quoteError}
             onClick={onShowConfirmation}
           />
           <SwapModal
@@ -678,7 +687,7 @@ export const Content = (props: Props) => {
             submitSwap={submitSwap}
             isLoading={isPending}
             outAmount={outAmountUI}
-            quote={quoteQuery.quote}
+            quote={quote}
             initialQuote={initialQuote}
           />
           <StyledPoweredByOrbs />
@@ -808,7 +817,7 @@ const StyledTokenListContainer = styled(FlexColumn)`
   width: 100%;
 `;
 
-const SwapDetails = ({ quote }: { quote?: QuoteResponse }) => {
+const SwapDetails = ({ quote }: { quote?: Quote }) => {
   const { fromToken, toToken, fromAmount } = useDexState();
   const minAmountOut = useFormatNumber({ value: quote?.amountOutUI });
   const gasCost = useAmountUI(toToken?.decimals, quote?.gasAmountOut);

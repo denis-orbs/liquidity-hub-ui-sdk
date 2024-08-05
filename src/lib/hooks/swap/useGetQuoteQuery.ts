@@ -4,7 +4,7 @@ import { useMainContext } from "../../context/MainContext";
 import { useQuoteQuery } from "./useQuote";
 
 export function useGetQuoteQuery() {
-  const quoteQueryKey = useMainContext().quoteQueryKey;
+  const quoteQueryKey = useMainContext().state.quoteQueryKey;
   const queryClient = useQueryClient();
   return useCallback(() => {
     if (!quoteQueryKey) return;

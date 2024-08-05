@@ -7,7 +7,7 @@ import { LH_CONTROL } from "../type";
 
 export function useIsDisabled() {
   const context = useMainContext()
-  const maxFailures = context.swap?.maxFailures;
+  const maxFailures = context.swapConfig?.maxFailures;
   const { liquidityHubEnabled, lhControl } = useLiquidityHubPersistedStore(
     (s) => ({
       liquidityHubEnabled: s.liquidityHubEnabled,
@@ -23,7 +23,7 @@ export function useIsDisabled() {
 
   const failedMaxFailures = !maxFailures
     ? false
-    : (context.failures || 0) >= maxFailures;
+    : (context.state.failures || 0) >= maxFailures;
 
   return useMemo(() => {
     if(!isValidChain) return true;

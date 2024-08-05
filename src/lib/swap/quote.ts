@@ -6,7 +6,7 @@ import {
   QUOTE_ERRORS,
   zeroAddress,
 } from "../config/consts";
-import { OriginalQuote, Token } from "../type";
+import { Quote, Token } from "../type";
 import {
   counter,
   isNativeAddress,
@@ -47,9 +47,8 @@ export const quote = async ({
   chainId,
 }: Args) => {
   swapAnalytics.onQuoteRequest();
-  let quote: OriginalQuote | undefined = undefined;
+  let quote: Quote | undefined = undefined;
   const count = counter();
-
 
   try {
     const response = await fetch(`${apiUrl}/quote?chainId=${chainId}`, {
@@ -97,14 +96,15 @@ export const quote = async ({
       gasAmountOut: quote.gasAmountOut,
       refetchInterval: quoteInterval,
     });
-    return {
-      originalQuote: quote,
+    quote = {
       ...quote,
       outAmount: safeBN(quote.outAmount) || "",
       minAmountOut: safeBN(quote.minAmountOut || 0) || "",
       gasAmountOut: safeBN(quote.gasAmountOut),
     };
-
+    return {
+      quote,
+    };
   } catch (error: any) {
     swapAnalytics.onQuoteFailed(error.message, count(), quote);
 

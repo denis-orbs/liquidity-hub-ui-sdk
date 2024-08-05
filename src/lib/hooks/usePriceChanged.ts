@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import BN from "bignumber.js";
 import { useAmountUI } from "./useAmountUI";
-import { QuoteResponse, Token } from "..";
+import { Quote, Token } from "..";
 import { useMainContext } from "../context/MainContext";
 
 export function usePriceChanged({
@@ -10,12 +10,12 @@ export function usePriceChanged({
   toToken,
   initialQuote,
 }: {
-  quote?: QuoteResponse;
+  quote?: Quote;
   isOpen?: boolean;
   toToken?: Token;
-  initialQuote?: QuoteResponse;
+  initialQuote?: Quote;
 }) {
-  const {swapStatus} = useMainContext()
+  const {state:{swapStatus}} = useMainContext()
   const enabled = isOpen && !swapStatus
   const [acceptedAmountOut, setAcceptedAmountOut] = useState<
     string | undefined

@@ -19,7 +19,7 @@ const useGetError = (error?: string) => {
 
 export const SwapFailed = () => {
   const chainConfig = useChainConfig();
-  const { isWrapped, swapError } = useMainContext();
+  const { state:{isWrapped, swapError} } = useMainContext();
   
   const error = useGetError(swapError);
 

@@ -13,7 +13,7 @@ export function SwapConfirmationProvider({ children, ...rest }: Props) {
   const [fromTokenUsd, setFromTokenUsd] = useState("");
   const [toTokenUsd, setToTokenUsd] = useState("");
   const [fromAmount, setFromAmount] = useState('')
-  const {swapStatus } = useMainContext();
+  const {swapStatus } = useMainContext().state;
 
   const swapLoading = swapStatus === "loading";
 

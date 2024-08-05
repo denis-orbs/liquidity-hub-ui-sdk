@@ -16,7 +16,7 @@ export function SwapDetails() {
   const { fromTokenUsd, toTokenUsd, outAmount, fromAmount } =
     useSwapConfirmationContext();
 
-  const {fromToken, toToken} = useMainContext();
+  const {fromToken, toToken} = useMainContext().state;
 
   return (
     <StyledSwapDetails className="lh-details">

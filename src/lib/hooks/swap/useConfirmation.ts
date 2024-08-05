@@ -4,32 +4,33 @@ import { useMainContext } from "../../context/MainContext";
 import { useGetQuoteQuery } from "./useGetQuoteQuery";
 
 export function useConfirmation(isOpen: boolean) {
-  const { swapStatus, actions, isWrapped, quoteQueryKey } = useMainContext();
+  const { updateState, state } = useMainContext();
+
+  const { isWrapped, quoteQueryKey, swapStatus } = state;
   const isOpenRef = useRef(false);
   const getQuoteQuery = useGetQuoteQuery();
   const queryClient = useQueryClient();
   const onCloseConfirmation = useCallback(() => {
-    actions.updateState({
+    updateState({
       showConfirmation: false,
     });
     if (!swapStatus) return;
     if (swapStatus === "loading") return;
 
     // refetch quote to get new session id
-    queryClient.resetQueries({queryKey: quoteQueryKey});
-  }, [swapStatus, actions.updateState, queryClient]);
+    queryClient.resetQueries({ queryKey: quoteQueryKey });
+  }, [swapStatus, updateState, queryClient]);
 
   const onShowConfirmation = useCallback(() => {
     const quoteQuery = getQuoteQuery();
-  
-    actions.updateState({
+
+    updateState({
       showConfirmation: true,
-      initialQuote: quoteQuery?.data?.quote,
     });
     quoteQuery?.data?.resetCount();
 
-    queryClient?.refetchQueries({queryKey: quoteQueryKey})
-  }, [actions.updateState, getQuoteQuery, queryClient, quoteQueryKey]);
+    queryClient?.refetchQueries({ queryKey: quoteQueryKey });
+  }, [updateState, getQuoteQuery, queryClient, quoteQueryKey]);
 
   useEffect(() => {
     if (isOpenRef.current === isOpen) return;

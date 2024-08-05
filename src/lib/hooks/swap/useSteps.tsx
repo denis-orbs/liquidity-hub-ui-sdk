@@ -10,7 +10,7 @@ import { useMainContext } from "../../context/MainContext";
 
 export const useSteps = () => {
   const { fromAmount } = useSwapConfirmationContext();
-  const { fromToken, currentStep, isSigned } = useMainContext();
+  const { state:{fromToken, currentStep, isSigned} } = useMainContext();
   const explorer = useChainConfig()?.explorer;
   const { data: hasAllowance, isLoading: allowanceLoading } = useAllowance(
     fromToken?.address,

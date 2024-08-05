@@ -10,7 +10,7 @@ import { useSwapConfirmationContext } from "./context";
 import { useMainContext } from "../../context/MainContext";
 
 export const SwapSuccess = () => {
-  const { fromToken, toToken, txHash } = useMainContext();
+  const { state:{fromToken, toToken, txHash} } = useMainContext();
   const { outAmount, fromAmount } = useSwapConfirmationContext();
 
   return (

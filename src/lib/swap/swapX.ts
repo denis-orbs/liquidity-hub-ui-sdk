@@ -1,5 +1,5 @@
 import { swapAnalytics } from "../analytics";
-import { OriginalQuote } from "../type";
+import { Quote } from "../type";
 import { counter } from "../util";
 
 interface Args {
@@ -7,7 +7,7 @@ interface Args {
   inTokenAddress: string;
   outTokenAddress: string;
   fromAmount: string;
-  quote?: OriginalQuote;
+  quote?: Quote;
   account: string;
   chainId: number;
   apiUrl: string;

@@ -3,8 +3,8 @@ import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useTokenListBalance } from "./useTokenListBalance";
 import { useTokenListBalances } from "./useTokenListBalances";
-import { useSwitchNetwork, useUnwrap } from "../..";
-import { useAmountBN, useChainConfig, useQuote } from "../../hooks";
+import { Quote, useSwitchNetwork, useUnwrap } from "../..";
+import { useAmountBN, useChainConfig } from "../../hooks";
 import { useDexState } from "../../store/dex";
 import { getChainConfig } from "../../util";
 import { useIsInvalidChain } from "./useIsInvalidChain";
@@ -55,11 +55,15 @@ export const useWrapMF = () => {
 };
 
 export const useShowConfirmationButton = (props: {
-  quoteQuery: ReturnType<typeof useQuote>;
+  quote?: Quote;
   onClick: () => void;
+  quoteError?: boolean;
+  quoteLoading: boolean;
 }) => {
   const {
-    quoteQuery: { quote, isLoading: quoteLoading, error: quoteError },
+    quote,
+    quoteError,
+    quoteLoading,
     onClick,
   } = props;
   const { fromAmount, fromToken, toToken } = useDexState();

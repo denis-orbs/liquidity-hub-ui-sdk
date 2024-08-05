@@ -13,7 +13,7 @@ interface Props {
 }
 
 export function StepComponent({ step}: Props) {
-  const {currentStep, swapStatus} = useMainContext();
+  const {currentStep, swapStatus} = useMainContext().state;
 
   const status = useMemo((): ActionStatus => {
     if (_.isUndefined(currentStep)) return;

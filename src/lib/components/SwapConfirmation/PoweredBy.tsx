@@ -3,7 +3,7 @@ import { useMainContext } from "../../context/MainContext";
 import { PoweredByOrbs } from "../PoweredByOrbs";
 
 export function PoweredBy({style = {}, className = ''}:{style?: CSSObject, className?: string}) {
-  const {swapStatus} = useMainContext()
+  const {swapStatus} = useMainContext().state
 
   if (!swapStatus  || swapStatus === 'success') {
     return <StyledPoweredBy style={style} className={className} />;

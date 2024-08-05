@@ -63,10 +63,10 @@ export interface ProviderArgs {
   theme?: "dark" | "light";
   connectWallet?: () => void;
   getTokens?: (chainId: number) => Promise<Token[] | undefined>;
-  swap?: {
+  swapConfig?: {
     maxFailures?: number;
   };
-  quote?: {
+  quoteConfig?: {
     refetchInterval?: number;
     fetchLimit?: number;
     pauseOnConfirmation?: boolean;
@@ -110,7 +110,7 @@ export interface UseSwapCallback {
   fromAmount?: string;
 }
 
-export interface OriginalQuote {
+export interface Quote {
   inToken: string;
   outToken: string;
   inAmount: string;
@@ -130,13 +130,13 @@ export interface OriginalQuote {
 }
 
 
-export interface QuoteResponse extends OriginalQuote {
+export interface QuoteResponse {
   disableRefetch?: boolean;
-  originalQuote?: OriginalQuote;
+  quote?: Quote;
 }
 
 export interface UseQueryData {
-  quote: QuoteResponse | undefined;
+  quoteResponse: QuoteResponse | undefined;
   refetchCount?: number;
   resetCount?: () => void;
   isPassedLimit?: boolean;
@@ -165,28 +165,6 @@ export interface Step {
   txHash?: string;
 }
 
-export type UseLiquidityHubArgs = {
-  fromToken?: Token;
-  toToken?: Token;
-  fromAmount?: string;
-  minAmountOut?: string;
-  slippage?: number;
-  disabled?: boolean;
-  debounceFromAmountMillis?: number;
-  quoteDelayMillis?: number;
-  outAmount?: string;
-};
-
-export type SwapRoute = "dex" | "lh";
-
-export type AddOrderArgs = {
-  fromToken: Token;
-  toToken: Token;
-  fromAmount: string;
-  toAmount: string;
-  txHash: string;
-  explorerLink: string;
-};
 
 export type Order = {
   id: string;
