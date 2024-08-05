@@ -29,7 +29,7 @@ export const getChainConfig = (chainId?: number): Network | undefined => {
   return Object.values(networks).find((it) => it.id === chainId);
 };
 
-export async function waitForTxReceipt(web3: Web3, txHash: string) {
+export async function waitForTxDetails(web3: Web3, txHash: string) {
   for (let i = 0; i < 30; ++i) {
     // due to swap being fetch and not web3
 
@@ -130,6 +130,7 @@ export function bn(n: BN.Value, base?: number): BN {
   return BN(n, base);
 }
 
+
 export async function sendAndWaitForConfirmations({
   web3,
   chainId,
@@ -212,16 +213,15 @@ export async function sendAndWaitForConfirmations({
   }
 
   if (!receipt) {
-    console.log({waitForReceipt: true});
+    console.log({ waitForReceipt: true });
     receipt = await waitForReceipt({ web3, txHash });
-    console.log({receipt});
-  
+    console.log({ receipt });
   }
 
-  if(!receipt) {
-    return undefined
+  if (!receipt) {
+    return undefined;
   }
-  
+
   if (confirmations > 1) {
     while (
       (await web3.eth.getTransactionCount(opts.from)) === nonce ||

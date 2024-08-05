@@ -5,17 +5,12 @@ import { Step, STEPS } from "../../type";
 import { isNativeAddress } from "../../util";
 import { useChainConfig } from "../useChainConfig";
 import { useAllowance } from "./useAllowance";
-import { useSwapConfirmationContext } from "../../components/SwapConfirmation/context";
 import { useMainContext } from "../../context/MainContext";
 
 export const useSteps = () => {
-  const { fromAmount } = useSwapConfirmationContext();
-  const { state:{fromToken, currentStep, isSigned} } = useMainContext();
+  const { state:{fromToken, currentStep, signature} } = useMainContext();
   const explorer = useChainConfig()?.explorer;
-  const { data: hasAllowance, isLoading: allowanceLoading } = useAllowance(
-    fromToken?.address,
-    fromAmount
-  );
+  const { data: hasAllowance, isLoading: allowanceLoading } = useAllowance();
 
   const steps = useMemo(() => {
     const wrap: Step = {
@@ -32,7 +27,7 @@ export const useSteps = () => {
 
     const sendTx: Step = {
       id: STEPS.SEND_TX,
-      title: isSigned ? "Swap pending..." : "Sign and Confirm swap",
+      title: signature ? "Swap pending..." : "Sign and Confirm swap",
       image: SwapImg,
     };
 
@@ -50,7 +45,7 @@ export const useSteps = () => {
     fromToken,
     hasAllowance,
     allowanceLoading,
-    isSigned,
+    signature,
     currentStep,
     explorer,
   ]);

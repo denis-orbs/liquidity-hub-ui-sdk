@@ -22,8 +22,7 @@ interface Props {
 }
 
 export const useQuote = (props: Props) => {
-  const res = useQuoteQuery(props);
-
+  const res = useQuoteQuery(props);  
   return useMemo(() => {
     return {
       quote: res.data?.quoteResponse.quote,
@@ -31,7 +30,7 @@ export const useQuote = (props: Props) => {
       error: res.error,
       isError: res.isError,
     };
-  }, [res]);
+  }, [ res.data?.quoteResponse.quote, res.isLoading, res.error, res.isError]);
 };
 
 export const useQuoteQuery = (props: Props) => {

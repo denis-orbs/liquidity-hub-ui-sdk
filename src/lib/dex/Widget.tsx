@@ -283,10 +283,7 @@ const SwapModal = ({
     return getSwapModalTitle(swapStatus);
   }, [swapStatus]);
 
-  const swapButtonContent = useSwapButtonContent(
-    fromToken?.address,
-    fromAmount
-  );
+  const swapButtonContent = useSwapButtonContent();
 
   const priceChangeWarning = usePriceChanged({
     quote,
@@ -680,6 +677,7 @@ export const Content = (props: Props) => {
             quoteLoading={quoteLoading}
             quoteError={quoteError}
             onClick={onShowConfirmation}
+            quote={quote}
           />
           <SwapModal
             onClose={() => setShowConfirmation(false)}

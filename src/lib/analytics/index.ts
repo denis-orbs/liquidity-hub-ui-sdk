@@ -1,7 +1,7 @@
 import BN from "bignumber.js";
 import Web3 from "web3";
 import { Quote } from "../type";
-import { amountUi, Logger, waitForTxReceipt } from "../util";
+import { amountUi, Logger, waitForTxDetails } from "../util";
 
 import { AnalyticsData, InitDexTrade, InitTrade } from "./types";
 const ANALYTICS_VERSION = 0.6;
@@ -329,7 +329,7 @@ async function onDexSwapSuccess(web3: Web3, dexSwapTxHash?: string) {
     dexSwapTxHash,
   });
   if (!dexSwapTxHash) return;
-  const res = await waitForTxReceipt(web3, dexSwapTxHash);
+  const res = await waitForTxDetails(web3, dexSwapTxHash);
 
   _analytics.updateAndSend({
     onChainDexSwapState: res?.mined ? "success" : "failed",

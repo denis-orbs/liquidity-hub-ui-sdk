@@ -30,7 +30,7 @@ interface State {
   failures?: number;
   txHash?: string;
   isWrapped?: boolean;
-  isSigned?: boolean;
+  signature?: string;
   approveTxHash?: string;
   wrapTxHash?: string;
   unwrapTxHash?: string;
@@ -38,6 +38,7 @@ interface State {
   showConfirmation?: boolean;
   quoteQueryKey?: QueryKey;
   slippage?: number;
+  receipt?: any;
 }
 
 interface ContextArgs extends  ProviderArgs {

@@ -2,6 +2,7 @@ import { useCallback, useMemo } from "react";
 import { useChainConfig } from "./useChainConfig";
 import { getContract } from "../util";
 import { useMainContext } from "../context/MainContext";
+import { zeroAddress } from "../config/consts";
 
 export const useContractCallback = () => {
   const { web3, chainId } = useMainContext();
@@ -21,4 +22,8 @@ export const useContract = (address?: string) => {
   return useMemo(() => {
     return getContract(address, web3, chainId);
   }, [web3, wethAddress, chainId, address]);
+};
+
+export const useWrappedContract = () => {
+  return useContract(zeroAddress);
 };
