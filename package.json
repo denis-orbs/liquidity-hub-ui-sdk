@@ -1,9 +1,9 @@
 {
   "name": "@orbs-network/liquidity-hub-ui-sdk-dev",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "main": "dist/main.umd.js",
   "module": "dist/main.es.js",
-  "types": "dist/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "publishConfig": {
     "access": "public"
   },
@@ -11,7 +11,7 @@
     ".": {
       "import": "./dist/main.es.js",
       "require": "./dist/main.umd.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/types/index.d.ts"
     }
   },
   "files": [
