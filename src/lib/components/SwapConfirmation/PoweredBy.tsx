@@ -1,9 +1,9 @@
 import styled, { CSSObject } from "styled-components";
-import { useMainContext } from "../../context/MainContext";
 import { PoweredByOrbs } from "../PoweredByOrbs";
+import { useSwapConfirmationContext } from "./context";
 
 export function PoweredBy({style = {}, className = ''}:{style?: CSSObject, className?: string}) {
-  const {swapStatus} = useMainContext().state
+  const {swapStatus} = useSwapConfirmationContext()
 
   if (!swapStatus  || swapStatus === 'success') {
     return <StyledPoweredBy style={style} className={className} />;

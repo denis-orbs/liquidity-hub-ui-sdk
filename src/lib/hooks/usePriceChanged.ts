@@ -1,21 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import BN from "bignumber.js";
-import { useAmountUI } from "./useAmountUI";
-import { Quote, Token } from "..";
-import { useMainContext } from "../context/MainContext";
+import { Quote, SwapStatus } from "..";
 
 export function usePriceChanged({
   quote,
   isOpen,
-  toToken,
+  swapStatus,
   initialQuote,
 }: {
   quote?: Quote;
   isOpen?: boolean;
-  toToken?: Token;
+  swapStatus?: SwapStatus;
   initialQuote?: Quote;
 }) {
-  const {state:{swapStatus}} = useMainContext()
   const enabled = isOpen && !swapStatus
   const [acceptedAmountOut, setAcceptedAmountOut] = useState<
     string | undefined
@@ -55,6 +52,5 @@ export function usePriceChanged({
   return {
     shouldAccept,
     acceptChanges,
-    newPrice: useAmountUI(toToken?.decimals, quote?.minAmountOut),
   };
 }

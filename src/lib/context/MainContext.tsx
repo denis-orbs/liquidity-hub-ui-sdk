@@ -1,4 +1,4 @@
-import { QueryKey } from "@tanstack/react-query";
+import { setWeb3Instance } from "@defi.org/web3-candies";
 import {
   createContext,
   useCallback,
@@ -8,40 +8,16 @@ import {
   useReducer,
 } from "react";
 import Web3 from "web3";
-import {
-  ActionStatus,
-  ProviderArgs,
-  SDKProps,
-  STEPS,
-  Token,
-} from "..";
+import { ProviderArgs, SDKProps } from "..";
 import { swapAnalytics } from "../analytics";
 import { useLhControllListener } from "../hooks/useLhControllListener";
 
 interface State {
-  fromToken?: Token;
-  toToken?: Token;
-  fromAmount?: string;
   sessionId?: string;
-  dexMinAmountOut?: string;
-  swapStatus?: ActionStatus;
-  currentStep?: STEPS;
-  swapError?: string;
-  failures?: number;
-  txHash?: string;
-  isWrapped?: boolean;
-  signature?: string;
-  approveTxHash?: string;
-  wrapTxHash?: string;
-  unwrapTxHash?: string;
-  quoteCount?: number;
-  showConfirmation?: boolean;
-  quoteQueryKey?: QueryKey;
   slippage?: number;
-  receipt?: any;
 }
 
-interface ContextArgs extends  ProviderArgs {
+interface ContextArgs extends ProviderArgs {
   web3?: Web3;
   updateState: (payload: Partial<State>) => void;
   state: State;
@@ -71,10 +47,12 @@ export const MainContextProvider = (props: SDKProps) => {
     [provider]
   );
 
+  useEffect(() => {
+    setWeb3Instance(web3);
+  }, [web3]);
+
   const updateState = useCallback(
     (payload: Partial<State>) => {
-      console.log({ payload });
-
       dispatch({ type: "UPDATE_STATE", payload });
     },
     [dispatch]

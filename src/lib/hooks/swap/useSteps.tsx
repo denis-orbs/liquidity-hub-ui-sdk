@@ -1,33 +1,37 @@
 import { useMemo } from "react";
 import SwapImg from "../../assets/swap.svg";
 import ApproveImg from "../../assets/approve.svg";
-import { Step, STEPS } from "../../type";
-import { isNativeAddress } from "../../util";
+import { Step } from "../../type";
 import { useChainConfig } from "../useChainConfig";
-import { useAllowance } from "./useAllowance";
-import { useMainContext } from "../../context/MainContext";
+import { useSwapConfirmationContext } from "../../components/SwapConfirmation/context";
+import { isNativeAddress } from "@defi.org/web3-candies";
 
 export const useSteps = () => {
-  const { state:{fromToken, currentStep, signature} } = useMainContext();
   const explorer = useChainConfig()?.explorer;
-  const { data: hasAllowance, isLoading: allowanceLoading } = useAllowance();
+  const { swapStep, fromToken, hasAllowance } =
+    useSwapConfirmationContext();
 
   const steps = useMemo(() => {
     const wrap: Step = {
       title: `Wrap ${fromToken?.symbol}`,
       image: SwapImg,
-      id: STEPS.WRAP,
+      id: 'wrap',
+      completed: swapStep === 'approve'
     };
 
     const approve: Step = {
       title: `Approve ${fromToken?.symbol} spending`,
       image: ApproveImg,
-      id: STEPS.APPROVE,
+      id: 'approve',
+      completed: swapStep === 'sign'
     };
 
     const sendTx: Step = {
-      id: STEPS.SEND_TX,
-      title: signature ? "Swap pending..." : "Sign and Confirm swap",
+      id: 'swap',
+      title:
+      swapStep === 'swap'
+          ? "Swap pending..."
+          : "Sign and Confirm swap",
       image: SwapImg,
     };
 
@@ -42,16 +46,12 @@ export const useSteps = () => {
     }
     return steps;
   }, [
-    fromToken,
+    swapStep,
+    fromToken?.address,
+    fromToken?.symbol,
     hasAllowance,
-    allowanceLoading,
-    signature,
-    currentStep,
     explorer,
   ]);
 
-  return {
-    steps: allowanceLoading ? [] : steps,
-    isLoading: allowanceLoading,
-  };
+  return steps;
 };

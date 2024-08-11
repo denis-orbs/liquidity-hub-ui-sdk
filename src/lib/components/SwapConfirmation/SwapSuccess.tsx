@@ -7,11 +7,9 @@ import { Separator } from "./Components";
 import SuccessImg from "../../assets/okay.png";
 import { ExplorerLink } from "../ExplorerLink";
 import { useSwapConfirmationContext } from "./context";
-import { useMainContext } from "../../context/MainContext";
 
 export const SwapSuccess = () => {
-  const { state:{fromToken, toToken, txHash} } = useMainContext();
-  const { outAmount, fromAmount } = useSwapConfirmationContext();
+  const { outAmount, fromAmount, fromToken, toToken, txHash } = useSwapConfirmationContext();
 
   return (
     <StyledSuccess className="lh-success">

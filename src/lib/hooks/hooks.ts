@@ -1,5 +1,5 @@
+import { eqIgnoreCase, isNativeAddress } from "@defi.org/web3-candies";
 import { useMemo } from "react";
-import { eqIgnoreCase, isNativeAddress } from "../util";
 import { useChainConfig } from "./useChainConfig";
 
 export function useWrapOrUnwrapOnly(
@@ -20,3 +20,5 @@ export function useWrapOrUnwrapOnly(
     };
   }, [wTokenAddress, fromTokenAddress, toTokenAddress]);
 }
+
+

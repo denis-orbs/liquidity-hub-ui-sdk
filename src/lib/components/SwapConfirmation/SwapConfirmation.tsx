@@ -1,8 +1,8 @@
 import styled, { CSSObject } from "styled-components";
 import { SwapConfirmationArgs } from "../..";
-import { ExplorerLink } from "../ExplorerLink";
 import {
   SwapConfirmationProvider,
+  useSwapConfirmationContext,
 } from "./context";
 import { SwapDetails } from "./Details";
 import { StepsComponent } from "./Steps";
@@ -10,89 +10,58 @@ import { SwapFailed } from "./SwapFailed";
 import { SwapSuccess } from "./SwapSuccess";
 import { PoweredBy } from "./PoweredBy";
 import { FlexColumn } from "../../base-styles";
-import { Fragment, ReactNode } from "react";
-import { useMainContext } from "../../context/MainContext";
-
-
-
+import { Fragment, ReactNode, useMemo } from "react";
+import { ThemeProvider } from "styled-components";
+import { darkTheme, lightTheme } from "./theme";
 
 interface Props extends SwapConfirmationArgs {
   className?: string;
   style?: CSSObject;
-  children: React.ReactNode;
-  
+  SubmitButton?: ReactNode;
 }
 
-const SwapConfirmation = ({
-  className = "",
-  style = {},
-  children,
-  ...args
-}: Props) => {
+const SwapConfirmation = ({ className = "", style = {}, ...args }: Props) => {
   return (
     <SwapConfirmationProvider {...args}>
       <Container className={`${className} lh-summary`} $style={style}>
-        {children}
+        <SwapConfirmationContent SubmitButton={args.SubmitButton} />
       </Container>
     </SwapConfirmationProvider>
   );
 };
 
-const Main = ({ SubmitButton }: { SubmitButton: ReactNode }) => {
-  const { state:{swapStatus} } = useMainContext();
-
-  return (
-    <Fragment>
-      {swapStatus === "success" ? (
-        <SwapSuccess />
-      ) : swapStatus === "failed" ? (
-        <SwapFailed />
-      ) : (
-        <FlexColumn>
-          <SwapDetails />
-          <StepsComponent />
-          {!swapStatus && SubmitButton}
-        </FlexColumn>
-      )}
-       <PoweredBy style={{ marginTop: 30 }} />
-    </Fragment>
-  );
-};
-
-const SubmitButton = ({ children }: { children: ReactNode }) => {
-  const {state:{swapStatus}} = useMainContext();
-
-  if (swapStatus) return null;
-
-  return <>{children}</>;
-};
-
-const ExplorerLinkComponent = ({
-  className = "",
-  styles = {},
+const SwapConfirmationContent = ({
+  SubmitButton,
 }: {
-  className?: string;
-  styles?: CSSObject;
+  SubmitButton?: ReactNode;
 }) => {
-  const { txHash } = useMainContext().state;
+  const { swapStatus, isLightMode } = useSwapConfirmationContext();
+  const theme = useMemo(() => {
+    if (isLightMode) {
+      return lightTheme;
+    }
+    return darkTheme;
+  }, [isLightMode]);
 
   return (
-    <ExplorerLink
-      className={className}
-      styles={styles}
-      txHash={txHash}
-    />
+    <ThemeProvider theme={theme}>
+      <Fragment>
+        {swapStatus === "success" ? (
+          <SwapSuccess />
+        ) : swapStatus === "failed" ? (
+          <SwapFailed />
+        ) : (
+          <FlexColumn>
+            <SwapDetails />
+            <StepsComponent />
+            {!swapStatus && SubmitButton}
+          </FlexColumn>
+        )}
+        <PoweredBy style={{ marginTop: 30 }} />
+      </Fragment>
+    </ThemeProvider>
   );
 };
-
-SwapConfirmation.Success = SwapSuccess;
-SwapConfirmation.Error = SwapFailed;
-SwapConfirmation.Details = SwapDetails;
-SwapConfirmation.Steps = StepsComponent;
-SwapConfirmation.ExplorerLink = ExplorerLinkComponent;
-SwapConfirmation.PoweredBy = PoweredBy;
-SwapConfirmation.SubmitButton = SubmitButton;
-SwapConfirmation.Main = Main;
 
 const Container = styled.div<{ $style: CSSObject }>`
   width: 100%;

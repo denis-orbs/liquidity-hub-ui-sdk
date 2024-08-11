@@ -15,23 +15,21 @@ export type AddOrderArgs = {
 
 export const useAddOrderCallback = () => {
   const addOrder = useOrders().addOrder;
-  const { state } = useMainContext();
-  const { fromAmount, fromToken, toToken } = state;
   const chainConfig = useChainConfig();
 
   return useCallback(
-    (quote: Quote, txHash: string) => {
-      if (!fromToken || !toToken || !fromAmount) return;
+    ({quote, txHash, fromToken, toToken}:{quote: Quote, txHash: string, fromToken: Token, toToken: Token}) => {
+      if (!fromToken || !toToken) return;
       addOrder({
         fromToken: fromToken,
         toToken: toToken,
-        fromAmount,
+        fromAmount:quote.inAmount,
         toAmount: quote.outAmount,
         txHash,
         explorerLink: `${chainConfig?.explorer}/tx/${txHash}`,
       });
     },
-    [addOrder, fromToken, toToken, fromAmount, chainConfig?.explorer]
+    [addOrder, chainConfig?.explorer]
   );
 };
 

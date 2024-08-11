@@ -6,17 +6,15 @@ import { Token } from "../../type";
 import { Text } from "../Text";
 import { Separator } from "./Components";
 import { useSwapConfirmationContext } from "./context";
-import { useMainContext } from "../../context/MainContext";
 const StyledSwapDetails = styled(FlexColumn)`
   width: 100%;
   gap: 15px;
 `;
 
 export function SwapDetails() {
-  const { fromTokenUsd, toTokenUsd, outAmount, fromAmount } =
+  const { fromTokenUsd, toTokenUsd, outAmount, fromAmount, fromToken, toToken } =
     useSwapConfirmationContext();
 
-  const {fromToken, toToken} = useMainContext().state;
 
   return (
     <StyledSwapDetails className="lh-details">

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { SwapConfirmationArgs } from "../..";
-import { useMainContext } from "../../context/MainContext";
+
 
 interface Props extends SwapConfirmationArgs {
   children: React.ReactNode;
@@ -12,10 +12,12 @@ export function SwapConfirmationProvider({ children, ...rest }: Props) {
   const [outAmount, setOutmount] = useState("");
   const [fromTokenUsd, setFromTokenUsd] = useState("");
   const [toTokenUsd, setToTokenUsd] = useState("");
-  const [fromAmount, setFromAmount] = useState('')
-  const {swapStatus } = useMainContext().state;
+  const [fromAmount, setFromAmount] = useState("");
 
-  const swapLoading = swapStatus === "loading";
+  const swapLoading = rest.swapStatus === "loading";
+
+  
+
 
   useEffect(() => {
     if (swapLoading) return;
@@ -47,7 +49,7 @@ export function SwapConfirmationProvider({ children, ...rest }: Props) {
 
   return (
     <SwapConfirmationContext.Provider
-      value={{  outAmount, fromTokenUsd, toTokenUsd, fromAmount }}
+      value={{ outAmount, fromTokenUsd, toTokenUsd, fromAmount }}
     >
       {children}
     </SwapConfirmationContext.Provider>

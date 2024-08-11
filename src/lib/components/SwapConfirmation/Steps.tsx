@@ -1,36 +1,21 @@
 import styled from "styled-components";
 import { useSteps } from "../..";
-import { FlexColumn, FlexRow } from "../../base-styles";
-import { useMainContext } from "../../context/MainContext";
-import { SkeletonLoader } from "../SkeletonLoader";
+import { FlexColumn } from "../../base-styles";
+import { useSwapConfirmationContext } from "./context";
 import { StepComponent } from "./Step";
 
 export const StepsComponent = () => {
-  const { state:{swapStatus} } =
-    useMainContext();
-  const { steps, isLoading } = useSteps();
+  const { swapStatus } = useSwapConfirmationContext();
+  const steps = useSteps();
   if (swapStatus !== "loading") return null;
 
   return (
     <>
       <StyledSteps $gap={15} style={{ width: "100%" }} className="lh-steps">
-        {isLoading ? (
-          <FlexRow style={{ width: "100%", justifyContent:'flex-start' }}>
-            <SkeletonLoader
-              styles={{ width: "30px", height: "30px", borderRadius: "50%" }}
-            />
-            <SkeletonLoader
-              styles={{ width: "50%", height: "20px", borderRadius: "20px" }}
-            />
-          </FlexRow>
-        ) : (
-          <>
-            <Divider className="lh-steps-divider" />
-            {steps.map((step) => {
-              return <StepComponent key={step.id} step={step} />;
-            })}
-          </>
-        )}
+        <Divider className="lh-steps-divider" />
+        {steps.map((step) => {
+          return <StepComponent key={step.id} step={step} />;
+        })}
       </StyledSteps>
     </>
   );

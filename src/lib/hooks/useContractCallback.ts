@@ -2,7 +2,7 @@ import { useCallback, useMemo } from "react";
 import { useChainConfig } from "./useChainConfig";
 import { getContract } from "../util";
 import { useMainContext } from "../context/MainContext";
-import { zeroAddress } from "../config/consts";
+import { zeroAddress } from "@defi.org/web3-candies";
 
 export const useContractCallback = () => {
   const { web3, chainId } = useMainContext();
@@ -24,6 +24,6 @@ export const useContract = (address?: string) => {
   }, [web3, wethAddress, chainId, address]);
 };
 
-export const useWrappedContract = () => {
+export const useWethContract = () => {
   return useContract(zeroAddress);
 };

@@ -1,15 +1,15 @@
+import { estimateGasPrice } from "@defi.org/web3-candies";
 import { useQuery } from "@tanstack/react-query";
 import BN from "bignumber.js";
 import { QUERY_KEYS } from "../config/consts";
 import { useMainContext } from "../context/MainContext";
-import { estimateGasPrice } from "../util";
 
 export const useEstimateGasPrice = () => {
   const { web3, chainId } = useMainContext();
   return useQuery({
     queryKey: [QUERY_KEYS.GAS_PRICE, chainId],
     queryFn: async () => {
-      const result = await estimateGasPrice(web3!, chainId!);
+      const result = await estimateGasPrice(undefined, undefined, web3);
       const priorityFeePerGas = result?.fast.tip || 0;
       const maxFeePerGas = BN.max(result?.fast.max || 0, priorityFeePerGas);
 

@@ -1,13 +1,13 @@
-import { ConnectButton, useConnectModal } from "@rainbow-me/rainbowkit";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useCallback, useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import styled from "styled-components";
-import { Widget } from "./lib/dex/Widget";
 import { RainbowProvider } from "./RainbowProvider";
 import _ from "lodash";
-import { Modal } from "./components/Modal";
-import { networks } from "./lib/config/networks";
 import Web3 from "web3";
+import { Widget } from "./Widget/Widget";
+import { LiquidityHubProvider } from "./lib";
+import { networks } from "@defi.org/web3-candies";
 
 export const useProvider = () => {
   const { connector, address, isConnected } = useAccount();
@@ -28,24 +28,24 @@ export const useProvider = () => {
   return provider;
 };
 
+const supportedChains = _.map(networks, (it) => it.id);
+
 function Wrapped() {
   const { address } = useAccount();
   const provider = useProvider();
   const connectedChainId =
     provider?.chainId && Web3.utils.hexToNumber(provider.chainId);
 
-  const { openConnectModal } = useConnectModal();
   return (
-    <Widget
-      Modal={Modal}
-      connectWallet={openConnectModal}
+    <LiquidityHubProvider
       provider={provider}
       chainId={connectedChainId}
       partner="playground"
       account={address}
-      initialFromToken="USDT"
-      supportedChains={_.map(networks, (it) => it.id)}
-    />
+      supportedChains={supportedChains}
+    >
+      <Widget initialFromToken="USDT" slippage={0.5} />
+    </LiquidityHubProvider>
   );
 }
 

@@ -1,11 +1,11 @@
 import { useMemo } from "react";
 import styled from "styled-components";
 import { Check } from "react-feather";
-import { ActionStatus, Step } from "../../type";
+import { Step, SwapStatus } from "../../type";
 import { FlexColumn, FlexRow } from "../../base-styles";
 import { Spinner } from "../Spinner";
 import _ from "lodash";
-import { useMainContext } from "../../context/MainContext";
+import { useSwapConfirmationContext } from "./context";
 
 interface Props {
   step: Step;
@@ -13,20 +13,17 @@ interface Props {
 }
 
 export function StepComponent({ step}: Props) {
-  const {currentStep, swapStatus} = useMainContext().state;
+  const {swapStep, swapStatus} = useSwapConfirmationContext();
 
-  const status = useMemo((): ActionStatus => {
-    if (_.isUndefined(currentStep)) return;
-    if (step.id < currentStep) {
+  const status = useMemo((): SwapStatus => {
+    if (_.isUndefined(swapStep)) return;
+    if (step.completed) {
       return "success";
     }
-    if (step.id > currentStep) {
-      return undefined;
-    }
-    return swapStatus;
-  }, [swapStatus, currentStep, step.id]);
+    return undefined;
+  }, [swapStatus, swapStep, step.id]);
 
-  const selected = step.id === currentStep;
+  const selected = step.id === swapStep;
   return (
     <StyledStep className="lh-step">
       <Logo status={status} image={step.image} selected={selected} />
@@ -61,7 +58,7 @@ const Logo = ({
 }: {
   image?: string;
   selected: boolean;
-  status: ActionStatus;
+  status: SwapStatus;
 }) => {
   return (
     <StyledStepLogo $selected={selected} className="lh-step-logo">

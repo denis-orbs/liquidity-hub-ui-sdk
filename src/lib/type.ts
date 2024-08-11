@@ -3,46 +3,7 @@ import {
   TypedDataDomain,
   TypedDataField,
 } from "@ethersproject/abstract-signer";
-import { CSSObject } from "styled-components";
 import { ReactNode } from "react";
-
-export interface TokenPanelProps {
-  inputValue?: string;
-  onInputChange?: (value: string) => void;
-  token?: Token;
-  label?: string;
-  isSrc?: boolean;
-  onTokenSelect: (token: Token) => void;
-  usd?: string;
-  usdLoading?: boolean;
-}
-
-export type TokenListItemProps = {
-  token: Token;
-  selected?: boolean;
-  balance?: string;
-  balanceLoading?: boolean;
-};
-
-export interface WidgetConfig {
-  styles?: CSSObject;
-  layout?: WidgetLayout;
-}
-
-export interface WidgetLayout {
-  tokenPanel?: {
-    percentButtons?: { label: string; value: number }[];
-    headerOutside?: boolean;
-    inputSide?: "left" | "right";
-    usdSide?: "left" | "right";
-  };
-}
-
-export interface MainContextArgs {
-  getTokens?: (chainId?: number) => Promise<Token[]>;
-  getUsdPrice?: (address: string, chainId: number) => Promise<number>;
-  connectWallet?: () => void;
-}
 
 export interface Token {
   name?: string;
@@ -59,19 +20,7 @@ export interface ProviderArgs {
   chainId?: number;
   partner: string;
   apiUrl?: string;
-  disableAnalytics?: boolean;
-  theme?: "dark" | "light";
-  connectWallet?: () => void;
-  getTokens?: (chainId: number) => Promise<Token[] | undefined>;
-  swapConfig?: {
-    maxFailures?: number;
-  };
-  quoteConfig?: {
-    refetchInterval?: number;
-    fetchLimit?: number;
-    pauseOnConfirmation?: boolean;
-  };
- 
+  quoteRefetchInterval?: number;
 }
 
 export interface QuoteArgs {
@@ -129,7 +78,6 @@ export interface Quote {
   gasAmountOut?: string;
 }
 
-
 export interface QuoteResponse {
   disableRefetch?: boolean;
   quote?: Quote;
@@ -148,23 +96,19 @@ export enum LH_CONTROL {
   RESET = "3",
 }
 
-export enum STEPS {
-  WRAP,
-  APPROVE,
-  SEND_TX,
-}
+export type SwapSteps = "wrap" | "approve" | "sign" | "swap" | undefined;
 
-export type ActionStatus = "loading" | "success" | "failed" | undefined;
+export type SwapStatus = "loading" | "success" | "failed" | undefined;
 
 export interface Step {
   title: ReactNode;
   link?: { href: string; text: string };
   image?: string;
   hidden?: boolean;
-  id: STEPS;
+  id: SwapSteps;
   txHash?: string;
+  completed?: boolean;
 }
-
 
 export type Order = {
   id: string;
@@ -205,7 +149,7 @@ export interface Network {
 }
 
 export type Abi = AbiItem[];
-export type Balances = { [key: string]: string };
+
 
 export declare type PermitData = {
   domain: TypedDataDomain;
@@ -213,14 +157,20 @@ export declare type PermitData = {
   values: any;
 };
 
-
 export interface SwapConfirmationArgs {
   fromTokenUsd?: string;
   toTokenUsd?: string;
   outAmount?: string;
   fromAmount?: string;
+  fromToken?: Token;
+  toToken?: Token;
+  swapStep?: SwapSteps;
+  swapStatus?: SwapStatus;
+  error?: string;
+  txHash?: string;
+  hasAllowance?: boolean;
+  isLightMode?: boolean;
 }
-
 
 export interface SDKProps extends ProviderArgs {
   children: ReactNode;

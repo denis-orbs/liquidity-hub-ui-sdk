@@ -5,7 +5,7 @@ import { Text } from "../Text";
 import { useChainConfig } from "../../hooks";
 import { isNativeBalanceError } from "../../util";
 import { useMemo } from "react";
-import { useMainContext } from "../../context/MainContext";
+import { useSwapConfirmationContext } from "./context";
 
 const useGetError = (error?: string) => {
   const chainConfig = useChainConfig();
@@ -18,20 +18,20 @@ const useGetError = (error?: string) => {
 };
 
 export const SwapFailed = () => {
-  const chainConfig = useChainConfig();
-  const { state:{isWrapped, swapError} } = useMainContext();
+  const { error } = useSwapConfirmationContext();
+  const _error = useGetError(error);
   
-  const error = useGetError(swapError);
 
   return (
     <Container className="lh-failed">
       <MainLogo className="lh-failed-img">
         <AlertCircle />
       </MainLogo>
-      <Title className="lh-failed-title">{error}</Title>
-      {isWrapped && chainConfig && (
+      <Title className="lh-failed-title">{_error}</Title>
+      {/* {isWrapped && chainConfig && (
         <Message>{`${chainConfig?.native.symbol} has been wrapped to ${chainConfig?.wToken?.symbol}`}</Message>
-      )}
+      )} */}
+      <Message>{_error}</Message>
     </Container>
   );
 };
