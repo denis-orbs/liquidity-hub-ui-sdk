@@ -12,10 +12,8 @@ import {
   Token,
   useAllowance,
   useAmountBN,
-  useQuote,
 } from "../lib";
 import { useInitialTokens } from "./hooks";
-import { useSubmitWidgetSwap } from "./useSubmitWidgetSwap";
 
 const Context = createContext({} as ContenxtType);
 
@@ -40,25 +38,19 @@ interface State {
   toToken?: Token;
   showConfirmation?: boolean;
   initialQuote?: Quote;
-  fromAmount?: string;
+  fromAmountUi?: string;
   toAmount?: string;
   fetchingBalancesAfterTx?: boolean;
+  swapStatus?: SwapStatus;
+  swapStep?: SwapSteps;
+  isWrapped?: boolean;
 }
 interface ContenxtType {
-  quote?: Quote;
-  quoteLoading: boolean;
-  quoteError: boolean;
-  onSwapCallback: (quote?: Quote) => Promise<{ txHash: string; receipt: any }>;
-  swapStatus: SwapStatus;
-  swapStep: SwapSteps;
-  isWrapped: boolean;
   state: State;
   updateState: (payload: Partial<State>) => void;
   resetState: () => void;
-  onShowConfirmation: () => void;
-  onCloseConfirmation: () => void;
   hasAllowance?: boolean;
-  fromAmountRaw?: string;
+  slippage?: number;
 }
 
 const initialState: State = {};
@@ -80,10 +72,7 @@ function reducer(state: State, action: Action) {
 export const WidgetProvider = (props: ContextProps) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  const fromAmountRaw = useAmountBN(
-    state.fromToken?.decimals,
-    state.fromAmount
-  );
+  const fromAmount = useAmountBN(state.fromToken?.decimals, state.fromAmountUi);
 
   const updateState = useCallback(
     (payload: Partial<State>) => {
@@ -91,78 +80,31 @@ export const WidgetProvider = (props: ContextProps) => {
     },
     [dispatch]
   );
-  const {
-    quote,
-    isLoading: quoteLoading,
-    isError: quoteError,
-  } = useQuote({
-    fromToken: state.fromToken,
-    toToken: state.toToken,
-    fromAmount: fromAmountRaw,
-    slippage: props.slippage || 0.5,
-  });
 
-  const onCloseConfirmation = useCallback(() => {
-    updateState({ showConfirmation: false });
-  }, [updateState]);
-  const { data: hasAllowance } = useAllowance(fromAmountRaw, state.fromToken);
-
-  const {
-    mutateAsync: onSwapCallback,
-    swapStatus,
-    swapStep,
-    isWrapped,
-  } = useSubmitWidgetSwap(
-    fromAmountRaw,
-    state.fromToken,
-    state.toToken,
-    hasAllowance
-  );
+  const { data: hasAllowance } = useAllowance(fromAmount, state.fromToken);
 
   const resetState = useCallback(() => {
     dispatch({ type: "RESET" });
   }, [dispatch]);
 
-  const onShowConfirmation = useCallback(() => {
-    updateState({ showConfirmation: true });
-    if (quote) {
-      updateState({ initialQuote: quote });
-    }
-  }, [quote, updateState]);
-
   return (
     <Context.Provider
       value={{
-        quote,
-        quoteLoading,
-        quoteError,
-        onSwapCallback,
-        swapStatus,
-        swapStep,
-        isWrapped,
         state,
         updateState,
         resetState,
-        onShowConfirmation,
-        onCloseConfirmation,
         hasAllowance,
-        fromAmountRaw,
+        slippage: props.slippage,
       }}
     >
-      <Listener />
+      <Listener {...props} />
       {props.children}
     </Context.Provider>
   );
 };
 
-const Listener = ({
-  initialFromToken,
-  initialToToken,
-}: {
-  initialFromToken?: string;
-  initialToToken?: string;
-}) => {
-  useInitialTokens(initialFromToken, initialToToken);
+const Listener = (props: ContextProps) => {
+  useInitialTokens(props.initialFromToken, props.initialToToken);
 
   return null;
 };

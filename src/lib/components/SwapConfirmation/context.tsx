@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext } from "react";
 import { SwapConfirmationArgs } from "../..";
-
 
 interface Props extends SwapConfirmationArgs {
   children: React.ReactNode;
@@ -9,48 +8,8 @@ interface Props extends SwapConfirmationArgs {
 const SwapConfirmationContext = createContext({} as SwapConfirmationArgs);
 
 export function SwapConfirmationProvider({ children, ...rest }: Props) {
-  const [outAmount, setOutmount] = useState("");
-  const [fromTokenUsd, setFromTokenUsd] = useState("");
-  const [toTokenUsd, setToTokenUsd] = useState("");
-  const [fromAmount, setFromAmount] = useState("");
-
-  const swapLoading = rest.swapStatus === "loading";
-
-  
-
-
-  useEffect(() => {
-    if (swapLoading) return;
-    if (rest.fromTokenUsd) {
-      setFromTokenUsd(rest.fromTokenUsd);
-    }
-  }, [rest.fromTokenUsd, swapLoading]);
-
-  useEffect(() => {
-    if (swapLoading) return;
-    if (rest.toTokenUsd) {
-      setToTokenUsd(rest.toTokenUsd);
-    }
-  }, [rest.toTokenUsd, swapLoading]);
-
-  useEffect(() => {
-    if (swapLoading) return;
-    if (rest.outAmount) {
-      setOutmount(rest.outAmount);
-    }
-  }, [rest.outAmount, swapLoading]);
-
-  useEffect(() => {
-    if (swapLoading) return;
-    if (rest.fromAmount) {
-      setFromAmount(rest.fromAmount);
-    }
-  }, [rest.fromAmount, swapLoading]);
-
   return (
-    <SwapConfirmationContext.Provider
-      value={{ outAmount, fromTokenUsd, toTokenUsd, fromAmount }}
-    >
+    <SwapConfirmationContext.Provider value={rest}>
       {children}
     </SwapConfirmationContext.Provider>
   );

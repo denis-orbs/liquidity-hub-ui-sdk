@@ -7,9 +7,9 @@ export function usePriceImpact(
   outTokenUsd?: string | number,
   outAmount?: string
 ) {
-  const { state:{fromToken, toToken, fromAmount: fromAmountUI} } = useWidgetContext()
+  const { state:{fromToken, toToken, fromAmountUi} } = useWidgetContext()
 
-  const fromAmount = useAmountBN(fromToken?.decimals, fromAmountUI);
+  const fromAmount = useAmountBN(fromToken?.decimals, fromAmountUi);
 
   return useMemo(() => {
     if (

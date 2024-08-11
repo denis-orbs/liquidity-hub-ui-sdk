@@ -9,10 +9,11 @@ export function useInitialTokens(
 ) {
   const tokens = useTokens();
   const context = useWidgetContext();
-
   const { fromToken, toToken } = context.state;
+  
   useEffect(() => {
     if (!fromToken && initialFromToken) {
+      
       context.updateState({
         fromToken: findTokenInList(tokens || [], initialFromToken),
       });

@@ -1,8 +1,9 @@
 import { useCallback } from "react";
-import { Token } from "../../lib";
+import { Token, useAmountUI } from "../../lib";
 import { useWidgetContext } from "../context";
 import { useTokenListBalance } from "./useTokenListBalance";
 import { useTokenListBalances } from "./useTokenListBalances";
+import { useWidgetQuote } from "./useWidgetQuote";
 
 export * from "./usePercentSelect";
 export * from "./useRefreshBalancesAfterTx";
@@ -25,7 +26,7 @@ export const useSetMaxBalance = () => {
   const { balance } = useTokenListBalance(fromToken?.address);
 
   return useCallback(() => {
-    updateState({ fromAmount: balance || "" });
+    updateState({ fromAmountUi: balance || "" });
   }, [balance, updateState]);
 };
 
@@ -39,7 +40,7 @@ export const useBalancesLoading = () => {
 export function useFromTokenPanel() {
   const {
     updateState,
-    state: { fromToken, fromAmount },
+    state: { fromToken, fromAmountUi },
   } = useWidgetContext();
 
   const { balance } = useTokenListBalance(fromToken?.address);
@@ -52,15 +53,15 @@ export function useFromTokenPanel() {
   );
 
   const onChange = useCallback(
-    (fromAmount: string) => {
-      updateState({ fromAmount });
+    (fromAmountUi: string) => {
+      updateState({ fromAmountUi });
     },
     [updateState]
   );
 
   return {
     token: fromToken,
-    amount: fromAmount,
+    amount: fromAmountUi,
     onTokenSelect,
     onChange,
     balance,
@@ -73,6 +74,8 @@ export function useToTokenPanel() {
     updateState,
   } = useWidgetContext();
   const balance = useTokenListBalance(toToken?.address).balance;
+  const {quote} = useWidgetQuote()
+  const outAmountUi = useAmountUI(toToken?.decimals, quote?.outAmount)
 
   const onTokenSelect = useCallback(
     (token: Token) => {
@@ -85,5 +88,6 @@ export function useToTokenPanel() {
     token: toToken,
     onTokenSelect,
     balance,
+    amount: outAmountUi
   };
 }

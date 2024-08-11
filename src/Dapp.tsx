@@ -44,7 +44,7 @@ function Wrapped() {
       account={address}
       supportedChains={supportedChains}
     >
-      <Widget initialFromToken="USDT" slippage={0.5} />
+      <Widget initialFromToken="USDC" initialToToken="WBNB" slippage={0.5} />
     </LiquidityHubProvider>
   );
 }

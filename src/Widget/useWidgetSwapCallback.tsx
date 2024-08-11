@@ -1,11 +1,7 @@
 import { isNativeAddress } from "@defi.org/web3-candies";
 import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
 import {
-  Quote,
-  SwapStatus,
-  SwapSteps,
-  Token,
+  useAmountBN,
   useApproveCallback,
   useGetTxReceiptCallback,
   useSignCalback,
@@ -13,43 +9,44 @@ import {
   useWrapCallback,
 } from "../lib";
 import { useOnSwapSuccessCallback } from "../lib/hooks/swap/useSwapStatusCallbacks";
+import { useWidgetContext } from "./context";
+import { useWidgetQuote } from "./hooks/useWidgetQuote";
 
-export const useSubmitWidgetSwap = (
-  fromAmountRaw?: string,
-  fromToken?: Token,
-  toToken?: Token,
-  hasAllowance?: boolean
-) => {
-  const [swapStatus, setSwapStatus] = useState<SwapStatus>(undefined);
-  const [swapStep, setSwapStep] = useState<SwapSteps>(undefined);
-  const [isWrapped, setIsWrapped] = useState(false);
+export const useWidgetSwapCallback = () => {
+  const {
+    state: { fromToken, toToken, fromAmountUi },
+    hasAllowance,
+    updateState,
+  } = useWidgetContext();
   const getReceipt = useGetTxReceiptCallback();
   const approve = useApproveCallback(fromToken);
   const wrapCallback = useWrapCallback();
   const signCallback = useSignCalback();
   const swapCallback = useSwapCallback();
   const onSuccess = useOnSwapSuccessCallback();
+  const { quote } = useWidgetQuote();
 
-  const mutation = useMutation({
-    mutationFn: async (quote?: Quote) => {
+  const fromAmountRaw = useAmountBN(fromToken?.decimals, fromAmountUi);
+
+  return  useMutation({
+    mutationFn: async () => {
       if (!quote) throw new Error("Missing quote");
       if (!fromAmountRaw) throw new Error("Missing amount");
       if (!fromToken || !toToken) throw new Error("Missing token");
 
-      setSwapStatus("loading");
+      updateState({ swapStatus: "loading" });
       if (isNativeAddress(fromToken.address)) {
-        setSwapStep("wrap");
+        updateState({ swapStep: "wrap" });
         await wrapCallback(fromAmountRaw);
-        setIsWrapped(true);
+        updateState({ isWrapped: true });
       }
       if (!hasAllowance) {
-        setSwapStep("approve");
+        updateState({ swapStep: "approve" });
         await approve();
       }
-
-      setSwapStep("sign");
+      updateState({ swapStep: "sign" });
       const signature = await signCallback(quote.permitData);
-      setSwapStep("swap");
+      updateState({ swapStep: "swap" });
       const txHash = await swapCallback({
         fromToken,
         toToken,
@@ -63,17 +60,10 @@ export const useSubmitWidgetSwap = (
       return result;
     },
     onSuccess: () => {
-      setSwapStatus("success");
+      updateState({ swapStatus: "success" });
     },
     onError: () => {
-      setSwapStatus("failed");
+      updateState({ swapStatus: "failed" });
     },
   });
-
-  return {
-    ...mutation,
-    swapStatus,
-    swapStep,
-    isWrapped,
-  };
 };

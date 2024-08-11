@@ -12,7 +12,7 @@ const StyledSwapDetails = styled(FlexColumn)`
 `;
 
 export function SwapDetails() {
-  const { fromTokenUsd, toTokenUsd, outAmount, fromAmount, fromToken, toToken } =
+  const { fromUsd, toUsd, outAmount, fromAmount, fromToken, toToken } =
     useSwapConfirmationContext();
 
 
@@ -20,14 +20,14 @@ export function SwapDetails() {
     <StyledSwapDetails className="lh-details">
       <TokenDisplay
         title="Swap from"
-        usd={fromTokenUsd}
+        usd={fromUsd}
         token={fromToken}
         amount={fromAmount}
       />
       <Separator />
       <TokenDisplay
         title="Swap to"
-        usd={toTokenUsd}
+        usd={toUsd}
         token={toToken}
         amount={outAmount}
       />

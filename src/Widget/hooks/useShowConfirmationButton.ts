@@ -1,13 +1,13 @@
 import BN from "bignumber.js";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useTokenListBalance } from "./useTokenListBalance";
 import { useTokenListBalances } from "./useTokenListBalances";
 import { useIsInvalidChain } from "./useIsInvalidChain";
 import { useWidgetContext } from "../context";
 import {
   getChainConfig,
-  Quote,
   useAmountBN,
+  useAmountUI,
   useChainConfig,
   useUnwrapCallback,
   useWrapCallback,
@@ -17,13 +17,14 @@ import { useSwitchNetwork } from "./useSwitchNetwork";
 import { useMainContext } from "../../lib/context/MainContext";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useWrapOrUnwrapOnly } from "../../lib/hooks/hooks";
+import { useWidgetQuote } from "./useWidgetQuote";
 
 export const useUnwrap = () => {
   const { refetch } = useTokenListBalances();
   const {
-    state: { fromAmount, fromToken },
+    state: { fromAmountUi, fromToken },
   } = useWidgetContext();
-  const amount = useAmountBN(fromToken?.decimals, fromAmount);
+  const amount = useAmountBN(fromToken?.decimals, fromAmountUi);
 
   const unwrapCallback = useUnwrapCallback();
   return useMutation({
@@ -42,11 +43,11 @@ export const useUnwrap = () => {
 export const useWrap = () => {
   const { refetch } = useTokenListBalances();
   const {
-    state: { fromAmount, fromToken },
+    state: { fromAmountUi, fromToken },
   } = useWidgetContext();
 
   const wrapMF = useWrapCallback();
-  const amount = useAmountBN(fromToken?.decimals, fromAmount);
+  const amount = useAmountBN(fromToken?.decimals, fromAmountUi);
 
   return useMutation({
     mutationFn: async () => {
@@ -59,15 +60,22 @@ export const useWrap = () => {
   });
 };
 
-export const useShowConfirmationButton = (props: {
-  quote?: Quote;
-  onClick: () => void;
-  quoteError?: boolean;
-  quoteLoading: boolean;
-}) => {
-  const { quote, quoteError, quoteLoading, onClick } = props;
-  const { state: {fromAmount, fromToken, toToken} } = useWidgetContext();
-  const outAmountUi = quote?.amountOutUI;
+export const useShowConfirmationButton = () => {
+  const {quote, isLoading: quoteLoading, isError: quoteError } = useWidgetQuote();
+  const {
+    state: { fromAmountUi, fromToken, toToken },
+    updateState
+  } = useWidgetContext();
+  const outAmountUi = useAmountUI(toToken?.decimals, quote?.outAmount);
+  const fromAmount = useAmountBN(fromToken?.decimals, fromAmountUi);
+
+  const onShowConfirmation = useCallback(
+    () => {
+      updateState({showConfirmation: true, initialQuote: quote})
+    },
+    [updateState, quote],
+  )
+  
 
   const { mutate: switchNetwork, isPending: switchNetworkLoading } =
     useSwitchNetwork();
@@ -177,7 +185,7 @@ export const useShowConfirmationButton = (props: {
     return {
       disabled: false,
       text: "Swap",
-      onClick: onClick,
+      onClick: onShowConfirmation,
     };
   }, [
     wrongChain,
@@ -201,7 +209,7 @@ export const useShowConfirmationButton = (props: {
     isUnwrapOnly,
     isWrapOnly,
     wrap,
-    onClick,
+    onShowConfirmation,
     openConnectModal,
   ]);
 };

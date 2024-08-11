@@ -1,17 +1,9 @@
 import { Spinner } from "../lib/components/Spinner";
-import { useWidgetContext } from "./context";
 import { useShowConfirmationButton } from "./hooks";
 import styled from "styled-components";
 import { Button } from "../lib/components/Button";
 export const SwapSubmitButton = () => {
-  const { onShowConfirmation, quoteLoading, quoteError, quote } =
-    useWidgetContext();
-  const { disabled, text, onClick, isLoading } = useShowConfirmationButton({
-    onClick: onShowConfirmation,
-    quoteLoading,
-    quoteError,
-    quote,
-  });
+  const { disabled, text, onClick, isLoading } = useShowConfirmationButton();
 
   return (
     <StyledSubmitButton

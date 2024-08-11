@@ -6,7 +6,6 @@ import _ from "lodash";
 import { TokenPanel } from "./components/TokenPanel";
 import { useWidgetContext, WidgetProvider } from "./context";
 import {
-  PoweredByOrbs,
   useFormatNumber,
 } from "../lib";
 import {
@@ -14,7 +13,7 @@ import {
   usePriceUsd,
   useToTokenPanel,
 } from "./hooks";
-import { StyledChangeTokens, StyledContainer, theme } from "./styles";
+import { StyledChangeTokens, StyledContainer, StyledPoweredByOrbs, theme } from "./styles";
 import { useWrapOrUnwrapOnly } from "../lib/hooks/hooks";
 import { SwapDetails } from "./SwapDetails";
 import { SwapSubmitButton } from "./SubmitButton";
@@ -70,19 +69,18 @@ const FromTokenPanel = () => {
   );
 };
 
-const ToTokenPanel = ({ outAmountUi }: { outAmountUi?: string }) => {
-  const { fromToken, toToken, fromAmount } = useWidgetContext().state;
-  const { token, onTokenSelect } = useToTokenPanel();
+const ToTokenPanel = () => {
+  const { fromToken, toToken, fromAmountUi } = useWidgetContext().state;
+  const { token, onTokenSelect, amount } = useToTokenPanel();
   const { isUnwrapOnly, isWrapOnly } = useWrapOrUnwrapOnly(
     fromToken?.address,
     toToken?.address
   );
-
   const { data: usdSingleToken, isLoading } = usePriceUsd({
     address: token?.address,
   });
 
-  const outAmount = isUnwrapOnly || isWrapOnly ? fromAmount : outAmountUi;
+  const outAmount = isUnwrapOnly || isWrapOnly ? fromAmountUi : amount;
 
   const usd = useMemo(() => {
     if (!usdSingleToken || !outAmount) return "0";
@@ -120,9 +118,11 @@ export const Widget = (props: Props) => {
           <SwapDetails />
           <SwapSubmitButton />
           <SwapConfirmationModal />
-          <PoweredByOrbs />
+          <StyledPoweredByOrbs />
         </StyledContainer>
       </WidgetProvider>
     </ThemeProvider>
   );
 };
+
+

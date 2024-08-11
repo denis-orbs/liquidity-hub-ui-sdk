@@ -19,7 +19,7 @@ export const useTokensList = () => {
       if (!chainId) return [];
 
       let tokens = await api.getTokensByChainId(chainId!);
-
+      
       return tokens || [];
     },
     queryKey: ["useTokensList", connectedChainId],

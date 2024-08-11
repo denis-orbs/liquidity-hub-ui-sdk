@@ -14,7 +14,7 @@ export const usePercentSelect = () => {
   return useCallback(
     (percent: number) => {
       updateState({
-        fromAmount: new BN(balanceUi || "0")
+        fromAmountUi: new BN(balanceUi || "0")
           .multipliedBy(percent)
           .toString(),
       });

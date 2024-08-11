@@ -106,6 +106,7 @@ export function TokenList({
 }) {
   const listRef = useRef<List>(null);
   const list = useTokens();
+  
   const balances = useTokenListBalances().data;
 
   const items = useMemo(() => {

@@ -53,7 +53,9 @@ export const EMPTY_QUOTE_RESPONSE = {
 } as QuoteResponse;
 
 export const QUOTE_REFETCH_THROTTLE = 60_000;
-export const QUOTE_REFETCH_INTERVAL = 10_000;
+export const QUOTE_REFETCH_INTERVAL = 20_000;
+export const QUOTE_TIMEOUT = 10_000;
+
 
 export const DEFAULT_QUOTE_REFETCH_LIMIT = 10;
 export const USE_SUBMIT_SWAP_KEY = "use-submit-lh-swap";

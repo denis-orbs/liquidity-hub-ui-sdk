@@ -7,13 +7,17 @@ import { useMainContext } from "../../lib/context/MainContext";
 import { usePercentSelect, usePriceUsd, useTokenListBalance } from "../hooks";
 import { FlexRow, FlexColumn } from "../../lib/base-styles";
 import { Logo } from "../../lib/components/Logo";
-import { StyledTokenPanel, StyledTokenPanelContent, StyledInput, StyledPercentButtons } from "../styles";
+import {
+  StyledTokenPanel,
+  StyledTokenPanelContent,
+  StyledInput,
+  StyledPercentButtons,
+} from "../styles";
 import { Text } from "../../lib/components/Text";
 import { useWidgetContext } from "../context";
 import { TokenList, TokenListItemProps } from "./TokenList";
 import { TokenSearchInput } from "./SearchInput";
 import { LoadingText } from "./LoadingText";
-
 
 export interface TokenPanelProps {
   inputValue?: string;
@@ -47,7 +51,8 @@ export const TokenPanel = ({
     value: balanceUi,
   });
 
-  const fetchingBalancesAfterTx = useWidgetContext().state.fetchingBalancesAfterTx;
+  const fetchingBalancesAfterTx =
+    useWidgetContext().state.fetchingBalancesAfterTx;
 
   const usd = useFormatNumber({ value: _usd });
 
@@ -78,6 +83,7 @@ export const TokenPanel = ({
             width: "100%",
           }}
         >
+          <USD value={`$ ${usd || "0"}`} isLoading={usdLoading} />
           {account && (
             <Balance
               value={`Balance: ${balance || "0"}`}
@@ -87,7 +93,6 @@ export const TokenPanel = ({
               }}
             />
           )}
-          <USD value={`$ ${usd || "0"}`} isLoading={usdLoading} />
         </FlexRow>
       </StyledTokenPanelContent>
     </StyledTokenPanel>
@@ -275,8 +280,8 @@ const StyledBalance = styled(LoadingText)`
 
 const USD = styled(LoadingText)`
   height: 13px;
-  text-align: right;
-  margin-left: auto;
+  text-align: left;
+
 `;
 
 const Balance = styled(LoadingText)`

@@ -4,21 +4,16 @@ import {
   QUERY_KEYS,
   QUOTE_ERRORS,
   QUOTE_REFETCH_INTERVAL,
+  QUOTE_TIMEOUT,
 } from "../../config/consts";
 import { useApiUrl } from "./useApiUrl";
 import BN from "bignumber.js";
 import _ from "lodash";
 import { useChainConfig, useIsDisabled } from "..";
-import { Quote, Token } from "../../type";
+import { Quote, QuoteResponse, Token } from "../../type";
 import { useWrapOrUnwrapOnly } from "../hooks";
 import { useMainContext } from "../../context/MainContext";
-import {
-  amountBN,
-  counter,
-  Logger,
-  safeBN,
-  shouldReturnZeroOutAmount,
-} from "../../util";
+import { counter, Logger, safeBN, shouldReturnZeroOutAmount } from "../../util";
 import { useMemo } from "react";
 import { isNativeAddress } from "@defi.org/web3-candies";
 import { zeroAddress } from "viem";
@@ -159,12 +154,10 @@ export const useQuoteQuery = (props: Props) => {
 
   const { fromAmount, dexMinAmountOut } = useMemo(() => {
     return {
-      fromAmount: safeBN(
-        amountBN(props.fromToken?.decimals, props.fromAmount).toString()
-      ),
+      fromAmount: safeBN(props.fromAmount),
       dexMinAmountOut: safeBN(props.minAmountOut),
     };
-  }, [props.fromAmount, props.minAmountOut, props.fromToken?.decimals]);
+  }, [props.fromAmount, props.minAmountOut]);
 
   const disabled = useIsDisabled();
   const refetchInterval =
@@ -196,22 +189,32 @@ export const useQuoteQuery = (props: Props) => {
   return useQuery({
     queryKey,
     queryFn: async ({ signal }) => {
-      const quoteResponse = await quote({
-        fromToken: props.fromToken!,
-        toToken: props.toToken!,
-        wTokenAddress: wTokenAddress!,
-        fromAmount: fromAmount!,
-        apiUrl: apiUrl!,
-        dexMinAmountOut,
-        account: context.account,
-        partner: context.partner,
-        sessionId: context.state.sessionId,
-        slippage: props.slippage,
-        signal,
-        quoteInterval: refetchInterval,
-        chainId: chainId!,
+      let timeoutId;
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject();
+        }, QUOTE_TIMEOUT);
       });
+      const quoteResponse = (await Promise.race([
+        await quote({
+          fromToken: props.fromToken!,
+          toToken: props.toToken!,
+          wTokenAddress: wTokenAddress!,
+          fromAmount: fromAmount!,
+          apiUrl: apiUrl!,
+          dexMinAmountOut,
+          account: context.account,
+          partner: context.partner,
+          sessionId: context.state.sessionId,
+          slippage: props.slippage,
+          signal,
+          quoteInterval: refetchInterval,
+          chainId: chainId!,
+        }),
+        timeoutPromise,
+      ])) as QuoteResponse;
       context.updateState({ sessionId: quoteResponse.quote?.sessionId });
+      clearTimeout(timeoutId);
       return quoteResponse;
     },
     refetchInterval: ({ state: { data } }) => {

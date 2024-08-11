@@ -1,4 +1,5 @@
-import styled, {CSSObject} from "styled-components";
+import styled, {CSSObject, createGlobalStyle} from "styled-components";
+import { PoweredByOrbs } from "../lib";
 import { FlexColumn, FlexRow } from "../lib/base-styles";
 import { NumericInput } from "./components/NumericInput";
 
@@ -109,3 +110,15 @@ export const theme = {
     textSecondary: "white",
   },
 };
+
+
+
+export const GlobalStyles = createGlobalStyle({
+  ".popup-content": {
+    background: "red"
+  }
+})
+
+export const StyledPoweredByOrbs = styled(PoweredByOrbs)`
+margin-top: 20px;
+`

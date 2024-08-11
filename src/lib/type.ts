@@ -73,7 +73,6 @@ export interface Quote {
   serializedOrder: string;
   permitData: PermitData;
   minAmountOut: string;
-  amountOutUI: string;
   error?: string;
   gasAmountOut?: string;
 }
@@ -158,8 +157,8 @@ export declare type PermitData = {
 };
 
 export interface SwapConfirmationArgs {
-  fromTokenUsd?: string;
-  toTokenUsd?: string;
+  fromUsd?: string;
+  toUsd?: string;
   outAmount?: string;
   fromAmount?: string;
   fromToken?: Token;

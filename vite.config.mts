@@ -22,6 +22,7 @@ export default defineConfig({
     },
     rollupOptions: {
       external: ["react", "react-dom"],
+      input: path.resolve(__dirname, "src/lib/index.ts"),
       output: {
         globals: {
           react: "React",
@@ -29,6 +30,7 @@ export default defineConfig({
         },
       },
     },
+
   },
 
   plugins: [
@@ -37,6 +39,8 @@ export default defineConfig({
     tsconfigPaths(),
     dts({
       insertTypesEntry: true,
+      outDir: "dist/types",
+      include: ["src/lib/**/*.*"],
     }),
     nodePolyfills({
       // To exclude specific polyfills, add them to this list.

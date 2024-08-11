@@ -1,4 +1,4 @@
-import _ from "lodash";
+import _  from "lodash";
 import BN from "bignumber.js";
 import { create } from "zustand";
 import { getChainConfig, Token } from "../lib";
@@ -70,7 +70,17 @@ const getTokens = async (chainId: number): Promise<Token[]> => {
 
   const tokens = _tokens.filter((it: any) => it.chainId === chainId);
 
-  const baseAssets = [zeroAddress, ...erc20s[config?.shortname as any]];
+
+  let  base = []
+
+  try {
+    base =  Object.values(erc20s[config?.shortname as any]).map((t: any) => t().address);
+  } catch (error) {
+    
+  }
+
+
+  const baseAssets = [zeroAddress, ...base];
   const native = _.find(networks, (it) => it.id === chainId)?.native;
 
   const sorted = _.sortBy(tokens, (t: any) => {
@@ -144,33 +154,33 @@ const getLineaTokens = async (): Promise<Token[]> => {
   });
 };
 
-
 const getBlastTokens = async (): Promise<Token[]> => {
+  const tokens = await fetch("https://token-list.sushi.com/").then((res) =>
+    res
+      .json()
+      .then((it) =>
+        it.tokens.filter((it: any) => it.chainId === networks.blast.id)
+      )
+  );
 
-  const tokens = await fetch('https://token-list.sushi.com/').then((res) => res.json().then(it => it.tokens.filter((it: any) => it.chainId === networks.blast.id)))
-  
-  const _tokens =  _.map(tokens, (token: any) => {
+  const _tokens = _.map(tokens, (token: any) => {
     return {
       address: token.address,
       symbol: token.symbol,
       decimals: token.decimals,
       logoUrl: token.logoURI,
       name: token.name,
-    }
-  })
+    };
+  });
 
-  const native = _.find(networks, (it) => it.id ===  networks.blast.id)?.native;
+  const native = _.find(networks, (it) => it.id === networks.blast.id)?.native;
 
-  if(native) {
-    _tokens.unshift(native as any)
+  if (native) {
+    _tokens.unshift(native as any);
   }
 
-  return _tokens
-
-
-}
-
-
+  return _tokens;
+};
 
 export const getTokensByChainId = async (chainId: number): Promise<Token[]> => {
   switch (chainId) {

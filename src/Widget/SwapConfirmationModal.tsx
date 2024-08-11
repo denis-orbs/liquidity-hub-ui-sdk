@@ -6,6 +6,7 @@ import {
   SwapConfirmation,
   useFormatNumber,
   useAmountUI,
+  Quote,
 } from "../lib";
 import { Button } from "../lib/components/Button";
 import { useWidgetContext } from "./context";
@@ -14,36 +15,58 @@ import { WidgetModal } from "./Modal";
 import BN from "bignumber.js";
 import { Text } from "../lib/components/Text";
 import { isNativeAddress } from "@defi.org/web3-candies";
+import { useWidgetSwapCallback } from "./useWidgetSwapCallback";
+import { useWidgetQuote } from "./hooks/useWidgetQuote";
 
-export const SwapConfirmationModal = () => {
+const useFromUsd = () => {
   const {
-    swapStatus,
-    swapStep,
-    isWrapped,
-    quote,
-    onSwapCallback,
-    state: { initialQuote, fromAmount, fromToken, toToken, showConfirmation },
-    updateState,
-    onCloseConfirmation,
-    hasAllowance,
+    state: { fromAmountUi, fromToken },
   } = useWidgetContext();
-
-  const outAmount = useAmountUI(toToken?.decimals, quote?.outAmount);
-  const wToken = useChainConfig()?.wToken;
   const fromTokenUsdSN = usePriceUsd({ address: fromToken?.address }).data;
-  const toTokenUsdSN = usePriceUsd({ address: toToken?.address }).data;
 
-  const fromTokenUsd = useMemo(() => {
+  return useMemo(() => {
     return BN(fromTokenUsdSN || 0)
-      .multipliedBy(fromAmount || 0)
+      .multipliedBy(fromAmountUi || 0)
       .toString();
-  }, [fromTokenUsdSN, fromAmount]);
+  }, [fromTokenUsdSN, fromAmountUi]);
+};
 
-  const toTokenUsd = useMemo(() => {
+const useToUsd = (quote?: Quote) => {
+  const {
+    state: { toToken },
+  } = useWidgetContext();
+  const toTokenUsdSN = usePriceUsd({ address: toToken?.address }).data;
+  const outAmount = useAmountUI(toToken?.decimals, quote?.outAmount);
+  return useMemo(() => {
     return BN(toTokenUsdSN || 0)
       .multipliedBy(outAmount || 0)
       .toString();
   }, [toTokenUsdSN, outAmount]);
+};
+
+export const SwapConfirmationModal = () => {
+  const {
+    state: {
+      initialQuote,
+      fromAmountUi,
+      fromToken,
+      toToken,
+      showConfirmation,
+      swapStatus,
+      swapStep,
+      isWrapped,
+    },
+    updateState,
+    hasAllowance,
+  } = useWidgetContext();
+  const { mutateAsync: onSwapCallback } = useWidgetSwapCallback();
+  const widgetQuote = useWidgetQuote();
+
+  const wToken = useChainConfig()?.wToken;
+
+  const onCloseConfirmation = useCallback(() => {
+    updateState({ showConfirmation: false });
+  }, [updateState]);
 
   const onWrapSuccess = useCallback(() => {
     updateState({ fromToken: wToken });
@@ -51,7 +74,6 @@ export const SwapConfirmationModal = () => {
 
   const refetchBalances = useRefreshBalancesAfterTx();
   const resetDexState = useWidgetContext().resetState;
-
   const onClick = useCallback(async () => {
     try {
       await onSwapCallback();
@@ -78,54 +100,64 @@ export const SwapConfirmationModal = () => {
     onCloseConfirmation,
   ]);
 
-  // const modalTitle = useMemo(() => {
-  //   return getSwapModalTitle(swapStatus);
-  // }, [swapStatus]);
-
   const swapButtonContent = useMemo(() => {
     if (isNativeAddress(fromToken?.address || "")) return "Wrap and Swap";
     if (!hasAllowance) return "Approve and Swap";
     return "Sign and Swap";
   }, [fromToken, hasAllowance]);
   const newPrice = useFormatNumber({
-    value: useAmountUI(toToken?.decimals, quote?.outAmount),
+    value: useAmountUI(toToken?.decimals, widgetQuote.quote?.outAmount),
   });
 
-  const priceChangeWarning = usePriceChanged({
-    quote,
-    initialQuote,
+  const showPriceWarning = usePriceChanged({
+    newPrice: widgetQuote.quote?.minAmountOut,
+    acceptedPrice: initialQuote?.minAmountOut,
     isOpen: showConfirmation,
     swapStatus,
   });
+  const onAcceptUpdatedPrice = useCallback(() => {
+    updateState({ initialQuote: widgetQuote.quote });
+  }, [widgetQuote.quote, updateState]);
+
+  const displayQuote = !swapStatus ? widgetQuote.quote : initialQuote;
+
+  const fromUsd = useFromUsd();
+  const toUsd = useToUsd(displayQuote);
+  const outAmount = useAmountUI(toToken?.decimals, initialQuote?.outAmount);
 
   return (
     <WidgetModal open={!!showConfirmation} onClose={closeModal}>
-      {priceChangeWarning.shouldAccept ? (
+      {showPriceWarning ? (
         <AcceptAmountOut
           amountToAccept={newPrice}
-          accept={priceChangeWarning.acceptChanges}
+          accept={onAcceptUpdatedPrice}
         />
       ) : (
         <SwapConfirmation
-          fromTokenUsd={fromTokenUsd}
-          toTokenUsd={toTokenUsd}
+          fromUsd={fromUsd}
+          toUsd={toUsd}
           outAmount={outAmount}
-          fromAmount={fromAmount}
+          fromAmount={fromAmountUi}
           fromToken={fromToken}
           toToken={toToken}
           swapStatus={swapStatus}
           swapStep={swapStep}
           hasAllowance={hasAllowance}
           SubmitButton={
-            <Button onClick={onClick} isLoading={false}>
+            <StyledSubmitButton onClick={onClick} isLoading={false}>
               {swapButtonContent}
-            </Button>
+            </StyledSubmitButton>
           }
         />
       )}
     </WidgetModal>
   );
 };
+
+const StyledSubmitButton = styled(Button)`
+    width: 100%;,
+    margin-top: 210px;
+`;
 
 const AcceptAmountOut = ({
   amountToAccept,
