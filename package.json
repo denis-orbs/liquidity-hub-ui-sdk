@@ -1,9 +1,12 @@
 {
-  "name": "@orbs-network/liquidity-hub-ui-sdk",
-  "version": "0.1.227",
+  "name": "@orbs-network/liquidity-hub-ui-sdk-dev",
+  "version": "0.0.4",
   "main": "dist/main.umd.js",
   "module": "dist/main.es.js",
   "types": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "import": "./dist/main.es.js",
