@@ -2,14 +2,18 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Token, useContract } from "../..";
 import { QUERY_KEYS } from "../../config/consts";
 import BN from "bignumber.js";
-import { useMainContext } from "../../context/MainContext";
 import { useCallback, useMemo } from "react";
 import { permit2Address } from "@defi.org/web3-candies";
+import Web3 from "web3";
 
-const useGetAllowance = (fromAmount?: string, fromToken?: Token) => {
-  const { account } = useMainContext();
-
-  const fromTokenContract = useContract(fromToken?.address);
+const useGetAllowance = (
+  account?: string,
+  web3?: Web3,
+  chainId?: number,
+  fromAmount?: string,
+  fromToken?: Token
+) => {
+  const fromTokenContract = useContract(fromToken?.address, web3, chainId);
 
   return useCallback(async () => {
     const allowance = await fromTokenContract?.methods
@@ -20,11 +24,17 @@ const useGetAllowance = (fromAmount?: string, fromToken?: Token) => {
   }, [fromTokenContract, account, fromToken?.address, fromAmount]);
 };
 
-export const useAllowance = (fromAmount?: string, fromToken?: Token) => {
-  const { account, chainId } = useMainContext();
+export const useAllowance = (
+  account?: string,
+  web3?: Web3,
+  chainId?: number,
+  fromAmount?: string,
+  fromToken?: Token
+) => {
   const queryClient = useQueryClient();
-  const fromTokenContract = useContract(fromToken?.address);
-  const getAllowance = useGetAllowance();
+  const fromTokenContract = useContract(fromToken?.address, web3, chainId);
+  const getAllowance = useGetAllowance( account, web3, chainId, fromAmount, fromToken);
+
   const queryKey = [
     QUERY_KEYS.APPROVE,
     account,

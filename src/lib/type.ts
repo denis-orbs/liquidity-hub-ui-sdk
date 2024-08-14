@@ -14,13 +14,7 @@ export interface Token {
 }
 
 export interface ProviderArgs {
-  supportedChains?: number[];
-  provider?: any;
-  account?: string;
-  chainId?: number;
   partner: string;
-  apiUrl?: string;
-  quoteRefetchInterval?: number;
 }
 
 export interface QuoteArgs {
@@ -77,13 +71,8 @@ export interface Quote {
   gasAmountOut?: string;
 }
 
-export interface QuoteResponse {
-  disableRefetch?: boolean;
-  quote?: Quote;
-}
-
 export interface UseQueryData {
-  quoteResponse: QuoteResponse | undefined;
+  quote: Quote | undefined;
   refetchCount?: number;
   resetCount?: () => void;
   isPassedLimit?: boolean;
@@ -95,9 +84,18 @@ export enum LH_CONTROL {
   RESET = "3",
 }
 
-export type SwapSteps = "wrap" | "approve" | "sign" | "swap" | undefined;
+export enum SwapSteps {
+  WRAP = 1,
+  APPROVE = 2,
+  SIGN = 3,
+  SENT_TX = 4,
+}
 
-export type SwapStatus = "loading" | "success" | "failed" | undefined;
+export enum SwapStatus {
+  LOADING = 1,
+  SUCCESS = 2,
+  FAILED = 3,
+}
 
 export interface Step {
   title: ReactNode;
@@ -107,6 +105,7 @@ export interface Step {
   id: SwapSteps;
   txHash?: string;
   completed?: boolean;
+  active?: boolean;
 }
 
 export type Order = {
@@ -169,6 +168,7 @@ export interface SwapConfirmationArgs {
   txHash?: string;
   hasAllowance?: boolean;
   isLightMode?: boolean;
+  chainId?: number;
 }
 
 export interface SDKProps extends ProviderArgs {

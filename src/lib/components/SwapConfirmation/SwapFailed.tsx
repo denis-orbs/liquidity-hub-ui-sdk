@@ -2,13 +2,14 @@ import { FlexColumn, FlexRow } from "../../base-styles";
 import { AlertCircle } from "react-feather";
 import styled from "styled-components";
 import { Text } from "../Text";
-import { useChainConfig } from "../../hooks";
-import { isNativeBalanceError } from "../../util";
+import { getChainConfig, isNativeBalanceError } from "../../util";
 import { useMemo } from "react";
 import { useSwapConfirmationContext } from "./context";
 
-const useGetError = (error?: string) => {
-  const chainConfig = useChainConfig();
+const useGetError = () => {
+  const { chainId, error } = useSwapConfirmationContext();
+
+  const chainConfig = useMemo(() => getChainConfig(chainId), [chainId]);
   return useMemo(() => {
     if (isNativeBalanceError(error)) {
       return `insufficient ${chainConfig?.native.symbol} balance`;
@@ -18,30 +19,28 @@ const useGetError = (error?: string) => {
 };
 
 export const SwapFailed = () => {
-  const { error } = useSwapConfirmationContext();
-  const _error = useGetError(error);
-  
+  const error = useGetError();
 
   return (
     <Container className="lh-failed">
       <MainLogo className="lh-failed-img">
         <AlertCircle />
       </MainLogo>
-      <Title className="lh-failed-title">{_error}</Title>
+      <Title className="lh-failed-title">{error}</Title>
       {/* {isWrapped && chainConfig && (
         <Message>{`${chainConfig?.native.symbol} has been wrapped to ${chainConfig?.wToken?.symbol}`}</Message>
       )} */}
-      <Message>{_error}</Message>
+      {/* <Message>{_error}</Message> */}
     </Container>
   );
 };
 
-const Message = styled(Text)`
-  text-align: center;
-  font-size: 16px;
-  line-height: normal;
-  margin-top: 5px;
-`;
+// const Message = styled(Text)`
+//   text-align: center;
+//   font-size: 16px;
+//   line-height: normal;
+//   margin-top: 5px;
+// `;
 const Title = styled(Text)`
   font-size: 22px;
   font-weight: 500;

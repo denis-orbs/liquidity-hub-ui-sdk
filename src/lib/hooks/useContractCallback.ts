@@ -1,29 +1,19 @@
-import { useCallback, useMemo } from "react";
-import { useChainConfig } from "./useChainConfig";
+import { useMemo } from "react";
 import { getContract } from "../util";
-import { useMainContext } from "../context/MainContext";
 import { zeroAddress } from "@defi.org/web3-candies";
+import Web3 from "web3";
 
-export const useContractCallback = () => {
-  const { web3, chainId } = useMainContext();
 
-  return useCallback(
-    (address?: string) => {
-      return getContract(address, web3, chainId);
-    },
-    [web3, chainId]
-  );
-};
-
-export const useContract = (address?: string) => {
-  const { web3, chainId } = useMainContext();
-  const wethAddress = useChainConfig()?.wToken?.address;
-
+export const useContract = (
+  address?: string,
+  web3?: Web3,
+  chainId?: number
+) => {
   return useMemo(() => {
     return getContract(address, web3, chainId);
-  }, [web3, wethAddress, chainId, address]);
+  }, [web3, chainId, address]);
 };
 
-export const useWethContract = () => {
-  return useContract(zeroAddress);
+export const useWethContract = (web3?: Web3, chainId?: number) => {
+  return useContract(zeroAddress, web3, chainId);
 };

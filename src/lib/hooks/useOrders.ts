@@ -1,8 +1,7 @@
 import { useCallback, useMemo } from "react";
-import { useMainContext } from "../context/MainContext";
 import { useOrdersStore } from "../store/main";
 import { Order, Quote, Token } from "../type";
-import { useChainConfig } from "./useChainConfig";
+import { getChainConfig } from "../util";
 
 export type AddOrderArgs = {
   fromToken: Token;
@@ -15,26 +14,37 @@ export type AddOrderArgs = {
 
 export const useAddOrderCallback = () => {
   const addOrder = useOrders().addOrder;
-  const chainConfig = useChainConfig();
 
   return useCallback(
-    ({quote, txHash, fromToken, toToken}:{quote: Quote, txHash: string, fromToken: Token, toToken: Token}) => {
+    ({
+      quote,
+      txHash,
+      fromToken,
+      toToken,
+      chainId,
+    }: {
+      quote: Quote;
+      txHash: string;
+      fromToken: Token;
+      toToken: Token;
+      chainId: number;
+    }) => {
       if (!fromToken || !toToken) return;
+      const config = getChainConfig(chainId);
       addOrder({
         fromToken: fromToken,
         toToken: toToken,
-        fromAmount:quote.inAmount,
+        fromAmount: quote.inAmount,
         toAmount: quote.outAmount,
         txHash,
-        explorerLink: `${chainConfig?.explorer}/tx/${txHash}`,
+        explorerLink: `${config?.explorer}/tx/${txHash}`,
       });
     },
-    [addOrder, chainConfig?.explorer]
+    [addOrder]
   );
 };
 
-export const useOrders = () => {
-  const { account, chainId } = useMainContext();
+export const useOrders = (account?: string, chainId?: number) => {
   const store = useOrdersStore();
   const orders = account && chainId ? store.orders?.[account]?.[chainId] : [];
 

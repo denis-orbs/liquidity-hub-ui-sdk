@@ -3,7 +3,6 @@ import { CSSObject, styled } from "styled-components";
 import { WidgetModal } from "../Modal";
 import BN from "bignumber.js";
 import { Token, useAmountUI, useFormatNumber } from "../../lib";
-import { useMainContext } from "../../lib/context/MainContext";
 import { usePercentSelect, usePriceUsd, useTokenListBalance } from "../hooks";
 import { FlexRow, FlexColumn } from "../../lib/base-styles";
 import { Logo } from "../../lib/components/Logo";
@@ -40,7 +39,7 @@ export const TokenPanel = ({
   usd: _usd,
   usdLoading,
 }: TokenPanelProps) => {
-  const account = useMainContext().account;
+  const account = useWidgetContext().account;
 
   const { balance: _balance, isLoading: balanceLoading } = useTokenListBalance(
     token?.address

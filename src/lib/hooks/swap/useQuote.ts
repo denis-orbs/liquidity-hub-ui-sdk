@@ -1,19 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import {
-  EMPTY_QUOTE_RESPONSE,
   QUERY_KEYS,
-  QUOTE_ERRORS,
   QUOTE_REFETCH_INTERVAL,
   QUOTE_TIMEOUT,
 } from "../../config/consts";
-import { useApiUrl } from "./useApiUrl";
 import BN from "bignumber.js";
 import _ from "lodash";
-import { useChainConfig, useIsDisabled } from "..";
-import { Quote, QuoteResponse, Token } from "../../type";
+import { Quote, Token } from "../../type";
 import { useWrapOrUnwrapOnly } from "../hooks";
 import { useMainContext } from "../../context/MainContext";
-import { counter, Logger, safeBN, shouldReturnZeroOutAmount } from "../../util";
+import { counter, getChainConfig, Logger, safeBN } from "../../util";
 import { useMemo } from "react";
 import { isNativeAddress } from "@defi.org/web3-candies";
 import { zeroAddress } from "viem";
@@ -35,7 +31,7 @@ interface Args {
   chainId: number;
 }
 
-const quote = async ({
+const fetchQuote = async ({
   fromToken,
   toToken,
   wTokenAddress,
@@ -50,8 +46,23 @@ const quote = async ({
   quoteInterval,
   chainId,
 }: Args) => {
-  swapAnalytics.onQuoteRequest();
-  let quote: Quote | undefined = undefined;
+  const analyticsArgs = {
+    fromToken,
+    toToken,
+    wTokenAddress,
+    fromAmount,
+    apiUrl,
+    dexMinAmountOut,
+    account,
+    partner,
+    sessionId,
+    slippage,
+    signal,
+    quoteInterval,
+    chainId,
+  };
+
+  swapAnalytics.onQuoteRequest(analyticsArgs);
   const count = counter();
 
   try {
@@ -64,7 +75,7 @@ const quote = async ({
         outToken: isNativeAddress(toToken?.address || "")
           ? zeroAddress
           : toToken?.address,
-        inAmount: fromAmount,
+        inAmount: safeBN(fromAmount),
         outAmount: _.isUndefined(dexMinAmountOut) ? "-1" : dexMinAmountOut,
         user: account || zeroAddress,
         slippage,
@@ -75,7 +86,7 @@ const quote = async ({
       signal,
     });
     Logger("calling quote api");
-    quote = await response.json();
+    const quote = await response.json();
 
     if (!quote) {
       throw new Error("No result");
@@ -84,104 +95,81 @@ const quote = async ({
     if (quote.error) {
       throw new Error(quote.error);
     }
+    swapAnalytics.onQuoteSuccess(count(), quote, analyticsArgs);
 
-    if (!quote.outAmount || new BN(quote.outAmount).eq(0)) {
-      throw new Error(QUOTE_ERRORS.noLiquidity);
-    }
-    swapAnalytics.onQuoteSuccess(count(), quote);
-
-    Logger({
-      fromAmount,
-      fromAddress: fromToken?.address,
-      toAddress: toToken?.address,
-      dexMinAmountOut,
-      quote,
-      minAmountOut: quote.minAmountOut,
-      gasAmountOut: quote.gasAmountOut,
-      refetchInterval: quoteInterval,
-    });
-    quote = {
-      ...quote,
-      outAmount: safeBN(quote.outAmount) || "",
-      minAmountOut: safeBN(quote.minAmountOut || 0) || "",
-      gasAmountOut: safeBN(quote.gasAmountOut),
-    };
-    return {
-      quote,
-    };
+    return quote;
   } catch (error: any) {
-    swapAnalytics.onQuoteFailed(error.message, count(), quote);
-
-    if (shouldReturnZeroOutAmount(error.message) || signal.aborted) {
-      return EMPTY_QUOTE_RESPONSE;
-    } else {
-      throw new Error(error.message);
-    }
+    swapAnalytics.onQuoteFailed(error.message, count());
+    throw new Error(error.message);
   }
 };
 
-interface Props {
+export interface Props {
   fromToken?: Token;
   toToken?: Token;
   fromAmount?: string;
   minAmountOut?: string;
   disabled?: boolean;
   slippage: number;
-  pauseOnConfirmation?: boolean;
+  chainId?: number;
+  refetchInterval?: number;
+  account?: string;
 }
 
 export const useQuote = (props: Props) => {
   const res = useQuoteQuery(props);
   return useMemo(() => {
     return {
-      quote: res.data?.quote,
+      quote: res.data,
       isLoading: res.isLoading,
       error: res.error,
       isError: res.isError,
     };
-  }, [res.data?.quote, res.isLoading, res.error, res.isError]);
+  }, [res.data, res.isLoading, res.error, res.isError]);
 };
 
-export const useQuoteQuery = (props: Props) => {
+export const useQuoteQuery = ({
+  chainId,
+  fromToken,
+  toToken,
+  fromAmount,
+  disabled,
+  slippage,
+  minAmountOut: dexMinAmountOut,
+  refetchInterval = QUOTE_REFETCH_INTERVAL,
+  account,
+}: Props) => {
   const context = useMainContext();
-  const apiUrl = useApiUrl();
-  const chainId = context.chainId;
-  const wTokenAddress = useChainConfig()?.wToken?.address;
+  const chainConfig = useMemo(() => {
+    return getChainConfig(chainId);
+  }, [chainId]);
+
+  const wTokenAddress = chainConfig?.wToken?.address;
+  const apiUrl = chainConfig?.apiUrl;
+
   const { isUnwrapOnly, isWrapOnly } = useWrapOrUnwrapOnly(
-    props.fromToken?.address,
-    props.toToken?.address
+    fromToken?.address,
+    toToken?.address
   );
-
-  const { fromAmount, dexMinAmountOut } = useMemo(() => {
-    return {
-      fromAmount: safeBN(props.fromAmount),
-      dexMinAmountOut: safeBN(props.minAmountOut),
-    };
-  }, [props.fromAmount, props.minAmountOut]);
-
-  const disabled = useIsDisabled();
-  const refetchInterval =
-    context.quoteRefetchInterval || QUOTE_REFETCH_INTERVAL;
 
   const enabled =
     !!chainId &&
     !!wTokenAddress &&
     !!context.partner &&
-    !!props.fromToken &&
-    !!props.toToken &&
+    !!fromToken &&
+    !!toToken &&
     BN(fromAmount || "0").gt(0) &&
     !!apiUrl &&
-    !props.disabled &&
     !disabled &&
     !isUnwrapOnly &&
     !isWrapOnly;
 
   const queryKey = [
     QUERY_KEYS.QUOTE,
-    props.fromToken?.address,
-    props.toToken?.address,
+    fromToken?.address,
+    toToken?.address,
     fromAmount,
-    props.slippage,
+    slippage,
     apiUrl,
     chainId,
   ];
@@ -195,34 +183,29 @@ export const useQuoteQuery = (props: Props) => {
           reject();
         }, QUOTE_TIMEOUT);
       });
-      const quoteResponse = (await Promise.race([
-        await quote({
-          fromToken: props.fromToken!,
-          toToken: props.toToken!,
+      const quote = (await Promise.race([
+        await fetchQuote({
+          fromToken: fromToken!,
+          toToken: toToken!,
           wTokenAddress: wTokenAddress!,
           fromAmount: fromAmount!,
           apiUrl: apiUrl!,
           dexMinAmountOut,
-          account: context.account,
+          account: account,
           partner: context.partner,
           sessionId: context.state.sessionId,
-          slippage: props.slippage,
+          slippage,
           signal,
           quoteInterval: refetchInterval,
           chainId: chainId!,
         }),
         timeoutPromise,
-      ])) as QuoteResponse;
-      context.updateState({ sessionId: quoteResponse.quote?.sessionId });
+      ])) as Quote;
+      context.updateState({ sessionId: quote?.sessionId });
       clearTimeout(timeoutId);
-      return quoteResponse;
+      return quote;
     },
-    refetchInterval: ({ state: { data } }) => {
-      if (data?.disableRefetch) {
-        return false;
-      }
-      return refetchInterval;
-    },
+    refetchInterval,
     staleTime: Infinity,
     enabled,
     gcTime: 0,

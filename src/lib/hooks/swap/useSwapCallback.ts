@@ -3,8 +3,7 @@ import { useCallback } from "react";
 import { swapAnalytics } from "../../analytics";
 import { useMainContext } from "../../context/MainContext";
 import { Quote, Token } from "../../type";
-import { counter, delay } from "../../util";
-import { useChainConfig } from "../useChainConfig";
+import { counter, delay, getChainConfig } from "../../util";
 
 interface Args {
   signature: string;
@@ -60,22 +59,25 @@ export const swapX = async (args: Args) => {
 export const useSwapCallback = () => {
   const {
     state: { sessionId },
-    account,
-    chainId,
   } = useMainContext();
-  const chainConfig = useChainConfig();
 
-  const wTokenAddress = chainConfig?.wToken?.address;
-  const apiUrl = chainConfig?.apiUrl;
   return useCallback(
-    async (args: {
-      fromAmount: string;
-      fromToken: Token;
-      toToken: Token;
-      quote: Quote;
-      signature: string;
-    }) => {
-      const { fromAmount, fromToken, toToken, quote, signature } = args;
+    async (
+      fromAmount: string,
+      fromToken: Token,
+      toToken: Token,
+      quote: Quote,
+      signature: string,
+      account: string,
+      chainId: number
+    ) => {
+  
+
+      const chainConfig = getChainConfig(chainId);
+
+      const wTokenAddress = chainConfig?.wToken?.address;
+      const apiUrl = chainConfig?.apiUrl;
+
       let inTokenAddress = isNativeAddress(fromToken.address || "")
         ? wTokenAddress
         : fromToken?.address;
@@ -122,7 +124,7 @@ export const useSwapCallback = () => {
         throw error;
       }
     },
-    [sessionId, account, chainId, wTokenAddress, apiUrl]
+    [sessionId]
   );
 };
 

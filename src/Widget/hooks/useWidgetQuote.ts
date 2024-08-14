@@ -5,6 +5,7 @@ export const useWidgetQuote = () => {
   const {
     state: { fromToken, toToken, fromAmountUi },
     slippage,
+    account, chainId
   } = useWidgetContext();
 
 
@@ -13,5 +14,7 @@ export const useWidgetQuote = () => {
     toToken,
     fromAmount: useAmountBN(fromToken?.decimals, fromAmountUi),
     slippage: slippage || 0.5,
+    account,
+    chainId
   });
 };

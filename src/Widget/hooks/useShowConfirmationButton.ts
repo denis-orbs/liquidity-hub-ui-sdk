@@ -2,19 +2,15 @@ import BN from "bignumber.js";
 import { useCallback, useMemo } from "react";
 import { useTokenListBalance } from "./useTokenListBalance";
 import { useTokenListBalances } from "./useTokenListBalances";
-import { useIsInvalidChain } from "./useIsInvalidChain";
 import { useWidgetContext } from "../context";
 import {
-  getChainConfig,
   useAmountBN,
   useAmountUI,
-  useChainConfig,
   useUnwrapCallback,
   useWrapCallback,
 } from "../../lib";
 import { useMutation } from "@tanstack/react-query";
 import { useSwitchNetwork } from "./useSwitchNetwork";
-import { useMainContext } from "../../lib/context/MainContext";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useWrapOrUnwrapOnly } from "../../lib/hooks/hooks";
 import { useWidgetQuote } from "./useWidgetQuote";
@@ -61,38 +57,39 @@ export const useWrap = () => {
 };
 
 export const useShowConfirmationButton = () => {
-  const {quote, isLoading: quoteLoading, isError: quoteError } = useWidgetQuote();
+  const {
+    quote,
+    isLoading: quoteLoading,
+    isError: quoteError,
+  } = useWidgetQuote();
   const {
     state: { fromAmountUi, fromToken, toToken },
-    updateState
+    updateState,
+    chainConfig,
+    account,
+    chainId,
   } = useWidgetContext();
   const outAmountUi = useAmountUI(toToken?.decimals, quote?.outAmount);
   const fromAmount = useAmountBN(fromToken?.decimals, fromAmountUi);
 
-  const onShowConfirmation = useCallback(
-    () => {
-      updateState({showConfirmation: true, initialQuote: quote})
-    },
-    [updateState, quote],
-  )
-  
+  const onShowConfirmation = useCallback(() => {
+    updateState({ showConfirmation: true, initialQuote: quote });
+  }, [updateState, quote]);
 
   const { mutate: switchNetwork, isPending: switchNetworkLoading } =
     useSwitchNetwork();
-  const wrongChain = useIsInvalidChain();
 
   const { balance: fromTokenBalance } = useTokenListBalance(fromToken?.address);
 
-  const wToken = useChainConfig()?.wToken?.address;
+  const wToken = chainConfig?.wToken?.address;
   const { mutate: unwrap, isPending: unwrapLoading } = useUnwrap();
   const { mutate: wrap, isPending: wrapLoading } = useWrap();
   const { openConnectModal } = useConnectModal();
 
-  const { account, supportedChains } = useMainContext();
-
   const { isUnwrapOnly, isWrapOnly } = useWrapOrUnwrapOnly(
     fromToken?.address,
-    toToken?.address
+    toToken?.address,
+    chainId
   );
 
   const isLoading =
@@ -116,15 +113,6 @@ export const useShowConfirmationButton = () => {
       };
     }
 
-    if (wrongChain) {
-      return {
-        disabled: false,
-        text: `Switch to ${getChainConfig(supportedChains?.[0])?.name}`,
-        onClick: () => switchNetwork?.(supportedChains?.[0]!),
-        switchNetworkLoading,
-        isLoading,
-      };
-    }
 
     if (!fromToken || !toToken) {
       return {
@@ -188,7 +176,6 @@ export const useShowConfirmationButton = () => {
       onClick: onShowConfirmation,
     };
   }, [
-    wrongChain,
     fromToken,
     toToken,
     fromAmount,
@@ -198,7 +185,6 @@ export const useShowConfirmationButton = () => {
     switchNetworkLoading,
     isLoading,
     account,
-    supportedChains,
     wToken,
     unwrap,
     unwrapLoading,

@@ -1,10 +1,10 @@
 import { network } from "@defi.org/web3-candies";
 import { useMutation } from "@tanstack/react-query";
 import Web3 from "web3";
-import { useMainContext } from "../../lib/context/MainContext";
+import { useWidgetContext } from "../context";
 
 export const useSwitchNetwork = () => {
-  const { provider } = useMainContext();
+  const { provider } = useWidgetContext();
   return useMutation({
     mutationFn: async (chainId: number) => {
       if (!provider) throw new Error(`no provider`);

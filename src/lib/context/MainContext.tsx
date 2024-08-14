@@ -1,13 +1,10 @@
-import { setWeb3Instance } from "@defi.org/web3-candies";
 import {
   createContext,
   useCallback,
   useContext,
   useEffect,
-  useMemo,
   useReducer,
 } from "react";
-import Web3 from "web3";
 import { ProviderArgs, SDKProps } from "..";
 import { swapAnalytics } from "../analytics";
 import { useLhControllListener } from "../hooks/useLhControllListener";
@@ -18,7 +15,6 @@ interface State {
 }
 
 interface ContextArgs extends ProviderArgs {
-  web3?: Web3;
   updateState: (payload: Partial<State>) => void;
   state: State;
 }
@@ -38,18 +34,9 @@ function reducer(state: State, action: Action) {
 
 export const MainContextProvider = (props: SDKProps) => {
   const { children, ...rest } = props;
-  const { partner, provider, chainId } = rest;
+  const { partner} = rest;
   const [state, dispatch] = useReducer(reducer, initialState);
   useLhControllListener();
-
-  const web3 = useMemo(
-    () => (provider ? new Web3(provider) : undefined),
-    [provider]
-  );
-
-  useEffect(() => {
-    setWeb3Instance(web3);
-  }, [web3]);
 
   const updateState = useCallback(
     (payload: Partial<State>) => {
@@ -59,14 +46,13 @@ export const MainContextProvider = (props: SDKProps) => {
   );
 
   useEffect(() => {
-    if (chainId && partner) {
-      swapAnalytics.setChainId(chainId);
+    if (partner) {
       swapAnalytics.setPartner(partner);
     }
-  }, [chainId, partner]);
+  }, [partner]);
 
   return (
-    <Context.Provider value={{ ...rest, web3, updateState, state }}>
+    <Context.Provider value={{ ...rest, updateState, state }}>
       {children}
     </Context.Provider>
   );

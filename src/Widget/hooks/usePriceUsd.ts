@@ -1,9 +1,8 @@
 import { isNativeAddress } from "@defi.org/web3-candies";
 import { useQuery } from "@tanstack/react-query";
 import { getChainConfig } from "../../lib";
-import { useMainContext } from "../../lib/context/MainContext";
 import { api } from "../api";
-
+import { useWidgetContext } from "../context";
 
 export const usePriceUsd = ({
   address,
@@ -16,24 +15,22 @@ export const usePriceUsd = ({
   noRefetch?: boolean;
   disabled?: boolean;
 }) => {
-  const { chainId: connectedChainId, supportedChains } = useMainContext();
-  const chainId = connectedChainId || supportedChains?.[0];
-  
+  const { chainId } = useWidgetContext();
+
   return useQuery({
     queryFn: async () => {
-      if (!chainId || !address) return 0;
       const chainConfig = getChainConfig(chainId);
       const wTokenAddress = chainConfig?.wToken?.address;
-      
-      const _address = isNativeAddress(address) ? wTokenAddress : address;
+
+      const _address = isNativeAddress(address!) ? wTokenAddress : address;
       if (!_address) return 0;
 
-      return api.priceUsd(_address, chainId);
+      return api.priceUsd(_address, chainId!);
     },
-    queryKey: ['USD_PRICE', chainId, address],
+    queryKey: ["USD_PRICE", chainId, address],
     refetchInterval: noRefetch ? false : refetchInterval,
     staleTime: Infinity,
     retry: 2,
-    enabled: !disabled,
+    enabled: !disabled && !!chainId && !!address,
   });
 };

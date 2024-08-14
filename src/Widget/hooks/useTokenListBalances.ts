@@ -1,28 +1,24 @@
 import { useQuery } from "@tanstack/react-query";
 import _ from "lodash";
-import { useMainContext } from "../../lib/context/MainContext";
+import { useWidgetContext } from "../context";
 import { getBalances } from "../getBalances";
-import { useIsInvalidChain } from "./useIsInvalidChain";
 import { useTokensList } from "./useTokenList";
 
 export const useTokenListBalances = () => {
   const list = useTokensList().data;
-  const invalidChain = useIsInvalidChain();
-
-  const { chainId, account, web3 } = useMainContext();
-
+  const { account, web3, chainId } = useWidgetContext();
+  
   return useQuery({
     queryKey: [
-      'useTokenListBalances',
+      "useTokenListBalances",
       account,
       chainId,
       _.size(list),
       web3?.version,
     ],
-    queryFn: async () => {      
-      if (!account || !chainId || !list || invalidChain || !web3) return {};            
-      const balances = await getBalances(list!, web3, account);
-      
+    queryFn: async () => {
+      if (!account || !chainId || !list || !web3) return {};
+      const balances = await getBalances(list!, web3, account);      
       return balances;
     },
     refetchInterval: 30_000,

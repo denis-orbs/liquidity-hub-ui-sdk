@@ -94,6 +94,9 @@ export interface AnalyticsData {
   quoteAmountOutUI?: string;
   quoteAmountOutUsd?: number;
 
+  quoteMinAmountOut?: string;
+  quoteMinAmountOutUI?: string;
+
   quoteSerializedOrder?: string;
   quoteMillis?: number;
   quoteError?: string;

@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { Spinner } from "./Spinner";
 export function Button({
   children,
-  className = "className",
+  className = "",
   onClick,
   isLoading,
   disabled,

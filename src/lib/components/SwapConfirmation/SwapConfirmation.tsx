@@ -1,5 +1,5 @@
 import styled, { CSSObject } from "styled-components";
-import { SwapConfirmationArgs } from "../..";
+import { SwapConfirmationArgs, SwapStatus } from "../..";
 import {
   SwapConfirmationProvider,
   useSwapConfirmationContext,
@@ -46,9 +46,9 @@ const SwapConfirmationContent = ({
   return (
     <ThemeProvider theme={theme}>
       <Fragment>
-        {swapStatus === "success" ? (
+        {swapStatus === SwapStatus.SUCCESS ? (
           <SwapSuccess />
-        ) : swapStatus === "failed" ? (
+        ) : swapStatus === SwapStatus.FAILED ? (
           <SwapFailed />
         ) : (
           <FlexColumn>

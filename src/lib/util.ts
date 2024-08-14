@@ -50,13 +50,27 @@ export const getChainConfig = (chainId?: number) => {
   if (!chainId) return undefined;
   const result = Object.values(networks).find((it) => it.id === chainId);
   if (!result) return undefined;
+  const localStorageApiUrl = localStorage.getItem("apiUrl");
   return {
     ...result,
-    apiUrl: getApiUrl(chainId),
+    apiUrl: localStorageApiUrl ||  getApiUrl(chainId),
   };
 };
 
-export async function waitForTxDetails(web3: Web3, txHash: string) {
+export const getTxReceipt = async (web3: Web3, txHash: string) => {
+  const res = await waitForTxDetails(web3, txHash);
+  if (!res?.mined) {
+    throw new Error(res?.revertMessage);
+  }
+
+  return {
+    receipt: res?.receipt,
+    txHash,
+  };
+};
+
+
+async function waitForTxDetails(web3: Web3, txHash: string) {
   for (let i = 0; i < 30; ++i) {
     // due to swap being fetch and not web3
 
@@ -141,10 +155,6 @@ export const counter = () => {
   };
 };
 
-export const shouldReturnZeroOutAmount = (error: string) => {
-  return Object.values(QUOTE_ERRORS).includes(error);
-};
-
 export const formatNumberDecimals = (
   decimalScale = 3,
   value?: string | number
@@ -223,8 +233,8 @@ export const isNativeBalanceError = (message?: string) => {
 };
 
 export const getSwapModalTitle = (swapStatus: SwapStatus) => {
-  if (swapStatus === "failed") return;
-  if (swapStatus === "success") return "Swap Successfull";
+  if (swapStatus === SwapStatus.FAILED) return;
+  if (swapStatus === SwapStatus.SUCCESS) return "Swap Successfull";
   return "Review Swap";
 };
 

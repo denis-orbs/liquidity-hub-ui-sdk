@@ -1,4 +1,3 @@
-import { QuoteResponse } from "../type";
 export const WEBSITE_URL = "https://www.orbs.com/";
 export const DEFAULT_QUOTE_INTERVAL = 10_000;
 
@@ -33,24 +32,6 @@ export const THENA_TOKENS_LIST_API =
 
 export const FROM_AMOUNT_DEBOUNCE = 300;
 
-export const EMPTY_QUOTE_RESPONSE = {
-  inToken: "",
-  outToken: "",
-  inAmount: "string",
-  outAmount: "string",
-  user: "string",
-  slippage: 0,
-  qs: "string",
-  partner: "string",
-  exchange: "string",
-  sessionId: "string",
-  serializedOrder: "string",
-  permitData: '',
-  minAmountOut: "string",
-  amountOutUI: "string",
-  error: "string",
-  gasAmountOut: "string",
-} as QuoteResponse;
 
 export const QUOTE_REFETCH_THROTTLE = 60_000;
 export const QUOTE_REFETCH_INTERVAL = 20_000;

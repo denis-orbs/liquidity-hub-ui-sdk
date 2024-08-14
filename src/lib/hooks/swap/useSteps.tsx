@@ -1,38 +1,37 @@
 import { useMemo } from "react";
 import SwapImg from "../../assets/swap.svg";
 import ApproveImg from "../../assets/approve.svg";
-import { Step } from "../../type";
-import { useChainConfig } from "../useChainConfig";
+import { Step, SwapSteps } from "../../type";
 import { useSwapConfirmationContext } from "../../components/SwapConfirmation/context";
 import { isNativeAddress } from "@defi.org/web3-candies";
+import { getChainConfig } from "../../util";
 
 export const useSteps = () => {
-  const explorer = useChainConfig()?.explorer;
-  const { swapStep, fromToken, hasAllowance } =
-    useSwapConfirmationContext();
+  const { swapStep, fromToken, hasAllowance, chainId } = useSwapConfirmationContext();
+  const explorer = useMemo(() => getChainConfig(chainId)?.explorer, [chainId]);
 
   const steps = useMemo(() => {
     const wrap: Step = {
       title: `Wrap ${fromToken?.symbol}`,
       image: SwapImg,
-      id: 'wrap',
-      completed: swapStep === 'approve'
+      id: SwapSteps.WRAP,
+      completed: (swapStep || 0) > SwapSteps.WRAP,
+      active:  (swapStep || 0)  === SwapSteps.WRAP
     };
 
     const approve: Step = {
       title: `Approve ${fromToken?.symbol} spending`,
       image: ApproveImg,
-      id: 'approve',
-      completed: swapStep === 'sign'
+      id: SwapSteps.APPROVE,
+      completed: (swapStep || 0) > SwapSteps.APPROVE,
+      active:  (swapStep || 0)  === SwapSteps.APPROVE
     };
 
     const sendTx: Step = {
-      id: 'swap',
-      title:
-      swapStep === 'swap'
-          ? "Swap pending..."
-          : "Sign and Confirm swap",
+      id: SwapSteps.SENT_TX,
+      title: SwapSteps.SENT_TX ? "Swap pending..." : "Sign and Confirm swap",
       image: SwapImg,
+      active:  (swapStep || 0)  >= SwapSteps.SIGN
     };
 
     const steps = [sendTx];
@@ -45,13 +44,7 @@ export const useSteps = () => {
       steps.unshift(wrap);
     }
     return steps;
-  }, [
-    swapStep,
-    fromToken?.address,
-    fromToken?.symbol,
-    hasAllowance,
-    explorer,
-  ]);
+  }, [swapStep, fromToken?.address, fromToken?.symbol, hasAllowance, explorer]);
 
   return steps;
 };

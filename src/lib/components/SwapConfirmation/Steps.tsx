@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { useSteps } from "../..";
+import { SwapStatus, useSteps } from "../..";
 import { FlexColumn } from "../../base-styles";
 import { useSwapConfirmationContext } from "./context";
 import { StepComponent } from "./Step";
@@ -7,7 +7,7 @@ import { StepComponent } from "./Step";
 export const StepsComponent = () => {
   const { swapStatus } = useSwapConfirmationContext();
   const steps = useSteps();
-  if (swapStatus !== "loading") return null;
+  if (swapStatus !== SwapStatus.LOADING) return null;
 
   return (
     <>

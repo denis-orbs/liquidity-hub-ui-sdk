@@ -3,9 +3,13 @@ import {
   ReactNode,
   useCallback,
   useContext,
+  useMemo,
   useReducer,
 } from "react";
+import { useAccount } from "wagmi";
+import Web3 from "web3";
 import {
+  getChainConfig,
   Quote,
   SwapStatus,
   SwapSteps,
@@ -14,6 +18,7 @@ import {
   useAmountBN,
 } from "../lib";
 import { useInitialTokens } from "./hooks";
+import { useProvider } from "./hooks/useProvider";
 
 const Context = createContext({} as ContenxtType);
 
@@ -51,6 +56,11 @@ interface ContenxtType {
   resetState: () => void;
   hasAllowance?: boolean;
   slippage?: number;
+  account?: string;
+  chainId?: number;
+  web3?: Web3;
+  chainConfig?: ReturnType<typeof getChainConfig>;
+  provider?: any;
 }
 
 const initialState: State = {};
@@ -73,6 +83,11 @@ export const WidgetProvider = (props: ContextProps) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   const fromAmount = useAmountBN(state.fromToken?.decimals, state.fromAmountUi);
+  const { address: account } = useAccount();
+
+  const provider = useProvider();
+  const chainId = provider?.chainId && Web3.utils.hexToNumber(provider.chainId);
+  const web3 = useMemo(() => !provider ? undefined :  new Web3(provider), [provider])
 
   const updateState = useCallback(
     (payload: Partial<State>) => {
@@ -81,12 +96,22 @@ export const WidgetProvider = (props: ContextProps) => {
     [dispatch]
   );
 
-  const { data: hasAllowance } = useAllowance(fromAmount, state.fromToken);
+  const { data: hasAllowance } = useAllowance(
+    account,
+    web3,
+    chainId,
+    fromAmount,
+    state.fromToken
+  );  
 
   const resetState = useCallback(() => {
     dispatch({ type: "RESET" });
   }, [dispatch]);
 
+
+
+
+  const chainConfig = useMemo(() => getChainConfig(chainId), [chainId])
   return (
     <Context.Provider
       value={{
@@ -95,6 +120,12 @@ export const WidgetProvider = (props: ContextProps) => {
         resetState,
         hasAllowance,
         slippage: props.slippage,
+        account,
+        chainId,
+        web3,
+        chainConfig,
+        provider
+
       }}
     >
       <Listener {...props} />

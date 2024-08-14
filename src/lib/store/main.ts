@@ -11,27 +11,18 @@ interface LHControlStore {
   setDebug: (value: boolean) => void;
   lhControl?: LH_CONTROL;
   setLHControl: (lhControl?: LH_CONTROL) => void;
-  liquidityHubEnabled: boolean;
-  updateLiquidityHubEnabled: () => void;
   orders: Orders;
   setOrders: (orders: Orders) => void;
-  password?: string;
-  setPassword: (password: string) => void;
   setForce: () => void;
 }
 export const useLiquidityHubPersistedStore = create(
   persist<LHControlStore>(
-    (set, get) => ({
+    (set) => ({
       debug: false,
       setDebug: (value) => set({ debug: value }),
-      password: undefined,
-      setPassword: (password) => set({ password }),
       lhControl: undefined,
       setLHControl: (lhControl) => set({ lhControl }),
-      liquidityHubEnabled: true,
       setForce: () => set({ lhControl: LH_CONTROL.FORCE }),
-      updateLiquidityHubEnabled: () =>
-        set({ liquidityHubEnabled: !get().liquidityHubEnabled }),
       orders: {},
       setOrders: (orders) => set({ orders }),
     }),

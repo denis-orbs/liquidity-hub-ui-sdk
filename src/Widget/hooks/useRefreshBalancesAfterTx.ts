@@ -4,7 +4,6 @@ import Web3 from "web3";
 import _ from "lodash";
 import { useTokenListBalances } from "./useTokenListBalances";
 import { useTokensList } from "./useTokenList";
-import { useMainContext } from "../../lib/context/MainContext";
 import { useWidgetContext } from "../context";
 import { delay, Token } from "../../lib";
 
@@ -12,7 +11,7 @@ import { Balances } from "../types";
 import { getBalances } from "../getBalances";
 export function useRefreshBalancesAfterTx() {
   const { data: balances } = useTokenListBalances();
-  const { account, web3, chainId } = useMainContext();
+  const { account, web3, chainId } = useWidgetContext();
   const queryClient = useQueryClient();
   const list = useTokensList().data;
   const {

@@ -3,9 +3,18 @@ import BN from "bignumber.js";
 import { Logger } from "../../util";
 import { useSendAndWaitForConfirmations } from "./useSendAndWaitForConfirmations";
 import { useCallback } from "react";
+import Web3 from "web3";
 
-export const useUnwrapCallback = () => {
-  const sendAndWaitForConfirmations = useSendAndWaitForConfirmations();
+export const useUnwrapCallback = (
+  account?: string,
+  web3?: Web3,
+  chainId?: number
+) => {
+  const sendAndWaitForConfirmations = useSendAndWaitForConfirmations(
+    web3,
+    chainId,
+    account
+  );
 
   const contract = useWethContract();
   return useCallback(

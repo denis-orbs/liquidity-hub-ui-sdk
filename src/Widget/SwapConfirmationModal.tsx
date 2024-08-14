@@ -1,12 +1,12 @@
 import { useMemo, useCallback } from "react";
 import styled from "styled-components";
 import {
-  useChainConfig,
   usePriceChanged,
   SwapConfirmation,
   useFormatNumber,
   useAmountUI,
   Quote,
+  SwapStatus,
 } from "../lib";
 import { Button } from "../lib/components/Button";
 import { useWidgetContext } from "./context";
@@ -58,14 +58,17 @@ export const SwapConfirmationModal = () => {
     },
     updateState,
     hasAllowance,
+    chainConfig,
   } = useWidgetContext();
   const { mutateAsync: onSwapCallback } = useWidgetSwapCallback();
   const widgetQuote = useWidgetQuote();
 
-  const wToken = useChainConfig()?.wToken;
+  const wToken = chainConfig?.wToken;
 
   const onCloseConfirmation = useCallback(() => {
-    updateState({ showConfirmation: false });
+    updateState({
+      showConfirmation: false,
+    });
   }, [updateState]);
 
   const onWrapSuccess = useCallback(() => {
@@ -84,11 +87,10 @@ export const SwapConfirmationModal = () => {
   }, [onSwapCallback, refetchBalances]);
 
   const closeModal = useCallback(() => {
-    if (swapStatus === "success") {
+    if (swapStatus === SwapStatus.SUCCESS || swapStatus === SwapStatus.FAILED) {
       resetDexState();
     }
-
-    if (swapStatus === "failed" && isWrapped) {
+    if (swapStatus === SwapStatus.FAILED && isWrapped) {
       onWrapSuccess();
     }
     onCloseConfirmation();
@@ -109,12 +111,10 @@ export const SwapConfirmationModal = () => {
     value: useAmountUI(toToken?.decimals, widgetQuote.quote?.outAmount),
   });
 
-  const showPriceWarning = usePriceChanged({
-    newPrice: widgetQuote.quote?.minAmountOut,
-    acceptedPrice: initialQuote?.minAmountOut,
-    isOpen: showConfirmation,
-    swapStatus,
-  });
+  const showPriceWarning = usePriceChanged(
+    widgetQuote.quote?.minAmountOut,
+    initialQuote?.minAmountOut
+  );
   const onAcceptUpdatedPrice = useCallback(() => {
     updateState({ initialQuote: widgetQuote.quote });
   }, [widgetQuote.quote, updateState]);
@@ -127,7 +127,7 @@ export const SwapConfirmationModal = () => {
 
   return (
     <WidgetModal open={!!showConfirmation} onClose={closeModal}>
-      {showPriceWarning ? (
+      {showPriceWarning && !swapStatus && showConfirmation ? (
         <AcceptAmountOut
           amountToAccept={newPrice}
           accept={onAcceptUpdatedPrice}
@@ -155,8 +155,8 @@ export const SwapConfirmationModal = () => {
 };
 
 const StyledSubmitButton = styled(Button)`
-    width: 100%;,
-    margin-top: 210px;
+  width: 100%;
+  margin-top: 20px;
 `;
 
 const AcceptAmountOut = ({

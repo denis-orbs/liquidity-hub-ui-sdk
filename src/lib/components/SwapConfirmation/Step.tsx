@@ -1,34 +1,20 @@
-import { useMemo } from "react";
 import styled from "styled-components";
 import { Check } from "react-feather";
-import { Step, SwapStatus } from "../../type";
+import { Step } from "../../type";
 import { FlexColumn, FlexRow } from "../../base-styles";
 import { Spinner } from "../Spinner";
 import _ from "lodash";
-import { useSwapConfirmationContext } from "./context";
 
 interface Props {
   step: Step;
-
 }
 
-export function StepComponent({ step}: Props) {
-  const {swapStep, swapStatus} = useSwapConfirmationContext();
-
-  const status = useMemo((): SwapStatus => {
-    if (_.isUndefined(swapStep)) return;
-    if (step.completed) {
-      return "success";
-    }
-    return undefined;
-  }, [swapStatus, swapStep, step.id]);
-
-  const selected = step.id === swapStep;
+export function StepComponent({ step }: Props) {
   return (
     <StyledStep className="lh-step">
-      <Logo status={status} image={step.image} selected={selected} />
+      <Logo step={step} />
       <FlexColumn $gap={5}>
-        <StyledStepTitle $selected={selected} className="lh-step-title">
+        <StyledStepTitle $selected={!!step.active} className="lh-step-title">
           {step.title}
         </StyledStepTitle>
         {step.link && (
@@ -36,13 +22,13 @@ export function StepComponent({ step}: Props) {
             className="lh-step-link"
             href={step.link.href}
             target="_blank"
-            $selected={selected}
+            $selected={!!step.active}
           >
             {step.link.text}
           </StyledStepLink>
         )}
       </FlexColumn>
-      {status === "success" && (
+      {step.completed && (
         <StyledSuccess>
           <Check size={20} />
         </StyledSuccess>
@@ -51,21 +37,13 @@ export function StepComponent({ step}: Props) {
   );
 }
 
-const Logo = ({
-  image,
-  selected,
-  status,
-}: {
-  image?: string;
-  selected: boolean;
-  status: SwapStatus;
-}) => {
+const Logo = ({ step }: { step?: Step }) => {
   return (
-    <StyledStepLogo $selected={selected} className="lh-step-logo">
-      {status === "loading" ? (
+    <StyledStepLogo $selected={!!step?.active} className="lh-step-logo">
+      {step?.active ? (
         <StyledLoader size={28} className="lh-step-loader" />
       ) : (
-        <img src={image} />
+        <img src={step?.image} />
       )}
     </StyledStepLogo>
   );
@@ -107,10 +85,10 @@ const StyledStepTitle = styled.p<{ $selected: boolean }>`
   opacity: ${({ $selected }) => ($selected ? 1 : 0.5)};
   color: ${({ $selected, theme }) =>
     $selected ? theme.colors.textMain : theme.colors.textSecondary};
-    a {
-      color: #da88de;
-      text-decoration: none;
-    }
+  a {
+    color: #da88de;
+    text-decoration: none;
+  }
 `;
 const StyledStepLink = styled("a")<{ $selected: boolean }>`
   color: #da88de;
