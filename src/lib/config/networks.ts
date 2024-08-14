@@ -1,6 +1,26 @@
 import { Network, zeroAddress } from "..";
 import { erc20sData } from "./erc20sData";
 
+const ethereum: Network = {
+  id: 1,
+  name: "Ethereum",
+  shortname: "eth",
+  native: {
+    address: zeroAddress,
+    symbol: "ETH",
+    decimals: 18,
+    logoUrl: "https://app.1inch.io/assets/images/network-logos/ethereum.svg",
+  },
+  wToken: erc20sData.eth.WETH,
+  logoUrl: "https://app.1inch.io/assets/images/network-logos/ethereum.svg",
+  explorer: "https://etherscan.io",
+  apiUrl: "https://eth.hub.orbs.network",
+  baseGasPrice: 3 * 1e9,
+  eip1559: false,
+  pendingBlocks: true,
+  publicRpcUrl: "https://eth.llamarpc.com	",
+};
+
 const bsc: Network = {
   id: 56,
   name: "BinanceSmartChain",
@@ -168,4 +188,5 @@ export const networks = {
   linea,
   blast,
   polygonZkevm,
+  ethereum
 };
