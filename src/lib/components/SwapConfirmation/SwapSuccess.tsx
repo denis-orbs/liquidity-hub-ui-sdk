@@ -50,9 +50,7 @@ const TopText = styled(Text)`
   font-size: 16px;
   text-align: center;
   a {
-    color: #d284cf;
     text-decoration: none;
-    border-bottom: 1px solid #d284cf;
   }
 `;
 

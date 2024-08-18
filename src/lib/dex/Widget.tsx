@@ -333,7 +333,7 @@ const SwapModal = () => {
           fromTokenUsd={fromTokenUsd}
           toTokenUsd={toTokenUsd}
           {...lhPayload}
-          outAmount='10'
+          outAmount={lhPayload.ui.outAmount}
         >
           {swapStatus === "success" ? (
             <SwapConfirmation.Success />
