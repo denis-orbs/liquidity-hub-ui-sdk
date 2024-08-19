@@ -2,7 +2,6 @@ import BN, { BigNumber } from "bignumber.js";
 import Web3 from "web3";
 import { LH_CONTROL, SwapStatus } from "./type";
 import _ from "lodash";
-import { QUOTE_ERRORS } from "./config/consts";
 import { numericFormatter } from "react-number-format";
 import { useLiquidityHubPersistedStore } from "./store/main";
 import erc20abi from "./abi/ERC20Abi.json";
@@ -53,7 +52,7 @@ export const getChainConfig = (chainId?: number) => {
   const localStorageApiUrl = localStorage.getItem("apiUrl");
   return {
     ...result,
-    apiUrl: localStorageApiUrl ||  getApiUrl(chainId),
+    apiUrl: localStorageApiUrl || getApiUrl(chainId),
   };
 };
 
@@ -68,7 +67,6 @@ export const getTxReceipt = async (web3: Web3, txHash: string) => {
     txHash,
   };
 };
-
 
 async function waitForTxDetails(web3: Web3, txHash: string) {
   for (let i = 0; i < 30; ++i) {
@@ -214,9 +212,16 @@ export const getContract = (
   const wethAddress = getChainConfig(chainId)?.wToken?.address;
 
   return new web3.eth.Contract(
-    isNativeAddress(address) ? iwethabi : (erc20abi as any),
+    erc20abi as any,
     isNativeAddress(address) ? wethAddress : address
   );
+};
+
+export const getWethContract = (web3?: Web3, chainId?: number) => {
+  if (!web3 || !chainId) return undefined;
+  const wethAddress = getChainConfig(chainId)?.wToken?.address;
+
+  return new web3.eth.Contract(iwethabi as any, wethAddress);
 };
 
 export const isTxRejected = (message?: string) => {
@@ -267,5 +272,46 @@ export async function waitForReceipt({
     } catch (error: any) {
       console.error("waitForReceipt error", error);
     }
+  }
+}
+
+export class TimeoutError extends Error {
+  constructor() {
+    super();
+    this.name = "TimeoutError";
+    this.message = "Timeout error";
+    Object.setPrototypeOf(this, TimeoutError.prototype);
+  }
+}
+
+export class RejectedError extends Error {
+  constructor() {
+    super();
+    this.name = "Rejected";
+    this.message = "Transaction rejected";
+
+    Object.setPrototypeOf(this, RejectedError.prototype);
+  }
+}
+
+export async function promiseWithTimeout<T>(
+  promise: Promise<T>,
+  timeout: number
+): Promise<T> {
+  let timer: any;
+
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      reject(new TimeoutError());
+    }, timeout);
+  });
+
+  try {
+    const result = await Promise.race([promise, timeoutPromise]);
+    clearTimeout(timer);
+    return result;
+  } catch (error) {
+    clearTimeout(timer);
+    throw error;
   }
 }

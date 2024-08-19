@@ -59,7 +59,6 @@ export const StyledPercentButtons = styled(FlexRow)<{ $style?: CSSObject }>`
     background: transparent;
 
     border: unset;
-    color: ${({ theme }) => theme.colors.primary};
     font-size: 16px;
     font-weight: 500;
     cursor: pointer;
@@ -70,7 +69,6 @@ export const StyledPercentButtons = styled(FlexRow)<{ $style?: CSSObject }>`
 
 
 const Card = styled(FlexColumn)`
-  background-color: ${({ theme }) => theme.colors.card};
   border-radius: 10px;
   padding: 16px;
   gap: 16px;

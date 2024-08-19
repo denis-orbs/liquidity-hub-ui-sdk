@@ -1,6 +1,6 @@
 import { useWethContract } from "../useContractCallback";
 import BN from "bignumber.js";
-import { Logger } from "../../util";
+import { isTxRejected, RejectedError } from "../../util";
 import { useSendAndWaitForConfirmations } from "./useSendAndWaitForConfirmations";
 import { useCallback } from "react";
 import Web3 from "web3";
@@ -16,7 +16,7 @@ export const useUnwrapCallback = (
     account
   );
 
-  const contract = useWethContract();
+  const contract = useWethContract(web3, chainId);
   return useCallback(
     async (fromAmount: string) => {
       try {
@@ -28,9 +28,10 @@ export const useUnwrapCallback = (
 
         return true;
       } catch (error: any) {
-        Logger({ error });
-
-        throw new Error(error.message);
+        if (isTxRejected((error as any).message)) {
+          throw new RejectedError();
+        }
+        throw error;
       }
     },
     [contract, sendAndWaitForConfirmations]

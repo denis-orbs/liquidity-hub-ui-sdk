@@ -1,4 +1,4 @@
-import { useAmountBN, useQuote } from "../../lib";
+import { useAmountBN, useQuoteQuery } from "../../lib";
 import { useWidgetContext } from "../context";
 
 export const useWidgetQuote = () => {
@@ -9,12 +9,13 @@ export const useWidgetQuote = () => {
   } = useWidgetContext();
 
 
-  return useQuote({
+  return useQuoteQuery({
     fromToken,
     toToken,
     fromAmount: useAmountBN(fromToken?.decimals, fromAmountUi),
     slippage: slippage || 0.5,
     account,
-    chainId
+    chainId,
+    partner:'widget'
   });
 };

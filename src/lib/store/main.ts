@@ -1,8 +1,4 @@
-import {
-  LH_CONTROL,
-  Order,
-  Orders,
-} from "../type";
+import { LH_CONTROL, Order, Orders, Quote, SwapStatus, SwapStep } from "../type";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -37,20 +33,52 @@ interface OrdersStore {
   addOrder: (address: string, chain: number, order: Order) => void;
 }
 
-export const useOrdersStore = create<OrdersStore>((set) => ({
-  orders: useLiquidityHubPersistedStore.getState().orders,
-  addOrder: (address, chain, order) => {
-    set((s) => {
-      const orders = s.orders;
-      if (!orders[address]) {
-        orders[address] = {};
-      }
-      if (!orders[address][chain]) {
-        orders[address][chain] = [];
-      }
-      orders[address][chain].unshift(order);
-      useLiquidityHubPersistedStore.getState().setOrders(orders);
-      return { orders };
-    });
-  },
+export const useOrdersStore = create(
+  persist<OrdersStore>(
+    (set) => ({
+      orders: useLiquidityHubPersistedStore.getState().orders,
+      addOrder: (address, chain, order) => {
+        set((s) => {
+          const orders = s.orders;
+          if (!orders[address]) {
+            orders[address] = {};
+          }
+          if (!orders[address][chain]) {
+            orders[address][chain] = [];
+          }
+          orders[address][chain].unshift(order);
+          useLiquidityHubPersistedStore.getState().setOrders(orders);
+          return { orders };
+        });
+      },
+    }),
+    {
+      name: "liquidity-hub-orders",
+    }
+  )
+);
+
+interface MainStore {
+  sessionId?: string;
+  chainId?: number;
+  updateState: (args: Partial<MainStore>) => void;
+}
+
+export const useMainStore = create<MainStore>((set) => ({
+  updateState: (args) => set({...args}),
+}));
+
+
+interface SwapStore {
+  swapStep?: SwapStep;
+  swapStatus?: SwapStatus;
+  acceptedQuote?: Quote;
+  isWrappedNativeToken?: boolean;
+  txHash?: string;
+  updateState: (args: Partial<SwapStore>) => void;
+
+}
+
+export const useSwapStore = create<SwapStore>((set) => ({
+  updateState: (args) => set({...args}),
 }));

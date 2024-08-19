@@ -1,23 +1,22 @@
-import  { useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { ArrowDown } from "react-feather";
-import { ThemeProvider } from "styled-components";
 import BN from "bignumber.js";
 import _ from "lodash";
 import { TokenPanel } from "./components/TokenPanel";
 import { useWidgetContext, WidgetProvider } from "./context";
+
+import { useFormatNumber } from "../lib";
+import { useFromTokenPanel, usePriceUsd, useToTokenPanel } from "./hooks";
 import {
-  useFormatNumber,
-} from "../lib";
-import {
-  useFromTokenPanel,
-  usePriceUsd,
-  useToTokenPanel,
-} from "./hooks";
-import { StyledChangeTokens, StyledContainer, StyledPoweredByOrbs, theme } from "./styles";
+  StyledChangeTokens,
+  StyledContainer,
+  StyledPoweredByOrbs,
+} from "./styles";
 import { useWrapOrUnwrapOnly } from "../lib/hooks/hooks";
 import { SwapDetails } from "./SwapDetails";
 import { SwapSubmitButton } from "./SubmitButton";
 import { SwapConfirmationModal } from "./SwapConfirmationModal";
+import { LiquidityHubProvider } from "../lib/LiquidityHubProvider";
 
 const ChangeTokens = () => {
   const {
@@ -109,20 +108,18 @@ export interface Props {
 
 export const Widget = (props: Props) => {
   return (
-    <ThemeProvider theme={theme}>
-      <WidgetProvider {...props}>
-        <StyledContainer>
-          <FromTokenPanel />
-          <ChangeTokens />
-          <ToTokenPanel />
-          <SwapDetails />
-          <SwapSubmitButton />
-          <SwapConfirmationModal />
-          <StyledPoweredByOrbs />
-        </StyledContainer>
-      </WidgetProvider>
-    </ThemeProvider>
+    <LiquidityHubProvider>
+        <WidgetProvider {...props}>
+          <StyledContainer>
+            <FromTokenPanel />
+            <ChangeTokens />
+            <ToTokenPanel />
+            <SwapDetails />
+            <SwapSubmitButton />
+            <SwapConfirmationModal />
+            <StyledPoweredByOrbs />
+          </StyledContainer>
+        </WidgetProvider>
+    </LiquidityHubProvider>
   );
 };
-
-

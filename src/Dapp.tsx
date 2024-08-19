@@ -3,13 +3,11 @@ import styled from "styled-components";
 import { RainbowProvider } from "./RainbowProvider";
 import _ from "lodash";
 import { Widget } from "./Widget/Widget";
-import { LiquidityHubProvider } from "./lib";
+
 
 function Wrapped() {
   return (
-    <LiquidityHubProvider partner="playground">
-      <Widget initialFromToken="USDC" initialToToken="WBNB" slippage={0.5} />
-    </LiquidityHubProvider>
+    <Widget initialFromToken="USDC" initialToToken="WBNB" slippage={0.5} />
   );
 }
 

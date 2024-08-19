@@ -6,20 +6,17 @@ import {
   useMemo,
   useReducer,
 } from "react";
+import { styled } from "styled-components";
 import { useAccount } from "wagmi";
 import Web3 from "web3";
 import {
   getChainConfig,
-  Quote,
-  SwapStatus,
-  SwapSteps,
   Token,
-  useAllowance,
   useAmountBN,
 } from "../lib";
+import { useAllowanceQuery } from "../lib/hooks/swap/useAllowanceQuery";
 import { useInitialTokens } from "./hooks";
 import { useProvider } from "./hooks/useProvider";
-
 const Context = createContext({} as ContenxtType);
 
 export const useWidgetContext = () => {
@@ -42,13 +39,9 @@ interface State {
   fromToken?: Token;
   toToken?: Token;
   showConfirmation?: boolean;
-  initialQuote?: Quote;
   fromAmountUi?: string;
-  toAmount?: string;
   fetchingBalancesAfterTx?: boolean;
-  swapStatus?: SwapStatus;
-  swapStep?: SwapSteps;
-  isWrapped?: boolean;
+  txHash?: string;
 }
 interface ContenxtType {
   state: State;
@@ -74,7 +67,12 @@ function reducer(state: State, action: Action) {
     return { ...state, ...action.payload };
   }
   if (action.type === "RESET") {
-    return initialState;
+    return {
+      ...state,
+      fromAmountUi: undefined,
+      showConfirmation: false,
+      txHash: undefined,
+    };
   }
   return state;
 }
@@ -96,13 +94,15 @@ export const WidgetProvider = (props: ContextProps) => {
     [dispatch]
   );
 
-  const { data: hasAllowance } = useAllowance(
+  const { data: hasAllowance } = useAllowanceQuery(
     account,
     web3,
     chainId,
     fromAmount,
     state.fromToken
   );  
+
+  
 
   const resetState = useCallback(() => {
     dispatch({ type: "RESET" });
@@ -113,6 +113,8 @@ export const WidgetProvider = (props: ContextProps) => {
 
   const chainConfig = useMemo(() => getChainConfig(chainId), [chainId])
   return (
+
+   
     <Context.Provider
       value={{
         state,
@@ -129,7 +131,10 @@ export const WidgetProvider = (props: ContextProps) => {
       }}
     >
       <Listener {...props} />
+      <StyledContent>
       {props.children}
+      </StyledContent>
+     
     </Context.Provider>
   );
 };
@@ -139,3 +144,12 @@ const Listener = (props: ContextProps) => {
 
   return null;
 };
+
+
+
+const StyledContent = styled('div')({
+ "*":{
+  color:'white'
+ }
+})
+

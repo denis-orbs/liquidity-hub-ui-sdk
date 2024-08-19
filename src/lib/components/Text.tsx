@@ -22,7 +22,6 @@ export function Text({
 const StyledText = styled.p<{ $fontSize: number }>`
   margin: 0;
   padding: 0;
-  color: ${({ theme }) => theme.colors.textMain};
   font-size: ${({ $fontSize }) => `${$fontSize}px`};
   font-family: inherit;
 `;

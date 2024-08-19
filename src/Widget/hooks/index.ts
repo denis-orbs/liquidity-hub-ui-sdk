@@ -74,7 +74,7 @@ export function useToTokenPanel() {
     updateState,
   } = useWidgetContext();
   const balance = useTokenListBalance(toToken?.address).balance;
-  const {quote} = useWidgetQuote()
+  const {data: quote} = useWidgetQuote()
   const outAmountUi = useAmountUI(toToken?.decimals, quote?.outAmount)
 
   const onTokenSelect = useCallback(

@@ -1,7 +1,6 @@
 import { isNativeAddress, zeroAddress } from "@defi.org/web3-candies";
-import { useCallback } from "react";
 import { swapAnalytics } from "../../analytics";
-import { useMainContext } from "../../context/MainContext";
+import { useMainStore } from "../../store/main";
 import { Quote, Token } from "../../type";
 import { counter, delay, getChainConfig } from "../../util";
 
@@ -48,6 +47,7 @@ export const swapX = async (args: Args) => {
     }
 
     swapAnalytics.onSwapSuccess(swap.txHash, count());
+    useMainStore.getState().updateState({sessionId: undefined});
     return swap.txHash;
   } catch (error: any) {
     const msg = error.message.error || error.message;
@@ -56,76 +56,58 @@ export const swapX = async (args: Args) => {
   }
 };
 
-export const useSwapCallback = () => {
-  const {
-    state: { sessionId },
-  } = useMainContext();
+export const swapCallback = async (
+  fromAmount: string,
+  fromToken: Token,
+  toToken: Token,
+  quote: Quote,
+  signature: string,
+  account: string,
+  chainId: number
+) => {
+  const chainConfig = getChainConfig(chainId);
 
-  return useCallback(
-    async (
-      fromAmount: string,
-      fromToken: Token,
-      toToken: Token,
-      quote: Quote,
-      signature: string,
-      account: string,
-      chainId: number
-    ) => {
-  
+  const wTokenAddress = chainConfig?.wToken?.address;
+  const apiUrl = chainConfig?.apiUrl;
 
-      const chainConfig = getChainConfig(chainId);
+  let inTokenAddress = isNativeAddress(fromToken.address || "")
+    ? wTokenAddress
+    : fromToken?.address;
+  const outTokenAddress = isNativeAddress(toToken.address || "")
+    ? zeroAddress
+    : toToken?.address;
 
-      const wTokenAddress = chainConfig?.wToken?.address;
-      const apiUrl = chainConfig?.apiUrl;
-
-      let inTokenAddress = isNativeAddress(fromToken.address || "")
-        ? wTokenAddress
-        : fromToken?.address;
-      const outTokenAddress = isNativeAddress(toToken.address || "")
-        ? zeroAddress
-        : toToken?.address;
-
-      if (
-        !inTokenAddress ||
-        !outTokenAddress ||
-        !sessionId ||
-        !account ||
-        !chainId ||
-        !apiUrl
-      ) {
-        throw new Error("Invalid state");
-      }
-      const count = counter();
-      swapX({
-        signature,
-        inTokenAddress,
-        outTokenAddress,
-        fromAmount,
-        quote,
-        account,
-        chainId,
-        apiUrl,
-      })
-        .then()
-        .catch(() => {});
-      try {
-        const txHash = await waitForSwap({
-          sessionId,
-          apiUrl: chainConfig.apiUrl,
-          user: account,
-          chainId,
-        });
-        if (!txHash) {
-          throw new Error("Swap failed");
-        }
-        return txHash;
-      } catch (error) {
-        swapAnalytics.onSwapFailed((error as any).message, count());
-        throw error;
-      }
-    },
-    [sessionId]
-  );
+  if (!inTokenAddress || !outTokenAddress || !account || !chainId || !apiUrl) {
+    throw new Error("Invalid state");
+  }
+  const count = counter();
+  swapX({
+    signature,
+    inTokenAddress,
+    outTokenAddress,
+    fromAmount,
+    quote,
+    account,
+    chainId,
+    apiUrl,
+  })
+    .then()
+    .catch(() => {});
+  try {
+    const txHash = await waitForSwap({
+      sessionId: quote.sessionId,
+      apiUrl: chainConfig.apiUrl,
+      user: account,
+      chainId,
+    });
+    if (!txHash) {
+      throw new Error("Swap failed");
+    }
+    return txHash;
+  } catch (error) {
+    swapAnalytics.onSwapFailed((error as any).message, count());
+    throw error;
+  }
 };
 
 async function waitForSwap({

@@ -1,9 +1,8 @@
 import BN from "bignumber.js";
-import Web3 from "web3";
 import { Quote, Token } from "../type";
-import { amountUi, getTxReceipt, Logger } from "../util";
+import { amountUi, Logger } from "../util";
 
-import { AnalyticsData, InitDexTrade, InitTrade } from "./types";
+import { AnalyticsData, InitTrade } from "./types";
 const ANALYTICS_VERSION = 0.6;
 const BI_ENDPOINT = `https://bi.orbs.network/putes/liquidity-hub-ui-${ANALYTICS_VERSION}`;
 const DEX_PRICE_BETTER_ERROR = "Dex trade is better than Clob trade";
@@ -28,7 +27,6 @@ type QuoteArgs = {
   partner: string;
   sessionId?: string;
   slippage: number;
-  signal: AbortSignal;
   quoteInterval?: number;
   chainId: number;
 };
@@ -141,6 +139,11 @@ export class Analytics {
   data = {} as Partial<AnalyticsData>;
   firstFailureSessionId = "";
   timeout: any = undefined;
+
+  constructor() {
+    this.updateAndSend({ moduleLoaded: true });
+  }
+
   setPartner(partner: string) {
     this.data.partner = partner;
   }
@@ -366,44 +369,5 @@ export class Analytics {
       this.firstFailureSessionId || this.data.sessionId || "";
   }
 }
-
-const _analytics = new Analytics();
-
-function onDexSwapRequest() {
-  _analytics.updateAndSend({ dexSwapState: "pending", isDexTrade: true });
-}
-
-async function onDexSwapSuccess(web3: Web3, dexSwapTxHash?: string) {
-  _analytics.updateAndSend({
-    dexSwapState: "success",
-    dexSwapTxHash,
-  });
-  if (!dexSwapTxHash) return;
-  const res = await getTxReceipt(web3, dexSwapTxHash);
-
-  _analytics.updateAndSend({
-    onChainDexSwapState: res?.receipt ? "success" : "failed",
-  });
-}
-function onDexSwapFailed(dexSwapError: string) {
-  _analytics.updateAndSend({ dexSwapState: "failed", dexSwapError });
-}
-
-const initDexSwap = (args: InitDexTrade) => {
-  const result = initSwap(args);
-  _analytics.updateAndSend({
-    ...result,
-    partner: args.partner,
-    chainId: args.chainId,
-  });
-};
-
-// for dex
-export const analytics = {
-  onSwapRequest: onDexSwapRequest,
-  onSwapSuccess: onDexSwapSuccess,
-  onSwapFailed: onDexSwapFailed,
-  initSwap: initDexSwap,
-};
 
 export const swapAnalytics = new Analytics();

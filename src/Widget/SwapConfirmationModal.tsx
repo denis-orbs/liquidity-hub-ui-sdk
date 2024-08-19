@@ -1,19 +1,18 @@
 import { useMemo, useCallback } from "react";
 import styled from "styled-components";
 import {
-  usePriceChanged,
   SwapConfirmation,
-  useFormatNumber,
   useAmountUI,
   Quote,
   SwapStatus,
+  useSwapState,
+  useFormatNumber,
 } from "../lib";
 import { Button } from "../lib/components/Button";
 import { useWidgetContext } from "./context";
 import { usePriceUsd, useRefreshBalancesAfterTx } from "./hooks";
 import { WidgetModal } from "./Modal";
 import BN from "bignumber.js";
-import { Text } from "../lib/components/Text";
 import { isNativeAddress } from "@defi.org/web3-candies";
 import { useWidgetSwapCallback } from "./useWidgetSwapCallback";
 import { useWidgetQuote } from "./hooks/useWidgetQuote";
@@ -46,20 +45,20 @@ const useToUsd = (quote?: Quote) => {
 
 export const SwapConfirmationModal = () => {
   const {
-    state: {
-      initialQuote,
-      fromAmountUi,
-      fromToken,
-      toToken,
-      showConfirmation,
-      swapStatus,
-      swapStep,
-      isWrapped,
-    },
+    state: { fromAmountUi, fromToken, toToken, showConfirmation, txHash },
     updateState,
     hasAllowance,
     chainConfig,
+    resetState,
+  
   } = useWidgetContext();
+  const {
+    isWrappedNativeToken,
+    swapStatus,
+    swapStep,
+    acceptedQuote,
+    onAcceptedQuote,
+  } = useSwapState();
   const { mutateAsync: onSwapCallback } = useWidgetSwapCallback();
   const widgetQuote = useWidgetQuote();
 
@@ -89,8 +88,9 @@ export const SwapConfirmationModal = () => {
   const closeModal = useCallback(() => {
     if (swapStatus === SwapStatus.SUCCESS || swapStatus === SwapStatus.FAILED) {
       resetDexState();
+      resetState();
     }
-    if (swapStatus === SwapStatus.FAILED && isWrapped) {
+    if (swapStatus === SwapStatus.FAILED && isWrappedNativeToken) {
       onWrapSuccess();
     }
     onCloseConfirmation();
@@ -98,8 +98,9 @@ export const SwapConfirmationModal = () => {
     resetDexState,
     swapStatus,
     onWrapSuccess,
-    isWrapped,
+    isWrappedNativeToken,
     onCloseConfirmation,
+    resetState,
   ]);
 
   const swapButtonContent = useMemo(() => {
@@ -107,86 +108,47 @@ export const SwapConfirmationModal = () => {
     if (!hasAllowance) return "Approve and Swap";
     return "Sign and Swap";
   }, [fromToken, hasAllowance]);
-  const newPrice = useFormatNumber({
-    value: useAmountUI(toToken?.decimals, widgetQuote.quote?.outAmount),
-  });
 
-  const showPriceWarning = usePriceChanged(
-    widgetQuote.quote?.minAmountOut,
-    initialQuote?.minAmountOut
-  );
-  const onAcceptUpdatedPrice = useCallback(() => {
-    updateState({ initialQuote: widgetQuote.quote });
-  }, [widgetQuote.quote, updateState]);
+  const refetchQuote = useCallback(async () => {
+    try {
+      const quote = await widgetQuote.refetch().then((res) => res.data);
+      onAcceptedQuote(quote);
+    } catch (error) {}
+  }, [widgetQuote.refetch, onAcceptedQuote]);
 
-  const displayQuote = !swapStatus ? widgetQuote.quote : initialQuote;
 
   const fromUsd = useFromUsd();
-  const toUsd = useToUsd(displayQuote);
-  const outAmount = useAmountUI(toToken?.decimals, initialQuote?.outAmount);
+  const toUsd = useToUsd(acceptedQuote);
+  const outAmount = useAmountUI(toToken?.decimals, acceptedQuote?.outAmount);
 
   return (
     <WidgetModal open={!!showConfirmation} onClose={closeModal}>
-      {showPriceWarning && !swapStatus && showConfirmation ? (
-        <AcceptAmountOut
-          amountToAccept={newPrice}
-          accept={onAcceptUpdatedPrice}
-        />
-      ) : (
-        <SwapConfirmation
-          fromUsd={fromUsd}
-          toUsd={toUsd}
-          outAmount={outAmount}
-          fromAmount={fromAmountUi}
-          fromToken={fromToken}
-          toToken={toToken}
-          swapStatus={swapStatus}
-          swapStep={swapStep}
-          hasAllowance={hasAllowance}
-          SubmitButton={
-            <StyledSubmitButton onClick={onClick} isLoading={false}>
-              {swapButtonContent}
-            </StyledSubmitButton>
-          }
-        />
-      )}
+      <StyledSwapConfirmation
+        fromUsd={fromUsd}
+        toUsd={toUsd}
+        outAmount={useFormatNumber({value: outAmount, decimalScale: 3})}
+        inAmount={useFormatNumber({value: fromAmountUi, decimalScale: 3})}
+        fromToken={fromToken}
+        toToken={toToken}
+        txHash={txHash}
+        swapStatus={swapStatus}
+        swapStep={swapStep}
+        refetchQuote={refetchQuote}
+        hasAllowance={hasAllowance}>
+          <StyledSubmitButton onClick={onClick} isLoading={false}>
+            {swapButtonContent}
+          </StyledSubmitButton>
+        </StyledSwapConfirmation>
     </WidgetModal>
   );
 };
 
+const StyledSwapConfirmation = styled(SwapConfirmation)({
+  color:'white'
+})
+
 const StyledSubmitButton = styled(Button)`
   width: 100%;
   margin-top: 20px;
-`;
 
-const AcceptAmountOut = ({
-  amountToAccept,
-  accept,
-}: {
-  amountToAccept?: string;
-  accept: () => void;
-}) => {
-  const amount = useFormatNumber({
-    value: amountToAccept,
-  });
-
-  return (
-    <StyledAcceptAmountOut>
-      <Text>Price updated</Text>
-      <Text>new amount out is {amount}</Text>
-      <Button onClick={accept}>Accept</Button>
-    </StyledAcceptAmountOut>
-  );
-};
-
-const StyledAcceptAmountOut = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  align-items: center;
-  text-align: center;
-  width: 100%;
-  button {
-    width: 100%;
-  }
 `;

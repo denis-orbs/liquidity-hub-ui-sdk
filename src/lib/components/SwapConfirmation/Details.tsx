@@ -12,7 +12,7 @@ const StyledSwapDetails = styled(FlexColumn)`
 `;
 
 export function SwapDetails() {
-  const { fromUsd, toUsd, outAmount, fromAmount, fromToken, toToken } =
+  const { fromUsd, toUsd, outAmount, inAmount, fromToken, toToken } =
     useSwapConfirmationContext();
 
 
@@ -22,7 +22,7 @@ export function SwapDetails() {
         title="Swap from"
         usd={fromUsd}
         token={fromToken}
-        amount={fromAmount}
+        amount={inAmount}
       />
       <Separator />
       <TokenDisplay
@@ -82,7 +82,6 @@ const StyledLogoAndSymbol = styled(FlexRow)``;
 
 const StyledSymbol = styled(Text)`
   font-size: 18px;
-  color: ${({ theme }) => theme.colors.textSecondary};
 `;
 
 const StyledLogo = styled(Logo)`
@@ -92,7 +91,6 @@ const StyledLogo = styled(Logo)`
 
 const USD = styled(Text)`
   font-size: 16px;
-  color: ${({ theme }) => theme.colors.textSmall};
 `;
 
 const TokenAmount = styled(Text)`
@@ -102,7 +100,6 @@ const TokenAmount = styled(Text)`
 
 const Title = styled(Text)`
   font-size: 16px;
-  color: ${({ theme }) => theme.colors.textSecondary};
 `;
 
 const StyledTokenDisplay = styled(FlexColumn)`

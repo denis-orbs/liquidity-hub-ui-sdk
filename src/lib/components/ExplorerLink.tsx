@@ -31,11 +31,11 @@ export const ExplorerLink = ({
 };
 
 const StyledTxHash = styled.a`
-  color: #d284cf;
+  color: unset;
   text-decoration: none;
   font-size: 16px;
   text-align: center;
   margin-left: auto;
   margin-right: auto;
-  border-bottom: 1px solid #d284cf;
+  outline: none;
 `;

@@ -29,6 +29,5 @@ const StyledInput = styled.input`
   width: 100%;
   margin-bottom: 10px;
   outline: none;
-  color: ${({ theme }) => theme.colors.textMain};
   background: transparent;
 `;

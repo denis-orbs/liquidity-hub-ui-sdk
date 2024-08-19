@@ -6,5 +6,4 @@ export * from './swap'
 export * from './useAmountBN'
 export * from './useAmountUI'
 export * from './usePriceChanged'
-export * from './usePriceChanged'
-export * from './useEstimateGasPrice'
+

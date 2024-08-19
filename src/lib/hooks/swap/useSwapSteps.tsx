@@ -1,37 +1,41 @@
 import { useMemo } from "react";
 import SwapImg from "../../assets/swap.svg";
 import ApproveImg from "../../assets/approve.svg";
-import { Step, SwapSteps } from "../../type";
-import { useSwapConfirmationContext } from "../../components/SwapConfirmation/context";
+import { Step, SwapStep, Token } from "../../type";
 import { isNativeAddress } from "@defi.org/web3-candies";
 import { getChainConfig } from "../../util";
 
-export const useSteps = () => {
-  const { swapStep, fromToken, hasAllowance, chainId } = useSwapConfirmationContext();
+export const useSwapSteps = (
+  swapStep?: SwapStep,
+  fromToken?: Token,
+  hasAllowance?: boolean,
+  chainId?: number,
+  txHash?: string
+) => {
   const explorer = useMemo(() => getChainConfig(chainId)?.explorer, [chainId]);
 
   const steps = useMemo(() => {
     const wrap: Step = {
       title: `Wrap ${fromToken?.symbol}`,
       image: SwapImg,
-      id: SwapSteps.WRAP,
-      completed: (swapStep || 0) > SwapSteps.WRAP,
-      active:  (swapStep || 0)  === SwapSteps.WRAP
+      id: SwapStep.WRAP,
+      completed: (swapStep || 0) > SwapStep.WRAP,
+      active: (swapStep || 0) === SwapStep.WRAP,
     };
 
     const approve: Step = {
       title: `Approve ${fromToken?.symbol} spending`,
       image: ApproveImg,
-      id: SwapSteps.APPROVE,
-      completed: (swapStep || 0) > SwapSteps.APPROVE,
-      active:  (swapStep || 0)  === SwapSteps.APPROVE
+      id: SwapStep.APPROVE,
+      completed: (swapStep || 0) > SwapStep.APPROVE,
+      active: (swapStep || 0) === SwapStep.APPROVE,
     };
 
     const sendTx: Step = {
-      id: SwapSteps.SENT_TX,
-      title: SwapSteps.SENT_TX ? "Swap pending..." : "Sign and Confirm swap",
+      id: SwapStep.SIGN_AND_SEND,
+      title: txHash ? "Swap pending..." : "Sign and Confirm swap",
       image: SwapImg,
-      active:  (swapStep || 0)  >= SwapSteps.SIGN
+      active: (swapStep || 0) >= SwapStep.SIGN_AND_SEND,
     };
 
     const steps = [sendTx];
@@ -44,7 +48,7 @@ export const useSteps = () => {
       steps.unshift(wrap);
     }
     return steps;
-  }, [swapStep, fromToken?.address, fromToken?.symbol, hasAllowance, explorer]);
+  }, [swapStep, fromToken?.address, fromToken?.symbol, hasAllowance, explorer, txHash]);
 
-  return steps;
+  return hasAllowance === undefined ? undefined : steps;
 };

@@ -13,10 +13,6 @@ export interface Token {
   logoUrl?: string;
 }
 
-export interface ProviderArgs {
-  partner: string;
-}
-
 export interface QuoteArgs {
   inToken: string;
   outToken: string;
@@ -71,24 +67,16 @@ export interface Quote {
   gasAmountOut?: string;
 }
 
-export interface UseQueryData {
-  quote: Quote | undefined;
-  refetchCount?: number;
-  resetCount?: () => void;
-  isPassedLimit?: boolean;
-}
-
 export enum LH_CONTROL {
   FORCE = "1",
   SKIP = "2",
   RESET = "3",
 }
 
-export enum SwapSteps {
+export enum SwapStep {
   WRAP = 1,
   APPROVE = 2,
-  SIGN = 3,
-  SENT_TX = 4,
+  SIGN_AND_SEND = 3,
 }
 
 export enum SwapStatus {
@@ -102,7 +90,7 @@ export interface Step {
   link?: { href: string; text: string };
   image?: string;
   hidden?: boolean;
-  id: SwapSteps;
+  id: SwapStep;
   txHash?: string;
   completed?: boolean;
   active?: boolean;
@@ -158,19 +146,16 @@ export declare type PermitData = {
 export interface SwapConfirmationArgs {
   fromUsd?: string;
   toUsd?: string;
+  inAmount?: string;
   outAmount?: string;
-  fromAmount?: string;
   fromToken?: Token;
   toToken?: Token;
-  swapStep?: SwapSteps;
+  swapStep?: SwapStep;
   swapStatus?: SwapStatus;
   error?: string;
   txHash?: string;
   hasAllowance?: boolean;
-  isLightMode?: boolean;
   chainId?: number;
+  refetchQuote?: () => Promise<void>;
 }
 
-export interface SDKProps extends ProviderArgs {
-  children: ReactNode;
-}

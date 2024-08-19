@@ -12,7 +12,7 @@ export const SwapDetails = () => {
   const {
     state: { fromToken, toToken, fromAmountUi },
   } = useWidgetContext();
-  const quote = useWidgetQuote().quote;
+  const quote = useWidgetQuote().data;
 
   const minAmountOut = useFormatNumber({
     value: useAmountUI(toToken?.decimals, quote?.minAmountOut),

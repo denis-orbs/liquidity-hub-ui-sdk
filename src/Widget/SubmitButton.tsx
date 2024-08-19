@@ -39,9 +39,5 @@ const StyledSubmitButton = styled(Button)<{ $disabled?: boolean }>`
   min-height: 52px;
   border-radius: 10px;
   position: relative;
-  cursor: ${({ $disabled }) => ($disabled ? "unset" : "pointer")};
-  background: ${({ $disabled, theme }) =>
-    $disabled ? theme.colors.buttonDisabled : theme.colors.button};
-  color: ${({ $disabled, theme }) =>
-    $disabled ? theme.colors.buttonDisabledText : theme.colors.buttonText};
+
 `;

@@ -1,15 +1,16 @@
-import { FlexColumn, FlexRow } from "../../base-styles";
-import { Token } from "../../type";
+
+import { Token } from "../../../type";
 import styled from "styled-components";
-import { Logo } from "../Logo";
-import { Text } from "../Text";
-import { Separator } from "./Components";
-import SuccessImg from "../../assets/okay.png";
-import { ExplorerLink } from "../ExplorerLink";
-import { useSwapConfirmationContext } from "./context";
+import { Logo } from "../../Logo";
+import { Text } from "../../Text";
+import { Separator } from "../Components";
+import SuccessImg from "../../../assets/okay.png";
+import { ExplorerLink } from "../../ExplorerLink";
+import { useSwapConfirmationContext } from "../context";
+import { FlexColumn, FlexRow } from "../../../base-styles";
 
 export const SwapSuccess = () => {
-  const { outAmount, fromAmount, fromToken, toToken, txHash } = useSwapConfirmationContext();
+  const { outAmount, inAmount, fromToken, toToken, txHash } = useSwapConfirmationContext();
 
   return (
     <StyledSuccess className="lh-success">
@@ -24,7 +25,7 @@ export const SwapSuccess = () => {
       </StyledTop>
 
       <StyledTokensContainer>
-        <SuccessToken token={fromToken} amount={fromAmount} />
+        <SuccessToken token={fromToken} amount={inAmount} />
         <Separator />
         <SuccessToken token={toToken} amount={outAmount} />
       </StyledTokensContainer>
@@ -69,7 +70,6 @@ const StyledLogo = styled(Logo)`
 const StyledTokenAmount = styled(Text)`
   font-size: 28px;
   font-weight: 600;
-  color: ${({ theme }) => theme.colors.textMain};
 `;
 
 const SuccessToken = ({

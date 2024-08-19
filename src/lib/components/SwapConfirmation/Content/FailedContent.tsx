@@ -1,10 +1,10 @@
-import { FlexColumn, FlexRow } from "../../base-styles";
+import { FlexColumn, FlexRow } from "../../../base-styles";
 import { AlertCircle } from "react-feather";
 import styled from "styled-components";
-import { Text } from "../Text";
-import { getChainConfig, isNativeBalanceError } from "../../util";
+import { Text } from "../../Text";
+import { getChainConfig, isNativeBalanceError } from "../../../util";
 import { useMemo } from "react";
-import { useSwapConfirmationContext } from "./context";
+import { useSwapConfirmationContext } from "../context";
 
 const useGetError = () => {
   const { chainId, error } = useSwapConfirmationContext();
@@ -18,7 +18,7 @@ const useGetError = () => {
   }, [error, chainConfig?.native.symbol]);
 };
 
-export const SwapFailed = () => {
+export const FailedContent = () => {
   const error = useGetError();
 
   return (

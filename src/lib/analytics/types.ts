@@ -29,6 +29,8 @@ export interface InitDexTrade extends InitTrade {
 type analyticsActionState = "pending" | "success" | "failed" | "null" | "";
 
 export interface AnalyticsData {
+  moduleLoaded: boolean;
+
   _id: string;
   partner?: string;
   chainId?: number;

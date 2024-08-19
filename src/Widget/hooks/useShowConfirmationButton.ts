@@ -6,6 +6,7 @@ import { useWidgetContext } from "../context";
 import {
   useAmountBN,
   useAmountUI,
+  useSwapState,
   useUnwrapCallback,
   useWrapCallback,
 } from "../../lib";
@@ -58,7 +59,7 @@ export const useWrap = () => {
 
 export const useShowConfirmationButton = () => {
   const {
-    quote,
+    data: quote,
     isLoading: quoteLoading,
     isError: quoteError,
   } = useWidgetQuote();
@@ -71,10 +72,12 @@ export const useShowConfirmationButton = () => {
   } = useWidgetContext();
   const outAmountUi = useAmountUI(toToken?.decimals, quote?.outAmount);
   const fromAmount = useAmountBN(fromToken?.decimals, fromAmountUi);
+  const {onAcceptedQuote} = useSwapState()
 
   const onShowConfirmation = useCallback(() => {
-    updateState({ showConfirmation: true, initialQuote: quote });
-  }, [updateState, quote]);
+    onAcceptedQuote(quote)
+    updateState({ showConfirmation: true});
+  }, [updateState, quote, onAcceptedQuote]);
 
   const { mutate: switchNetwork, isPending: switchNetworkLoading } =
     useSwitchNetwork();

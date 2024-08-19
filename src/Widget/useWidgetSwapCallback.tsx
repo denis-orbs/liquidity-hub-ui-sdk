@@ -2,14 +2,14 @@ import { isNativeAddress } from "@defi.org/web3-candies";
 import { useMutation } from "@tanstack/react-query";
 import {
   getTxReceipt,
-  isTxRejected,
+  RejectedError,
   signPermitData,
+  swapCallback,
   SwapStatus,
-  SwapSteps,
+  SwapStep,
   useAmountBN,
   useApproveCallback,
-  useSwapCallback,
-  useSwapSuccessCallback,
+  useSwapState,
   useWrapCallback,
 } from "../lib";
 import { useWidgetContext } from "./context";
@@ -19,16 +19,15 @@ export const useWidgetSwapCallback = () => {
   const {
     state: { fromToken, toToken, fromAmountUi },
     hasAllowance,
-    updateState,
     web3,
     account,
     chainId,
+    updateState
   } = useWidgetContext();
+  const { onSwapStep, onSwapStatus, onWrappedNativeToken } = useSwapState();
   const approve = useApproveCallback(account, web3, chainId, fromToken);
   const wrapCallback = useWrapCallback(account, web3, chainId);
-  const swapCallback = useSwapCallback();
-  const onSuccess = useSwapSuccessCallback();
-  const { quote } = useWidgetQuote();
+  const { data: quote } = useWidgetQuote();
 
   const fromAmountRaw = useAmountBN(fromToken?.decimals, fromAmountUi);
 
@@ -40,24 +39,23 @@ export const useWidgetSwapCallback = () => {
       if (!web3) throw new Error("Missing web3");
       if (!account) throw new Error("Missing account");
       if (!chainId) throw new Error("Missing chainId");
-      updateState({ swapStatus: SwapStatus.LOADING });
+      onSwapStatus(SwapStatus.LOADING);
 
       if (isNativeAddress(fromToken.address)) {
-        updateState({ swapStep: SwapSteps.WRAP });
+        onSwapStep(SwapStep.WRAP);
         await wrapCallback(fromAmountRaw);
-        updateState({ isWrapped: true });
+        onWrappedNativeToken();
       }
 
       if (!hasAllowance) {
-        updateState({ swapStep: SwapSteps.APPROVE });
+        onSwapStep(SwapStep.APPROVE);
         await approve();
       }
 
-      updateState({ swapStep: SwapSteps.SIGN });
+      onSwapStep(SwapStep.SIGN_AND_SEND);
 
       const signature = await signPermitData(account, web3, quote.permitData);
 
-      updateState({ swapStep: SwapSteps.SENT_TX });
       const txHash = await swapCallback(
         fromAmountRaw,
         fromToken,
@@ -67,21 +65,19 @@ export const useWidgetSwapCallback = () => {
         account,
         chainId
       );
-
+      updateState({ txHash });
       const result = await getTxReceipt(web3, txHash);
-      onSuccess(quote, txHash, fromToken, toToken, chainId);
-
       return result;
     },
     onSuccess: () => {
-      updateState({ swapStatus: SwapStatus.SUCCESS });
+      onSwapStatus(SwapStatus.SUCCESS);
     },
     onError: (error) => {
-      console.log(isTxRejected(error.message), error.message);
-      
-      updateState({
-        swapStatus: isTxRejected(error.message) ? undefined : SwapStatus.FAILED,
-      });
+      console.log({ error });
+
+      onSwapStatus(
+        error instanceof RejectedError ? undefined : SwapStatus.FAILED
+      );
     },
   });
 };

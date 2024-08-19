@@ -3,7 +3,7 @@ import { useCallback } from "react";
 import Web3 from "web3";
 import { swapAnalytics } from "../../analytics";
 import { Token } from "../../type";
-import { counter } from "../../util";
+import { counter, isTxRejected, RejectedError } from "../../util";
 import { useContract } from "../useContractCallback";
 import { useSendAndWaitForConfirmations } from "./useSendAndWaitForConfirmations";
 
@@ -36,6 +36,9 @@ export const useApproveCallback = (
       return txHash;
     } catch (error) {
       swapAnalytics.onApprovalFailed((error as any).message, count());
+      if (isTxRejected((error as any).message)) {
+        throw new RejectedError();
+      }
       throw error;
     }
   }, [

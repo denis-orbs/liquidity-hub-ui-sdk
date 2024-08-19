@@ -1,50 +1,35 @@
-import { CSSProperties } from "react";
-import { CSSObject, styled } from "styled-components";
+import { styled } from "styled-components";
 import { OrbsLogo } from "./OrbsLogo";
+import { Text } from "./Text";
 
-export const PoweredByOrbs = ({
-  className = "",
-  style = {},
-  labelStyles = {},
-  symbolStyle = {},
-}: {
-  className?: string;
-  style?: CSSObject;
-  labelStyles?: CSSProperties;
-  symbolStyle?: CSSProperties;
-}) => {
+export const PoweredByOrbs = ({ className = "" }: { className?: string }) => {
   return (
-    <StyledLink
-      style={style}
-      className={`lh-powered-by ${className}`}
-      href="https://www.orbs.com/"
-      target="_blank"
-      rel="noreferrer"
-    >
-      <span style={labelStyles} className="lh-powered-by-title">
-        powered by
-      </span>
-      <OrbsLogo width={18} height={18} />
-      <span className="lh-powered-by-symbol" style={symbolStyle}>
-        ORBS
-      </span>
+    <StyledLink className={`lh-powered-by ${className}`}>
+      <a href="https://www.orbs.com/" target="_blank" rel="noreferrer">
+        <span className="lh-powered-by-title">powered by</span>
+        <OrbsLogo width={18} height={18} />
+        <span className="lh-powered-by-symbol">ORBS</span>
+      </a>
     </StyledLink>
   );
 };
 
-const StyledLink = styled.a`
-  color: ${(props) => props.theme.colors.textMain};
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  width: 100%;
-  justify-content: center;
-  width: auto;
+const StyledLink = styled(Text)`
   border-radius: 8px;
   margin-left: auto;
   margin-right: auto;
-  img {
-    margin-left: 6px;
-    margin-right: 6px;
+  a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: unset;
+    img {
+      margin-left: 6px;
+      margin-right: 6px;
+      width: 18px;
+      height: 18px;
+    }
   }
+  
 `;

@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import Web3 from "web3";
 import { swapAnalytics } from "../../analytics";
-import { counter } from "../../util";
+import { counter, isTxRejected, RejectedError } from "../../util";
 import { useWethContract } from "../useContractCallback";
 import { useSendAndWaitForConfirmations } from "./useSendAndWaitForConfirmations";
 
@@ -40,6 +40,9 @@ export const useWrapCallback = (
         return txHash;
       } catch (error) {
         swapAnalytics.onWrapFailed((error as any).message, count());
+        if (isTxRejected((error as any).message)) {
+          throw new RejectedError();
+        }
         throw error;
       }
     },

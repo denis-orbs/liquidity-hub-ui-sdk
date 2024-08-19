@@ -2,7 +2,7 @@ import { _TypedDataEncoder } from "@ethersproject/hash";
 import Web3 from "web3";
 import { swapAnalytics } from "../../analytics";
 import { PermitData } from "../../type";
-import { counter, isTxRejected } from "../../util";
+import { counter, isTxRejected, RejectedError } from "../../util";
 
 const signEIP712 = async (
   permitData: PermitData,
@@ -29,7 +29,7 @@ const signEIP712 = async (
     return await signAsync(signer, provider, "eth_signTypedData_v4", message);
   } catch (e: any) {
     if (isTxRejected(e.message)) {
-      throw e;
+      throw new RejectedError();
     }
     try {
       return await signAsync(signer, provider, "eth_signTypedData", message);
@@ -67,7 +67,7 @@ async function signAsync(
 export const signPermitData = async (
   signer: string,
   web3: Web3,
-  permitData: PermitData,
+  permitData: PermitData
 ) => {
   const count = counter();
   try {
@@ -81,6 +81,6 @@ export const signPermitData = async (
     return signature;
   } catch (error) {
     swapAnalytics.onSignatureFailed((error as any).message, count());
-    throw new Error((error as Error)?.message);
+    throw error;
   }
 };
