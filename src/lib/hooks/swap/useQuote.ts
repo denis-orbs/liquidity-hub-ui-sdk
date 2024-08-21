@@ -4,7 +4,7 @@ import {
   QUOTE_REFETCH_INTERVAL,
 } from "../../config/consts";
 import _ from "lodash";
-import { Token } from "../../type";
+import { Quote, Token } from "../../type";
 import {
   counter,
   getChainConfig,
@@ -15,10 +15,9 @@ import {
 import { isNativeAddress } from "@defi.org/web3-candies";
 import { zeroAddress } from "viem";
 import { swapAnalytics } from "../../analytics";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import BN from "bignumber.js";
 import { useWrapOrUnwrapOnly } from "../hooks";
-import { useMainStore } from "../../store/main";
 
 export const fetchQuote = async ({
   fromToken,
@@ -30,6 +29,7 @@ export const fetchQuote = async ({
   slippage,
   signal,
   chainId,
+  sessionId
 }: {
   fromToken: Token;
   toToken: Token;
@@ -40,19 +40,13 @@ export const fetchQuote = async ({
   slippage: number;
   signal?: AbortSignal;
   chainId: number;
+  sessionId?: string;
 }) => {
   const chainConfig = getChainConfig(chainId);
-  const store = useMainStore.getState();
 
   if (!chainConfig) {
     throw new Error("Chain config not found");
   }
-
-  if (chainConfig.id !== store.chainId) {
-    store.updateState({sessionId: undefined});
-  }
-
-  store.updateState({chainId: chainConfig.id});
   const { wToken, apiUrl } = chainConfig;
 
   const analyticsArgs = {
@@ -64,7 +58,7 @@ export const fetchQuote = async ({
     dexMinAmountOut: minAmountOut,
     account,
     partner,
-    sessionId: store.sessionId,
+    sessionId,
     slippage,
     chainId,
   };
@@ -91,7 +85,7 @@ export const fetchQuote = async ({
             window.location.hash || window.location.search
           ),
           partner: partner.toLowerCase(),
-          sessionId: store.sessionId,
+          sessionId,
         }),
         signal,
       }),
@@ -108,7 +102,6 @@ export const fetchQuote = async ({
       throw new Error(quote.error);
     }
     swapAnalytics.onQuoteSuccess(count(), quote, analyticsArgs);
-    store.updateState({sessionId: quote.sessionId});
     return quote;
   } catch (error: any) {
     swapAnalytics.onQuoteFailed(error.message, count());
@@ -139,6 +132,7 @@ export const useQuoteQuery = ({
   account?: string;
   partner: string;
 }) => {
+  const queryClient = useQueryClient()
   const { isUnwrapOnly, isWrapOnly } = useWrapOrUnwrapOnly(
     fromToken?.address,
     toToken?.address
@@ -167,6 +161,8 @@ export const useQuoteQuery = ({
   return useQuery({
     queryKey,
     queryFn: async ({ signal }) => {
+      const sessionId = (queryClient.getQueryData(queryKey) as Quote | undefined)?.sessionId;
+      
       const quote = await fetchQuote({
         fromToken: fromToken!,
         toToken: toToken!,
@@ -177,6 +173,7 @@ export const useQuoteQuery = ({
         slippage,
         signal,
         chainId: chainId!,
+        sessionId
       });
       return quote;
     },

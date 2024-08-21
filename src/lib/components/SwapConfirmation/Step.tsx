@@ -1,54 +1,77 @@
 import styled from "styled-components";
 import { Check } from "react-feather";
-import { Step, SwapStep } from "../../type";
-import { FlexColumn,FlexRow } from "../../base-styles";
+import { Step } from "../../type";
+import { FlexColumn, FlexRow } from "../../base-styles";
 import { Spinner } from "../Spinner";
 import _ from "lodash";
-import { useSignatureDeadline } from "../../hooks/swap/useSignatureDeadline";
 import { Text } from "../Text";
+import { useSignatureTimeout } from "../../hooks";
+import { SIGNATURE_TIMEOUT_MILLIS } from "../../config/consts";
 
 interface Props {
   step: Step;
-  refetchQuote?: () => Promise<void>;
+  component?: React.ReactNode;
 }
 
-export function StepComponent({ step, refetchQuote }: Props) {
+export function StepComponent({ step }: Props) {
   return (
     <StyledStep className="lh-step">
       <Logo step={step} />
       <FlexColumn $gap={5}>
-        <StyledStepTitle $selected={!!step.active} className="lh-step-title">
+        <StyledStepTitle
+          $selected={Boolean(step.active || step.completed)}
+          className="lh-step-title"
+        >
           {step.title}
         </StyledStepTitle>
         <StepLink step={step} />
       </FlexColumn>
-      <StepStatus step={step} refetchQuote={refetchQuote} />
+      <StepStatus step={step} />
     </StyledStep>
   );
 }
 
-const StepStatus = ({
-  step,
-  refetchQuote,
-}: {
-  step: Step;
-  refetchQuote?: () => Promise<void>;
-}) => {
-  const showRefetchTimer =
-    refetchQuote && step.active && step.id >= SwapStep.SIGN_AND_SEND;
-
-  return (
-    <StyledStatus>
-      {step.completed ? (
+const StepStatus = ({ step }: { step: Step }) => {
+  if (step.completed) {
+    return (
+      <StyledStatus>
         <StyledSuccess>
           <Check size={20} />
         </StyledSuccess>
-      ) : showRefetchTimer ? (
-        <RefetchQuote refetchQuote={refetchQuote} />
-      ) : null}
-    </StyledStatus>
+      </StyledStatus>
+    );
+  }
+
+  if (!step.active) return null;
+
+  if (step.timeout) {
+    return (
+      <StyledStatus>
+        <SignatureDeadline timeout={step.timeout} />
+      </StyledStatus>
+    );
+  }
+
+  return null;
+};
+
+const SignatureDeadline = ({
+  timeout = SIGNATURE_TIMEOUT_MILLIS,
+}: {
+  timeout?: number;
+}) => {
+  const { minutes, seconds } = useSignatureTimeout(timeout);
+
+  return (
+    <StyledDeadline className="lh-step-deadline">
+      {minutes}:{seconds}
+    </StyledDeadline>
   );
 };
+
+const StyledDeadline = styled(Text)({
+  fontSize: 14,
+});
 
 const StepLink = ({ step }: { step: Step }) => {
   if (!step.link) return null;
@@ -58,24 +81,10 @@ const StepLink = ({ step }: { step: Step }) => {
       className="lh-step-link"
       href={step.link.href}
       target="_blank"
-      $selected={!!step.active}
+      $selected={Boolean(step.active || step.completed)}
     >
       {step.link.text}
     </StyledStepLink>
-  );
-};
-
-const RefetchQuote = ({
-  refetchQuote,
-}: {
-  refetchQuote: () => Promise<void>;
-}) => {
-  const { minutes, seconds } = useSignatureDeadline(refetchQuote);
-
-  return (
-    <Text className="lh-step-deadline">
-      {minutes}:{seconds}
-    </Text>
   );
 };
 
@@ -84,8 +93,9 @@ const StyledStatus = styled.div`
 `;
 
 const Logo = ({ step }: { step?: Step }) => {
+  const selected = step?.active || step?.completed;
   return (
-    <StyledStepLogo $selected={!!step?.active} className="lh-step-logo">
+    <StyledStepLogo $selected={Boolean(selected)} className="lh-step-logo">
       {step?.active ? (
         <StyledLoader size={28} className="lh-step-loader" />
       ) : (

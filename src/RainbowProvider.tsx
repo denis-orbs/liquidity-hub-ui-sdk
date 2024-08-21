@@ -13,6 +13,7 @@ import {
   fantom,
   linea,
   blast,
+  mainnet
 } from "wagmi/chains";
 import "@rainbow-me/rainbowkit/styles.css";
 import { WagmiProvider } from "wagmi";
@@ -26,7 +27,7 @@ const queryClient = new QueryClient()
 const config = getDefaultConfig({
   appName,
   projectId,
-  chains: [polygon, bsc, polygonZkEvm, base, fantom, linea, blast],
+  chains: [polygon, bsc, polygonZkEvm, base, fantom, linea, blast, mainnet],
   ssr: false, // If your dApp uses server side rendering (SSR)
 });
 

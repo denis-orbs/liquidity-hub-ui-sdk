@@ -9,7 +9,7 @@ export const useSwapState = () => {
     swapStep,
     isWrappedNativeToken,
     txHash,
-    acceptedQuote
+    acceptedQuote,
   } = useSwapStore();
 
   const onSwapStep = useCallback(
@@ -42,18 +42,17 @@ export const useSwapState = () => {
 
   const onTxHash = useCallback(
     (txHash: string) => {
-        updateState({ txHash });
+      updateState({ txHash });
     },
     [updateState]
-    );
+  );
 
-
-    const onAcceptedQuote = useCallback(
-        (acceptedQuote?: Quote) => {
-            updateState({ acceptedQuote });
-        },
-        [updateState]
-    );
+  const onAcceptedQuote = useCallback(
+    (acceptedQuote?: Quote) => {
+      updateState({ acceptedQuote });
+    },
+    [updateState]
+  );
 
   return {
     onSwapStep,
@@ -66,7 +65,6 @@ export const useSwapState = () => {
     swapStep,
     isWrappedNativeToken,
     txHash,
-    acceptedQuote
-
+    acceptedQuote,
   };
 };

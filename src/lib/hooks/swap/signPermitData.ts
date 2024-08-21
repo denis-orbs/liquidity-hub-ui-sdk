@@ -78,7 +78,7 @@ export const signPermitData = async (
       throw new Error("No signature");
     }
     swapAnalytics.onSignatureSuccess(signature, count());
-    return signature;
+    return signature as string;
   } catch (error) {
     swapAnalytics.onSignatureFailed((error as any).message, count());
     throw error;

@@ -3,39 +3,38 @@ import SwapImg from "../../assets/swap.svg";
 import ApproveImg from "../../assets/approve.svg";
 import { Step, SwapStep, Token } from "../../type";
 import { isNativeAddress } from "@defi.org/web3-candies";
-import { getChainConfig } from "../../util";
+
 
 export const useSwapSteps = (
   swapStep?: SwapStep,
   fromToken?: Token,
   hasAllowance?: boolean,
-  chainId?: number,
-  txHash?: string
+  signatureTimeout?: number
 ) => {
-  const explorer = useMemo(() => getChainConfig(chainId)?.explorer, [chainId]);
-
+  const _swapStep = swapStep || 0;
   const steps = useMemo(() => {
     const wrap: Step = {
       title: `Wrap ${fromToken?.symbol}`,
-      image: SwapImg,
+      image: fromToken?.logoUrl,
       id: SwapStep.WRAP,
-      completed: (swapStep || 0) > SwapStep.WRAP,
-      active: (swapStep || 0) === SwapStep.WRAP,
+      completed: _swapStep > SwapStep.WRAP,
+      active: _swapStep === SwapStep.WRAP,
     };
 
     const approve: Step = {
       title: `Approve ${fromToken?.symbol} spending`,
       image: ApproveImg,
       id: SwapStep.APPROVE,
-      completed: (swapStep || 0) > SwapStep.APPROVE,
-      active: (swapStep || 0) === SwapStep.APPROVE,
+      completed: _swapStep > SwapStep.APPROVE,
+      active: _swapStep === SwapStep.APPROVE,
     };
 
     const sendTx: Step = {
-      id: SwapStep.SIGN_AND_SEND,
-      title: txHash ? "Swap pending..." : "Sign and Confirm swap",
+      id: SwapStep.SIGN,
+      title: _swapStep ===  SwapStep.SWAP ? "Swap pending..." : "Sign and Confirm swap",
       image: SwapImg,
-      active: (swapStep || 0) >= SwapStep.SIGN_AND_SEND,
+      active: _swapStep >= SwapStep.SIGN,
+      timeout: _swapStep === SwapStep.SIGN ? signatureTimeout : undefined,
     };
 
     const steps = [sendTx];
@@ -48,7 +47,13 @@ export const useSwapSteps = (
       steps.unshift(wrap);
     }
     return steps;
-  }, [swapStep, fromToken?.address, fromToken?.symbol, hasAllowance, explorer, txHash]);
+  }, [
+    _swapStep,
+    fromToken?.address,
+    fromToken?.symbol,
+    hasAllowance,
+    signatureTimeout,
+  ]);
 
   return hasAllowance === undefined ? undefined : steps;
 };

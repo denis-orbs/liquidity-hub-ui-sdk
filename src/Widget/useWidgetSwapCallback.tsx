@@ -2,11 +2,14 @@ import { isNativeAddress } from "@defi.org/web3-candies";
 import { useMutation } from "@tanstack/react-query";
 import {
   getTxReceipt,
+  promiseWithTimeout,
   RejectedError,
+  SIGNATURE_TIMEOUT_MILLIS,
   signPermitData,
   swapCallback,
   SwapStatus,
   SwapStep,
+  TimeoutError,
   useAmountBN,
   useApproveCallback,
   useSwapState,
@@ -22,9 +25,13 @@ export const useWidgetSwapCallback = () => {
     web3,
     account,
     chainId,
-    updateState
+    updateState,
   } = useWidgetContext();
-  const { onSwapStep, onSwapStatus, onWrappedNativeToken } = useSwapState();
+  const {
+    onSwapStep,
+    onSwapStatus,
+    onWrappedNativeToken,
+  } = useSwapState();
   const approve = useApproveCallback(account, web3, chainId, fromToken);
   const wrapCallback = useWrapCallback(account, web3, chainId);
   const { data: quote } = useWidgetQuote();
@@ -40,44 +47,57 @@ export const useWidgetSwapCallback = () => {
       if (!account) throw new Error("Missing account");
       if (!chainId) throw new Error("Missing chainId");
       onSwapStatus(SwapStatus.LOADING);
+      let wrappedNative = false;
+      try {
+        if (isNativeAddress(fromToken.address)) {
+          onSwapStep(SwapStep.WRAP);
+          await wrapCallback(fromAmountRaw);
+          wrappedNative = true;
+        }
 
-      if (isNativeAddress(fromToken.address)) {
-        onSwapStep(SwapStep.WRAP);
-        await wrapCallback(fromAmountRaw);
-        onWrappedNativeToken();
+        if (!hasAllowance) {
+          onSwapStep(SwapStep.APPROVE);
+          await approve();
+        }
+
+        onSwapStep(SwapStep.SIGN);
+
+        const signature = await promiseWithTimeout(
+          signPermitData(account, web3, quote.permitData),
+          SIGNATURE_TIMEOUT_MILLIS
+        );
+        onSwapStep(SwapStep.SWAP);
+        const txHash = await swapCallback(
+          fromToken,
+          toToken,
+          quote,
+          signature,
+          account,
+          chainId
+        );
+        updateState({ txHash });
+        const result = await getTxReceipt(web3, txHash);
+        return result;
+      } catch (error) {
+        console.log({ error });
+        if (wrappedNative) {
+          onWrappedNativeToken();
+          onSwapStatus(SwapStatus.FAILED);
+        } else if (
+          error instanceof RejectedError ||
+          error instanceof TimeoutError
+        ) {
+          onSwapStatus(undefined);
+          onSwapStep(undefined)
+        }else{
+          onSwapStatus(SwapStatus.FAILED);
+        }
+        throw error;
       }
-
-      if (!hasAllowance) {
-        onSwapStep(SwapStep.APPROVE);
-        await approve();
-      }
-
-      onSwapStep(SwapStep.SIGN_AND_SEND);
-
-      const signature = await signPermitData(account, web3, quote.permitData);
-
-      const txHash = await swapCallback(
-        fromAmountRaw,
-        fromToken,
-        toToken,
-        quote,
-        signature,
-        account,
-        chainId
-      );
-      updateState({ txHash });
-      const result = await getTxReceipt(web3, txHash);
-      return result;
     },
     onSuccess: () => {
       onSwapStatus(SwapStatus.SUCCESS);
-    },
-    onError: (error) => {
-      console.log({ error });
-
-      onSwapStatus(
-        error instanceof RejectedError ? undefined : SwapStatus.FAILED
-      );
+      updateState({ fromAmountUi: "" });
     },
   });
 };

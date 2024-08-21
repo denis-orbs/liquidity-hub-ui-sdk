@@ -33,4 +33,4 @@ export const QUOTE_TIMEOUT = 10_000;
 
 export const DEFAULT_QUOTE_REFETCH_LIMIT = 10;
 export const USE_SUBMIT_SWAP_KEY = "use-submit-lh-swap";
-export const SIGNATURE_TIMEOUT = 20_000
+export const SIGNATURE_TIMEOUT_MILLIS = 40_000

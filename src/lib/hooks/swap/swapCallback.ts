@@ -1,6 +1,5 @@
 import { isNativeAddress, zeroAddress } from "@defi.org/web3-candies";
 import { swapAnalytics } from "../../analytics";
-import { useMainStore } from "../../store/main";
 import { Quote, Token } from "../../type";
 import { counter, delay, getChainConfig } from "../../util";
 
@@ -47,7 +46,7 @@ export const swapX = async (args: Args) => {
     }
 
     swapAnalytics.onSwapSuccess(swap.txHash, count());
-    useMainStore.getState().updateState({sessionId: undefined});
+    
     return swap.txHash;
   } catch (error: any) {
     const msg = error.message.error || error.message;
@@ -57,7 +56,6 @@ export const swapX = async (args: Args) => {
 };
 
 export const swapCallback = async (
-  fromAmount: string,
   fromToken: Token,
   toToken: Token,
   quote: Quote,
@@ -85,7 +83,7 @@ export const swapCallback = async (
     signature,
     inTokenAddress,
     outTokenAddress,
-    fromAmount,
+    fromAmount: quote.inAmount,
     quote,
     account,
     chainId,

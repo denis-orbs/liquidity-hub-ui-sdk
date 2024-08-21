@@ -76,7 +76,8 @@ export enum LH_CONTROL {
 export enum SwapStep {
   WRAP = 1,
   APPROVE = 2,
-  SIGN_AND_SEND = 3,
+  SIGN = 3,
+  SWAP = 4,
 }
 
 export enum SwapStatus {
@@ -94,6 +95,7 @@ export interface Step {
   txHash?: string;
   completed?: boolean;
   active?: boolean;
+  timeout?: number;
 }
 
 export type Order = {
@@ -156,6 +158,6 @@ export interface SwapConfirmationArgs {
   txHash?: string;
   hasAllowance?: boolean;
   chainId?: number;
-  refetchQuote?: () => Promise<void>;
+  signatureTimeoutMillis?: number;
 }
 

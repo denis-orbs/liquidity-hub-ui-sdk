@@ -4,7 +4,6 @@ import {
   SwapConfirmation,
   useAmountUI,
   Quote,
-  SwapStatus,
   useSwapState,
   useFormatNumber,
 } from "../lib";
@@ -15,7 +14,6 @@ import { WidgetModal } from "./Modal";
 import BN from "bignumber.js";
 import { isNativeAddress } from "@defi.org/web3-candies";
 import { useWidgetSwapCallback } from "./useWidgetSwapCallback";
-import { useWidgetQuote } from "./hooks/useWidgetQuote";
 
 const useFromUsd = () => {
   const {
@@ -46,36 +44,17 @@ const useToUsd = (quote?: Quote) => {
 export const SwapConfirmationModal = () => {
   const {
     state: { fromAmountUi, fromToken, toToken, showConfirmation, txHash },
-    updateState,
     hasAllowance,
-    chainConfig,
     resetState,
-  
   } = useWidgetContext();
   const {
-    isWrappedNativeToken,
     swapStatus,
     swapStep,
     acceptedQuote,
-    onAcceptedQuote,
   } = useSwapState();
   const { mutateAsync: onSwapCallback } = useWidgetSwapCallback();
-  const widgetQuote = useWidgetQuote();
-
-  const wToken = chainConfig?.wToken;
-
-  const onCloseConfirmation = useCallback(() => {
-    updateState({
-      showConfirmation: false,
-    });
-  }, [updateState]);
-
-  const onWrapSuccess = useCallback(() => {
-    updateState({ fromToken: wToken });
-  }, [updateState, wToken]);
 
   const refetchBalances = useRefreshBalancesAfterTx();
-  const resetDexState = useWidgetContext().resetState;
   const onClick = useCallback(async () => {
     try {
       await onSwapCallback();
@@ -86,35 +65,14 @@ export const SwapConfirmationModal = () => {
   }, [onSwapCallback, refetchBalances]);
 
   const closeModal = useCallback(() => {
-    if (swapStatus === SwapStatus.SUCCESS || swapStatus === SwapStatus.FAILED) {
-      resetDexState();
-      resetState();
-    }
-    if (swapStatus === SwapStatus.FAILED && isWrappedNativeToken) {
-      onWrapSuccess();
-    }
-    onCloseConfirmation();
-  }, [
-    resetDexState,
-    swapStatus,
-    onWrapSuccess,
-    isWrappedNativeToken,
-    onCloseConfirmation,
-    resetState,
-  ]);
+    resetState();
+  }, [resetState]);
 
   const swapButtonContent = useMemo(() => {
     if (isNativeAddress(fromToken?.address || "")) return "Wrap and Swap";
     if (!hasAllowance) return "Approve and Swap";
     return "Sign and Swap";
   }, [fromToken, hasAllowance]);
-
-  const refetchQuote = useCallback(async () => {
-    try {
-      const quote = await widgetQuote.refetch().then((res) => res.data);
-      onAcceptedQuote(quote);
-    } catch (error) {}
-  }, [widgetQuote.refetch, onAcceptedQuote]);
 
 
   const fromUsd = useFromUsd();
@@ -126,29 +84,29 @@ export const SwapConfirmationModal = () => {
       <StyledSwapConfirmation
         fromUsd={fromUsd}
         toUsd={toUsd}
-        outAmount={useFormatNumber({value: outAmount, decimalScale: 3})}
-        inAmount={useFormatNumber({value: fromAmountUi, decimalScale: 3})}
+        outAmount={useFormatNumber({ value: outAmount, decimalScale: 3 })}
+        inAmount={useFormatNumber({ value: fromAmountUi, decimalScale: 3 })}
         fromToken={fromToken}
         toToken={toToken}
         txHash={txHash}
         swapStatus={swapStatus}
         swapStep={swapStep}
-        refetchQuote={refetchQuote}
-        hasAllowance={hasAllowance}>
-          <StyledSubmitButton onClick={onClick} isLoading={false}>
-            {swapButtonContent}
-          </StyledSubmitButton>
-        </StyledSwapConfirmation>
+        hasAllowance={hasAllowance}
+      >
+        <StyledSubmitButton onClick={onClick} isLoading={false}>
+          {swapButtonContent}
+        </StyledSubmitButton>
+      </StyledSwapConfirmation>
     </WidgetModal>
   );
 };
 
+
 const StyledSwapConfirmation = styled(SwapConfirmation)({
-  color:'white'
-})
+  color: "white",
+});
 
 const StyledSubmitButton = styled(Button)`
   width: 100%;
   margin-top: 20px;
-
 `;

@@ -39,6 +39,7 @@ const getApiUrl = (chainId: number) => {
       return "https://blast.hub.orbs.network";
     case networks.zkevm.id:
       return "https://zkevm.hub.orbs.network";
+    
 
     default:
       return "https://hub.orbs.network";

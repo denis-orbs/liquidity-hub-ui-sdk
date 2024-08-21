@@ -1,17 +1,17 @@
 import { useCallback, useEffect } from "react";
+import { SIGNATURE_TIMEOUT_MILLIS } from "../../config/consts";
 import { useCountdown } from "../hooks";
 
-export function useSignatureDeadline(onTimeout: () => Promise<void>) {
-  const { start, secondsLeft, seconds, minutes, reset } = useCountdown(10);
+export function useSignatureTimeout(millis = SIGNATURE_TIMEOUT_MILLIS ) {
+  const { start, secondsLeft, seconds, minutes, stop } = useCountdown(millis  / 1000);
 
   useEffect(() => {
-    start();
-  }, []);
+    start()
+  }, [])
+  
 
   const onDeadline = useCallback(async () => {
-    reset();
-    await onTimeout();
-    start();
+    stop();
   }, []);
 
   useEffect(() => {

@@ -1,4 +1,11 @@
-import { LH_CONTROL, Order, Orders, Quote, SwapStatus, SwapStep } from "../type";
+import {
+  LH_CONTROL,
+  Order,
+  Orders,
+  Quote,
+  SwapStatus,
+  SwapStep,
+} from "../type";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -58,16 +65,6 @@ export const useOrdersStore = create(
   )
 );
 
-interface MainStore {
-  sessionId?: string;
-  chainId?: number;
-  updateState: (args: Partial<MainStore>) => void;
-}
-
-export const useMainStore = create<MainStore>((set) => ({
-  updateState: (args) => set({...args}),
-}));
-
 
 interface SwapStore {
   swapStep?: SwapStep;
@@ -76,9 +73,8 @@ interface SwapStore {
   isWrappedNativeToken?: boolean;
   txHash?: string;
   updateState: (args: Partial<SwapStore>) => void;
-
 }
 
 export const useSwapStore = create<SwapStore>((set) => ({
-  updateState: (args) => set({...args}),
+  updateState: (args) => set({ ...args }),
 }));

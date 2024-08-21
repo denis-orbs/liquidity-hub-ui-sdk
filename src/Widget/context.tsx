@@ -13,6 +13,7 @@ import {
   getChainConfig,
   Token,
   useAmountBN,
+  useSwapState,
 } from "../lib";
 import { useAllowanceQuery } from "../lib/hooks/swap/useAllowanceQuery";
 import { useInitialTokens } from "./hooks";
@@ -82,6 +83,7 @@ export const WidgetProvider = (props: ContextProps) => {
 
   const fromAmount = useAmountBN(state.fromToken?.decimals, state.fromAmountUi);
   const { address: account } = useAccount();
+  const {onReset} = useSwapState()
 
   const provider = useProvider();
   const chainId = provider?.chainId && Web3.utils.hexToNumber(provider.chainId);
@@ -106,7 +108,8 @@ export const WidgetProvider = (props: ContextProps) => {
 
   const resetState = useCallback(() => {
     dispatch({ type: "RESET" });
-  }, [dispatch]);
+    onReset()
+  }, [dispatch, onReset]);
 
 
 
