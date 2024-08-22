@@ -1,6 +1,13 @@
 import BN, { BigNumber } from "bignumber.js";
 import Web3 from "web3";
-import { ActionStatus, LH_CONTROL, Network, Token } from "./type";
+import {
+  ActionStatus,
+  LH_CONTROL,
+  Network,
+  QuoteResponse,
+  Token,
+  TxDetailsFromApi,
+} from "./type";
 import _ from "lodash";
 import { nativeTokenAddresses, QUOTE_ERRORS, zero } from "./config/consts";
 import { numericFormatter } from "react-number-format";
@@ -20,6 +27,14 @@ export const amountUi = (decimals?: number, amount?: BN) => {
   return amount.times(percision).idiv(percision).div(percision).toString();
 };
 
+
+export const amountUiV2 = (decimals?: number, amount?: string) => {
+  if (!amount) return "";
+  const percision = new BN(10).pow(decimals || 0);
+  return BN(amount).times(percision).idiv(percision).div(percision).toString();
+};
+
+
 export function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -27,6 +42,42 @@ export function delay(ms: number) {
 export const getChainConfig = (chainId?: number): Network | undefined => {
   if (!chainId) return undefined;
   return Object.values(networks).find((it) => it.id === chainId);
+};
+
+export const getTxDetailsFromApi = async (
+  txHash: string,
+  chainId: number,
+  quote?: QuoteResponse
+): Promise<TxDetailsFromApi | undefined> => {
+  const apiUrl = getChainConfig(chainId)?.apiUrl;
+  for (let i = 0; i < 30; ++i) {
+    // due to swap being fetch and not web3
+
+    await delay(3_000); // to avoid potential rate limiting from public rpc
+    try {
+      const response = await fetch(
+        `${apiUrl}/tx/${txHash}?chainId=${chainId}`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            outToken: quote?.outToken,
+            user: quote?.user,
+            qs: quote?.qs,
+            partner: quote?.partner,
+            sessionId: quote?.sessionId,
+          }),
+        }
+      );
+
+      const result = await response?.json();
+
+      if (result && result.status?.toLowerCase() === 'mined') {        
+        return result;
+      }
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
 };
 
 export async function waitForTxReceipt(web3: Web3, txHash: string) {
@@ -468,7 +519,7 @@ export const getContract = (
   );
 };
 
-export const isTxRejected = (error: any) => {  
+export const isTxRejected = (error: any) => {
   if (error?.message) {
     return (
       error.message?.toLowerCase()?.includes("rejected") ||
@@ -478,9 +529,10 @@ export const isTxRejected = (error: any) => {
 };
 export const isNativeBalanceError = (error: any) => {
   if (error?.message) {
-    return error.message?.toLowerCase()?.includes("insufficient") || 
-    error.message?.toLowerCase()?.includes("gas required exceeds allowance");
-    ;
+    return (
+      error.message?.toLowerCase()?.includes("insufficient") ||
+      error.message?.toLowerCase()?.includes("gas required exceeds allowance")
+    );
   }
 };
 

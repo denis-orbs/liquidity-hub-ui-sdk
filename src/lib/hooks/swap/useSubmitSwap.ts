@@ -3,6 +3,7 @@ import { useChainConfig } from "../useChainConfig";
 import {
   amountUi,
   delay,
+  getTxDetailsFromApi,
   isNativeAddress,
   isNativeBalanceError,
   isTxRejected,
@@ -12,7 +13,13 @@ import {
 import BN from "bignumber.js";
 import { zeroAddress } from "../../config/consts";
 import { useOrders } from "../useOrders";
-import { QuoteResponse, STEPS, Token, UseLiquidityHubState } from "../../type";
+import {
+  QuoteResponse,
+  STEPS,
+  Token,
+  TxDetailsFromApi,
+  UseLiquidityHubState,
+} from "../../type";
 import { useMainContext } from "../../provider";
 import { sign } from "../../swap/sign";
 import { approve } from "../../swap/approve";
@@ -32,6 +39,7 @@ export const useSubmitSwap = ({
   updateState,
   sessionId,
   failures,
+  getReceipt,
 }: {
   fromAmount?: string;
   fromToken?: Token;
@@ -40,6 +48,7 @@ export const useSubmitSwap = ({
   updateState: (value: Partial<UseLiquidityHubState>) => void;
   sessionId?: string;
   failures: number;
+  getReceipt?: boolean;
 }) => {
   const { web3, provider, account, chainId } = useMainContext();
   const chainConfig = useChainConfig();
@@ -159,11 +168,21 @@ export const useSubmitSwap = ({
       }
       Logger(txHash);
       updateState({ txHash });
-      const txDetails = await waitForTxReceipt(web3, txHash);
 
-      if (!txDetails?.mined) {
-        throw new Error(txDetails?.revertMessage);
-      }
+
+       let receipt = '';
+      let txDataFromApi: TxDetailsFromApi | undefined;
+      try {
+        if (getReceipt) {
+          const result = await waitForTxReceipt(web3, txHash);
+          if (!result?.mined) {
+            throw new Error(result?.revertMessage);
+          }
+          receipt = result.receipt;
+        } else {
+           txDataFromApi = await getTxDetailsFromApi(txHash, chainId, quote);
+        }
+      } catch (error) {}
 
       swapAnalytics.onClobOnChainSwapSuccess();
       updateState({ swapStatus: "success", failures: 0, sessionId: undefined });
@@ -179,10 +198,13 @@ export const useSubmitSwap = ({
 
       Logger("Swap success");
       swapAnalytics.clearState();
-      return {
+
+      return  {
         txHash,
-        receipt: txDetails.receipt,
-      };
+        exactOutAmount: txDataFromApi?.exactOutAmount,
+        gasCharges: txDataFromApi?.gasCharges,
+        receipt,
+      }
     },
     onSettled: () => refetchAllowance(),
     onError: (error) => {

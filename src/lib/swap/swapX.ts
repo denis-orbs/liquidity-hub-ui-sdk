@@ -49,6 +49,5 @@ export const swapX = async (args: Args) => {
   } catch (error: any) {
     const msg = error.message.error || error.message;
     swapAnalytics.onSwapFailed(msg, count());
-    throw new Error("Something went wrong");
   }
 };

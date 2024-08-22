@@ -115,6 +115,7 @@ export const useLiquidityHub = (args: UseLiquidityHubArgs) => {
     quote: quoteQuery.data?.quote,
     sessionId: state.sessionId,
     failures: state.failures,
+    getReceipt: args.getReceipt,
   });
 
   const onClose = useCallback(() => {

@@ -5,7 +5,6 @@ import { Logo } from "../Logo";
 import { Text } from "../Text";
 import { Separator } from "./Components";
 import { useFormatNumber } from "../../hooks";
-import SuccessImg from "../../assets/okay.png";
 import { ExplorerLink } from "../ExplorerLink";
 import { useSwapConfirmationContext } from "./context";
 
@@ -15,7 +14,6 @@ export const SwapSuccess = () => {
   return (
     <StyledSuccess className="lh-success">
       <StyledTop>
-        <StyledImg src={SuccessImg} />
         <TopText>
           Successfully Swapped <br /> Using{" "}
           <a href="https://www.orbs.com/liquidity-hub/" target="_blank">
@@ -34,10 +32,10 @@ export const SwapSuccess = () => {
   );
 };
 
-const StyledImg = styled.img`
-  width: 63px;
-  height: 63px;
-`;
+// const StyledImg = styled.img`
+//   width: 63px;
+//   height: 63px;
+// `;
 
 const StyledTop = styled(FlexColumn)`
   gap: 20px;

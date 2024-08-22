@@ -193,7 +193,15 @@ export type UseLiquidityHubArgs = {
   debounceFromAmountMillis?: number;
   quoteDelayMillis?: number;
   outAmount?: string;
+  getReceipt?: boolean;
 };
+
+
+export type TxDetailsFromApi  ={
+  "status": string,
+  "exactOutAmount": string,
+  "gasCharges": string,
+}
 
 export type SwapRoute = "dex" | "lh";
 

@@ -13,6 +13,7 @@ import {
   TokenListItemProps,
   ProviderArgs,
   Token,
+  QuoteResponse,
 } from "../type";
 import {
   StyledChangeTokens,
@@ -39,7 +40,6 @@ import {
   useChainConfig,
   useFormatNumber,
   useLiquidityHub,
-  usePriceChanged,
   useSwapButtonContent,
 } from "../hooks";
 import { Text } from "../components/Text";
@@ -61,7 +61,11 @@ import {
 } from "./hooks";
 import _ from "lodash";
 import { useInitialTokens } from "./hooks/useInitialTokens";
-import { getSwapModalTitle } from "../util";
+import {
+  amountUiV2,
+  getSwapModalTitle,
+  getTxDetailsFromApi,
+} from "../util";
 import { useWrapOrUnwrapOnly } from "../hooks/hooks";
 
 export const theme = {
@@ -231,17 +235,15 @@ const SwapModal = () => {
     showConfirmationModal,
     submitSwap,
     swapLoading,
-    quote,
-    initialQuote,
     fromToken,
     toToken,
     fromAmount,
     isWrapped,
-    ui
+    ui,
   } = lhPayload;
 
-  const fromAmountUi = ui.fromAmount
-  const outAmountUi = ui.outAmount
+  const fromAmountUi = ui.fromAmount;
+  const outAmountUi = ui.outAmount;
   const updateStore = useDexState(useShallow((s) => s.updateStore));
 
   const wToken = useChainConfig()?.wToken;
@@ -254,17 +256,12 @@ const SwapModal = () => {
       .toString();
   }, [fromTokenUsdSN, fromAmountUi]);
 
-  const toTokenUsd = useMemo(() => {
-    return BN(toTokenUsdSN || 0)
-      .multipliedBy(outAmountUi || 0)
-      .toString();
-  }, [toTokenUsdSN, outAmountUi]);
-
   const onWrapSuccess = useCallback(() => {
     updateStore({ fromToken: wToken });
   }, [updateStore, wToken]);
   const refetchBalances = useRefreshBalancesAfterTx();
   const resetDexState = useDexState((s) => s.onReserAfterSwap);
+  const [exactOutAmount, setExactOutAmount] = useState<string | undefined>("");
 
   const TryAgainButton = () => {
     return (
@@ -276,12 +273,13 @@ const SwapModal = () => {
 
   const onClick = useCallback(async () => {
     try {
-      await submitSwap();
+      const res = await submitSwap();
+      setExactOutAmount(amountUiV2(toToken?.decimals, res.exactOutAmount));
       refetchBalances();
     } catch (error) {
       console.log(error);
     }
-  }, [submitSwap, refetchBalances]);
+  }, [submitSwap, refetchBalances, toToken]);
 
   const closeModal = useCallback(() => {
     if (swapStatus === "success") {
@@ -300,7 +298,7 @@ const SwapModal = () => {
     onWrapSuccess,
     isWrapped,
   ]);
-  
+
   const modalTitle = useMemo(() => {
     return getSwapModalTitle(swapStatus);
   }, [swapStatus]);
@@ -310,12 +308,13 @@ const SwapModal = () => {
     fromAmount
   );
 
-  const priceChangeWarning = usePriceChanged({
-    quote,
-    initialQuote,
-    enabled: showConfirmationModal && !swapStatus,
-    toToken,
-  });
+  const toAmount = exactOutAmount || outAmountUi;
+
+  const toTokenUsd = useMemo(() => {
+    return BN(toTokenUsdSN || 0)
+      .multipliedBy(toAmount || 0)
+      .toString();
+  }, [toTokenUsdSN, toAmount]);
 
   return (
     <WidgetModal
@@ -323,78 +322,40 @@ const SwapModal = () => {
       open={showConfirmationModal}
       onClose={closeModal}
     >
-      {priceChangeWarning.shouldAccept ? (
-        <AcceptAmountOut
-          amountToAccept={priceChangeWarning.newPrice}
-          accept={priceChangeWarning.acceptChanges}
-        />
-      ) : (
-        <SwapConfirmation
-          fromTokenUsd={fromTokenUsd}
-          toTokenUsd={toTokenUsd}
-          {...lhPayload}
-          outAmount={lhPayload.ui.outAmount}
-        >
-          {swapStatus === "success" ? (
-            <SwapConfirmation.Success />
-          ) : swapStatus === "failed" ? (
-            <FlexColumn>
-              <SwapConfirmation.Error />
-              <TryAgainButton />
-            </FlexColumn>
-          ) : (
-            <FlexColumn>
-              <SwapConfirmation.Details />
-              <SwapConfirmation.Steps />
-              <SwapConfirmation.SubmitButton>
-                <StyledSubmitButton
-                  onClick={onClick}
-                  isLoading={swapLoading}
-                  $disabled={swapLoading}
-                >
-                  {swapButtonContent}
-                </StyledSubmitButton>
-              </SwapConfirmation.SubmitButton>
-            </FlexColumn>
-          )}
-          <SwapConfirmation.PoweredBy />
-        </SwapConfirmation>
-      )}
+      <SwapConfirmation
+        fromTokenUsd={fromTokenUsd}
+        toTokenUsd={toTokenUsd}
+        {...lhPayload}
+        outAmount={toAmount}
+      >
+        {swapStatus === "success" ? (
+          <SwapConfirmation.Success />
+        ) : swapStatus === "failed" ? (
+          <FlexColumn>
+            <SwapConfirmation.Error />
+            <TryAgainButton />
+          </FlexColumn>
+        ) : (
+          <FlexColumn>
+            <SwapConfirmation.Details />
+            <SwapConfirmation.Steps />
+            <SwapConfirmation.SubmitButton>
+              <StyledSubmitButton
+                onClick={onClick}
+                isLoading={swapLoading}
+                $disabled={swapLoading}
+              >
+                {swapButtonContent}
+              </StyledSubmitButton>
+            </SwapConfirmation.SubmitButton>
+          </FlexColumn>
+        )}
+        <SwapConfirmation.PoweredBy />
+      </SwapConfirmation>
     </WidgetModal>
   );
 };
 
-const AcceptAmountOut = ({
-  amountToAccept,
-  accept,
-}: {
-  amountToAccept?: string;
-  accept: () => void;
-}) => {
-  const amount = useFormatNumber({
-    value: amountToAccept,
-  });
-
-  return (
-    <StyledAcceptAmountOut>
-      <Text>Price updated</Text>
-      <Text>new amount out is {amount}</Text>
-      <Button onClick={accept}>Accept</Button>
-    </StyledAcceptAmountOut>
-  );
-};
-
-const StyledAcceptAmountOut = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  align-items: center;
-  text-align: center;
-  width: 100%;
-  button {
-    width: 100%;
-  }
-`;
 
 const StyledPoweredByOrbs = styled(PoweredByOrbs)`
   margin-top: 30px;
@@ -493,9 +454,12 @@ const FromTokenPanel = () => {
 };
 
 const ToTokenPanel = () => {
-  const { ui, fromToken,toToken } = useWidgetContext().lhPayload;
+  const { ui, fromToken, toToken } = useWidgetContext().lhPayload;
   const { token, onTokenSelect } = useToTokenPanel();
-  const { isUnwrapOnly, isWrapOnly } = useWrapOrUnwrapOnly(fromToken?.address, toToken?.address);
+  const { isUnwrapOnly, isWrapOnly } = useWrapOrUnwrapOnly(
+    fromToken?.address,
+    toToken?.address
+  );
 
   const { data: usdSingleToken, isLoading } = usePriceUsd({
     address: token?.address,
@@ -652,6 +616,7 @@ export const Widget = (props: Props) => {
         >
           <Watcher {...props} />
           <Container>
+            <Button onClick={testFN}>Click</Button>
             <FromTokenPanel />
             <ChangeTokens />
             <ToTokenPanel />
@@ -862,3 +827,227 @@ const StyledDetailsRowValue = styled(Text)`
     opacity: 0.5;
   }
 `;
+
+const quote = {
+  inToken: "0x55d398326f99059fF775485246999027B3197955",
+  outToken: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+  inAmount: "38849369874687187427",
+  outAmount: "66140519978621861",
+  user: "0x50015A452E644F5511fbeeac6B2aD2bf154E40E4",
+  slippage: 0.5,
+  qs: "",
+  partner: "playground",
+  exchange: "paraswap",
+  sessionId: "680c1afc_56",
+  serializedOrder:
+    "0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000066c6ed540000000000000000000000000000000000000000000000000000000066c6ed77000000000000000000000000120971cac17b63ffdadf862724925914b025a9e6000000000000000000000000000000000000000000000000000000000000000000000000000000000000000055d398326f99059ff775485246999027b31979550000000000000000000000000000000000000000000000021b24b011787dd9e30000000000000000000000000000000000000000000000021b24b011787dd9e30000000000000000000000000000000000000000000000000000000000000200000000000000000000000000e9e78109c89162cef32bfe7cbcee1f31312fc1f600000000000000000000000050015a452e644f5511fbeeac6b2ad2bf154e40e40000000000000000000000000000000000000000000000000000000066c6ed4a0000000000000000000000000000000000000000000000000000000066c6edfe000000000000000000000000120971cac17b63ffdadf862724925914b025a9e600000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000bb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c000000000000000000000000000000000000000000000000000466dd2ae07000000000000000000000000000000000000000000000000000000466dd2ae07000000000000000000000000000b1baf397b3946a81c7f5c54807474ecf194dc446000000000000000000000000bb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c00000000000000000000000000000000000000000000000000e8928f535ac79600000000000000000000000000000000000000000000000000e8928f535ac79600000000000000000000000050015a452e644f5511fbeeac6b2ad2bf154e40e4",
+  permitData: {
+    domain: {
+      name: "Permit2",
+      chainId: "56",
+      verifyingContract: "0x000000000022d473030f116ddee9f6b43ac78ba3",
+    },
+    types: {
+      PermitWitnessTransferFrom: [
+        {
+          name: "permitted",
+          type: "TokenPermissions",
+        },
+        {
+          name: "spender",
+          type: "address",
+        },
+        {
+          name: "nonce",
+          type: "uint256",
+        },
+        {
+          name: "deadline",
+          type: "uint256",
+        },
+        {
+          name: "witness",
+          type: "ExclusiveDutchOrder",
+        },
+      ],
+      TokenPermissions: [
+        {
+          name: "token",
+          type: "address",
+        },
+        {
+          name: "amount",
+          type: "uint256",
+        },
+      ],
+      ExclusiveDutchOrder: [
+        {
+          name: "info",
+          type: "OrderInfo",
+        },
+        {
+          name: "decayStartTime",
+          type: "uint256",
+        },
+        {
+          name: "decayEndTime",
+          type: "uint256",
+        },
+        {
+          name: "exclusiveFiller",
+          type: "address",
+        },
+        {
+          name: "exclusivityOverrideBps",
+          type: "uint256",
+        },
+        {
+          name: "inputToken",
+          type: "address",
+        },
+        {
+          name: "inputStartAmount",
+          type: "uint256",
+        },
+        {
+          name: "inputEndAmount",
+          type: "uint256",
+        },
+        {
+          name: "outputs",
+          type: "DutchOutput[]",
+        },
+      ],
+      OrderInfo: [
+        {
+          name: "reactor",
+          type: "address",
+        },
+        {
+          name: "swapper",
+          type: "address",
+        },
+        {
+          name: "nonce",
+          type: "uint256",
+        },
+        {
+          name: "deadline",
+          type: "uint256",
+        },
+        {
+          name: "additionalValidationContract",
+          type: "address",
+        },
+        {
+          name: "additionalValidationData",
+          type: "bytes",
+        },
+      ],
+      DutchOutput: [
+        {
+          name: "token",
+          type: "address",
+        },
+        {
+          name: "startAmount",
+          type: "uint256",
+        },
+        {
+          name: "endAmount",
+          type: "uint256",
+        },
+        {
+          name: "recipient",
+          type: "address",
+        },
+      ],
+    },
+    values: {
+      permitted: {
+        token: "0x55d398326f99059fF775485246999027B3197955",
+        amount: {
+          type: "BigNumber",
+          hex: "0x021b24b011787dd9e3",
+        },
+      },
+      spender: "0xe9E78109c89162cEF32Bfe7cBCEe1f31312fc1F6",
+      nonce: {
+        type: "BigNumber",
+        hex: "0x66c6ed4a",
+      },
+      deadline: 1724313086,
+      witness: {
+        info: {
+          reactor: "0xe9E78109c89162cEF32Bfe7cBCEe1f31312fc1F6",
+          swapper: "0x50015A452E644F5511fbeeac6B2aD2bf154E40E4",
+          nonce: {
+            type: "BigNumber",
+            hex: "0x66c6ed4a",
+          },
+          deadline: 1724313086,
+          additionalValidationContract:
+            "0x120971cAc17B63FFdaDf862724925914b025A9E6",
+          additionalValidationData: "0x",
+        },
+        decayStartTime: 1724312916,
+        decayEndTime: 1724312951,
+        exclusiveFiller: "0x120971cAc17B63FFdaDf862724925914b025A9E6",
+        exclusivityOverrideBps: {
+          type: "BigNumber",
+          hex: "0x00",
+        },
+        inputToken: "0x55d398326f99059fF775485246999027B3197955",
+        inputStartAmount: {
+          type: "BigNumber",
+          hex: "0x021b24b011787dd9e3",
+        },
+        inputEndAmount: {
+          type: "BigNumber",
+          hex: "0x021b24b011787dd9e3",
+        },
+        outputs: [
+          {
+            token: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+            startAmount: {
+              type: "BigNumber",
+              hex: "0x0466dd2ae07000",
+            },
+            endAmount: {
+              type: "BigNumber",
+              hex: "0x0466dd2ae07000",
+            },
+            recipient: "0xb1BaF397B3946a81c7f5C54807474ECF194dc446",
+          },
+          {
+            token: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+            startAmount: {
+              type: "BigNumber",
+              hex: "0xe8928f535ac796",
+            },
+            endAmount: {
+              type: "BigNumber",
+              hex: "0xe8928f535ac796",
+            },
+            recipient: "0x50015A452E644F5511fbeeac6B2aD2bf154E40E4",
+          },
+        ],
+      },
+    },
+  },
+  minAmountOut: "66140519978621861",
+  amountOutUI: "-1",
+  inTokenUsd: 1,
+  outTokenUsd: 572.83,
+  gasAmountOut: "1239000000000000",
+} as QuoteResponse;
+const txHash =
+  "0xf47ff7feefa542b86d5d39d026daecaec5795ab7a0392b55cad41df70906377c";
+
+const testFN = async () => {
+  try {
+    const res = await getTxDetailsFromApi(txHash, 56, quote);
+
+    console.log({ res });
+  } catch (error) {}
+};
