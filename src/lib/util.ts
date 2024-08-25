@@ -50,7 +50,7 @@ export const getTxDetailsFromApi = async (
   quote?: QuoteResponse
 ): Promise<TxDetailsFromApi | undefined> => {
   const apiUrl = getChainConfig(chainId)?.apiUrl;
-  for (let i = 0; i < 30; ++i) {
+  for (let i = 0; i < 60; ++i) {
     // due to swap being fetch and not web3
 
     await delay(3_000); // to avoid potential rate limiting from public rpc

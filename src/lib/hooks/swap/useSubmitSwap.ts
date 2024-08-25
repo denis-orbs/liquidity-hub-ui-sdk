@@ -1,4 +1,3 @@
-import { swapAnalytics } from "../../analytics";
 import { useChainConfig } from "../useChainConfig";
 import {
   amountUi,
@@ -104,8 +103,6 @@ export const useSubmitSwap = ({
 
       let inTokenAddress = isNativeIn ? zeroAddress : fromToken.address;
       const outTokenAddress = isNativeOut ? zeroAddress : toToken.address;
-      Logger({ inTokenAddress, outTokenAddress });
-      Logger({ quote });
       updateState({ swapStatus: "loading" });
       if (isNativeIn) {
         updateState({ currentStep: STEPS.WRAP });
@@ -124,7 +121,6 @@ export const useSubmitSwap = ({
         updateState({ isWrapped: true });
       }
       if (!hasAllowance) {
-        Logger("Approval required");
         updateState({ currentStep: STEPS.APPROVE });
         await approve({
           account,
@@ -136,10 +132,7 @@ export const useSubmitSwap = ({
             updateState({ approveTxHash });
           },
         });
-      } else {
-        swapAnalytics.onApprovedBeforeTheTrade();
       }
-      Logger("Signing...");
       updateState({ currentStep: STEPS.SEND_TX });
       const signature = await sign({
         account,
@@ -148,7 +141,6 @@ export const useSubmitSwap = ({
         permitData: quote.permitData,
       });
       updateState({ isSigned: true });
-      Logger(signature);
 
       swapX({
         signature,
@@ -166,11 +158,9 @@ export const useSubmitSwap = ({
       if (!txHash) {
         throw new Error("Swap failed");
       }
-      Logger(txHash);
       updateState({ txHash });
 
-
-       let receipt = '';
+      let receipt = "";
       let txDataFromApi: TxDetailsFromApi | undefined;
       try {
         if (getReceipt) {
@@ -180,11 +170,10 @@ export const useSubmitSwap = ({
           }
           receipt = result.receipt;
         } else {
-           txDataFromApi = await getTxDetailsFromApi(txHash, chainId, quote);
+          txDataFromApi = await getTxDetailsFromApi(txHash, chainId, quote);
         }
       } catch (error) {}
 
-      swapAnalytics.onClobOnChainSwapSuccess();
       updateState({ swapStatus: "success", failures: 0, sessionId: undefined });
 
       addOrder({
@@ -196,21 +185,17 @@ export const useSubmitSwap = ({
         explorerLink: `${explorerUrl}/tx/${txHash}`,
       });
 
-      Logger("Swap success");
-      swapAnalytics.clearState();
-
-      return  {
+      return {
         txHash,
-        exactOutAmount: txDataFromApi?.exactOutAmount,
+        exactOutAmount: BN(txDataFromApi?.exactOutAmount || 0).gt(0)
+          ? txDataFromApi?.exactOutAmount
+          : undefined,
         gasCharges: txDataFromApi?.gasCharges,
         receipt,
-      }
+      };
     },
     onSettled: () => refetchAllowance(),
     onError: (error) => {
-      swapAnalytics.onClobFailure();
-      // if user rejects the tx, we get back to confirmation step
-
       if (isTxRejected(error)) {
         updateState({ swapStatus: undefined, currentStep: undefined });
         throw error;
@@ -222,7 +207,6 @@ export const useSubmitSwap = ({
         currentStep: undefined,
         failures: isNativeBalanceError(error) ? 0 : (failures || 0) + 1,
       });
-      swapAnalytics.clearState();
     },
   });
 };

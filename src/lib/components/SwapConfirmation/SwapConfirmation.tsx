@@ -50,7 +50,6 @@ const Main = ({ SubmitButton }: { SubmitButton: ReactNode }) => {
           {!swapStatus && SubmitButton}
         </FlexColumn>
       )}
-       <PoweredBy style={{ marginTop: 30 }} />
     </Fragment>
   );
 };
