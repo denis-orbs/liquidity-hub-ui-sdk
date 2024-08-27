@@ -12,6 +12,7 @@ interface Args {
   account: string;
   chainId: number;
   apiUrl: string;
+  dexTx?: any;
 }
 
 export const swapX = async (args: Args) => {
@@ -23,7 +24,7 @@ export const swapX = async (args: Args) => {
     if (!args.quote) {
       throw new Error("Missing quote");
     }
-    const response = await fetch(`${apiUrl}/swapx?chainId=${chainId}`, {
+    const response = await fetch(`${apiUrl}/swap-async?chainId=${chainId}`, {
       method: "POST",
       body: JSON.stringify({
         ...args.quote,
@@ -32,6 +33,7 @@ export const swapX = async (args: Args) => {
         inAmount: args.fromAmount,
         user: account,
         signature: args.signature,
+        dexTx: args.dexTx,
       }),
     });
     const swap = await response.json();
@@ -61,7 +63,8 @@ export const swapCallback = async (
   quote: Quote,
   signature: string,
   account: string,
-  chainId: number
+  chainId: number,
+  dexTx?: any
 ) => {
   const chainConfig = getChainConfig(chainId);
 
@@ -88,6 +91,7 @@ export const swapCallback = async (
     account,
     chainId,
     apiUrl,
+    dexTx
   })
     .then()
     .catch(() => {});

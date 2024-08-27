@@ -102,7 +102,7 @@ export const fetchQuote = async ({
       throw new Error(quote.error);
     }
     swapAnalytics.onQuoteSuccess(count(), quote, analyticsArgs);
-    return quote;
+    return quote as Quote;
   } catch (error: any) {
     swapAnalytics.onQuoteFailed(error.message, count());
     throw new Error(error.message);
