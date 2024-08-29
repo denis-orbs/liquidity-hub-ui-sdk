@@ -67,7 +67,7 @@ export const useWidgetSwapCallback = () => {
           SIGNATURE_TIMEOUT_MILLIS
         );
         onSwapStep(SwapStep.SWAP);
-        const txHash = await swapCallback(
+        const {txHash} = await swapCallback(
           fromToken,
           toToken,
           quote,

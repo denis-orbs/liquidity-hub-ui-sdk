@@ -158,6 +158,9 @@ export interface SwapConfirmationArgs {
   txHash?: string;
   hasAllowance?: boolean;
   chainId?: number;
-  signatureTimeoutMillis?: number;
+  counters?: {
+    signature?: number;
+    swap?: number;
+  }
 }
 

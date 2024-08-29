@@ -92,6 +92,10 @@ export const SwapConfirmationModal = () => {
         swapStatus={swapStatus}
         swapStep={swapStep}
         hasAllowance={hasAllowance}
+        counters= {{
+          swap: 60_000,
+          signature: 30_000
+        }}
       >
         <StyledSubmitButton onClick={onClick} isLoading={false}>
           {swapButtonContent}

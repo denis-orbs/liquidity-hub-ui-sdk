@@ -30,6 +30,7 @@ type analyticsActionState = "pending" | "success" | "failed" | "null" | "";
 
 export interface AnalyticsData {
   moduleLoaded: boolean;
+  liquidityHubDisabled: boolean;
 
   _id: string;
   partner?: string;
@@ -109,4 +110,7 @@ export interface AnalyticsData {
   isOkxWallet?: boolean;
   isTrustWallet?: boolean;
   isMetaMask?: boolean;
+
+  exactOutAmount?: string;
+  gasCharges?: string;
 }

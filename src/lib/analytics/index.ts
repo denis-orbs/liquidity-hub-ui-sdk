@@ -3,7 +3,7 @@ import { Quote, Token } from "../type";
 import { amountUi, Logger } from "../util";
 
 import { AnalyticsData, InitTrade } from "./types";
-const ANALYTICS_VERSION = 0.6;
+const ANALYTICS_VERSION = 0.7;
 const BI_ENDPOINT = `https://bi.orbs.network/putes/liquidity-hub-ui-${ANALYTICS_VERSION}`;
 const DEX_PRICE_BETTER_ERROR = "Dex trade is better than Clob trade";
 
@@ -141,7 +141,15 @@ export class Analytics {
   timeout: any = undefined;
 
   constructor() {
-    this.updateAndSend({ moduleLoaded: true });
+    let liquidityHubDisabled = false;
+
+    try {
+      liquidityHubDisabled =
+        JSON.parse(localStorage.redux_localstorage_simple_user)
+          .userLiquidityHubDisabled
+    } catch (error) {}
+
+    this.updateAndSend({ moduleLoaded: true, liquidityHubDisabled: !!liquidityHubDisabled });
   }
 
   setPartner(partner: string) {
@@ -356,8 +364,12 @@ export class Analytics {
     }, 1_000);
   }
 
-  async onClobOnChainSwapSuccess() {
-    this.updateAndSend({ onChainClobSwapState: "success" });
+  async onClobOnChainSwapSuccess(exactOutAmount?: string, gasCharges?: string) {
+    this.updateAndSend({
+      onChainClobSwapState: "success",
+      exactOutAmount,
+      gasCharges,
+    });
   }
 
   onNotClobTrade(message: string) {

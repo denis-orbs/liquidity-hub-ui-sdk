@@ -9,7 +9,10 @@ export const useSwapSteps = (
   swapStep?: SwapStep,
   fromToken?: Token,
   hasAllowance?: boolean,
-  signatureTimeout?: number
+  counters?: {
+    signature?: number;
+    swap?: number;
+  }
 ) => {
   const _swapStep = swapStep || 0;
   const steps = useMemo(() => {
@@ -34,7 +37,7 @@ export const useSwapSteps = (
       title: _swapStep ===  SwapStep.SWAP ? "Swap pending..." : "Sign and Confirm swap",
       image: SwapImg,
       active: _swapStep >= SwapStep.SIGN,
-      timeout: _swapStep === SwapStep.SIGN ? signatureTimeout : undefined,
+      timeout: _swapStep === SwapStep.SIGN ? counters?.signature : _swapStep === SwapStep.SWAP ? counters?.swap : undefined,
     };
 
     const steps = [sendTx];
@@ -52,7 +55,7 @@ export const useSwapSteps = (
     fromToken?.address,
     fromToken?.symbol,
     hasAllowance,
-    signatureTimeout,
+    counters,
   ]);
 
   return hasAllowance === undefined ? undefined : steps;

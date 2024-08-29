@@ -56,7 +56,6 @@ export const useCountdown = (initialSeconds: number) => {
   };
 
   const reset = () => {
-    setIsRunning(false);
     setSecondsLeft(initialSeconds);
     clearInterval(intervalRef.current);
   };

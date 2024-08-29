@@ -1,7 +1,12 @@
 import { isNativeAddress, zeroAddress } from "@defi.org/web3-candies";
 import { swapAnalytics } from "../../analytics";
 import { Quote, Token } from "../../type";
-import { counter, delay, getChainConfig } from "../../util";
+import {
+  counter,
+  delay,
+  getChainConfig,
+  getTxDetailsFromApi,
+} from "../../util";
 
 interface Args {
   signature: string;
@@ -46,15 +51,18 @@ export const swapX = async (args: Args) => {
     if (!swap.txHash) {
       throw new Error("Missing txHash");
     }
-
-    swapAnalytics.onSwapSuccess(swap.txHash, count());
-    
     return swap.txHash;
   } catch (error: any) {
     const msg = error.message.error || error.message;
     swapAnalytics.onSwapFailed(msg, count());
     throw new Error("Something went wrong");
   }
+};
+
+export type TxDetailsFromApi = {
+  status: string;
+  exactOutAmount: string;
+  gasCharges: string;
 };
 
 export const swapCallback = async (
@@ -91,7 +99,7 @@ export const swapCallback = async (
     account,
     chainId,
     apiUrl,
-    dexTx
+    dexTx,
   })
     .then()
     .catch(() => {});
@@ -102,10 +110,22 @@ export const swapCallback = async (
       user: account,
       chainId,
     });
+
+
     if (!txHash) {
       throw new Error("Swap failed");
     }
-    return txHash;
+    swapAnalytics.onSwapSuccess(txHash, count());
+
+    let txDataFromApi: TxDetailsFromApi | undefined;
+    try {
+      txDataFromApi = await getTxDetailsFromApi(txHash, chainId, quote);
+    } catch (error) {}
+    swapAnalytics.onClobOnChainSwapSuccess(txDataFromApi?.exactOutAmount, txDataFromApi?.gasCharges);
+    return {
+      txHash,
+      ...(txDataFromApi || {})
+    };
   } catch (error) {
     swapAnalytics.onSwapFailed((error as any).message, count());
     throw error;

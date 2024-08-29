@@ -17,7 +17,6 @@ export const useSwapSuccessCallback = () => {
       toToken: Token,
       chainId: number
     ) => {
-      swapAnalytics.onClobOnChainSwapSuccess();
       addOrder({ quote, txHash, fromToken, toToken, chainId });
       swapAnalytics.clearState();
       queryClient.refetchQueries({
