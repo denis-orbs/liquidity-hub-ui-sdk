@@ -4,7 +4,6 @@ import styled from "styled-components";
 import { Logo } from "../../Logo";
 import { Text } from "../../Text";
 import { Separator } from "../Components";
-import SuccessImg from "../../../assets/okay.png";
 import { ExplorerLink } from "../../ExplorerLink";
 import { useSwapConfirmationContext } from "../context";
 import { FlexColumn, FlexRow } from "../../../base-styles";
@@ -15,7 +14,6 @@ export const SwapSuccess = () => {
   return (
     <StyledSuccess className="lh-success">
       <StyledTop>
-        <StyledImg src={SuccessImg} />
         <TopText>
           Successfully Swapped <br /> Using{" "}
           <a href="https://www.orbs.com/liquidity-hub/" target="_blank">
@@ -34,10 +32,10 @@ export const SwapSuccess = () => {
   );
 };
 
-const StyledImg = styled.img`
-  width: 63px;
-  height: 63px;
-`;
+// const StyledImg = styled.img`
+//   width: 63px;
+//   height: 63px;
+// `;
 
 const StyledTop = styled(FlexColumn)`
   gap: 20px;
@@ -50,9 +48,7 @@ const TopText = styled(Text)`
   font-size: 16px;
   text-align: center;
   a {
-    color: #d284cf;
     text-decoration: none;
-    border-bottom: 1px solid #d284cf;
   }
 `;
 

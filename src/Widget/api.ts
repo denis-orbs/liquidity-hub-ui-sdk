@@ -88,6 +88,7 @@ const getTokens = async (chainId: number): Promise<Token[]> => {
     return index >= 0 ? index : Number.MAX_SAFE_INTEGER;
   });
 
+
   return [native, ...sorted].map((token: any) => {
     return {
       address: token.address,

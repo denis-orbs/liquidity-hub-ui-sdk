@@ -19,6 +19,14 @@ export const amountUi = (decimals?: number, amount?: BN | string) => {
   return BN(amount).times(percision).idiv(percision).div(percision).toString();
 };
 
+
+export const amountUiV2 = (decimals?: number, amount?: string) => {
+  if (!amount) return "";
+  const percision = new BN(10).pow(decimals || 0);
+  return BN(amount).times(percision).idiv(percision).div(percision).toString();
+};
+
+
 export function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
