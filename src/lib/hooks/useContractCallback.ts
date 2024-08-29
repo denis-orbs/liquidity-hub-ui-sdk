@@ -1,24 +1,20 @@
-import { useCallback, useMemo } from "react";
-import { useMainContext } from "../provider";
-import { useChainConfig } from "./useChainConfig";
-import { getContract } from "../util";
+import { useMemo } from "react";
+import { getContract, getWethContract } from "../util";
 
-export const useContractCallback = () => {
-  const { web3, chainId } = useMainContext();
+import Web3 from "web3";
 
-  return useCallback(
-    (address?: string) => {
-      return getContract(address, web3, chainId);
-    },
-    [web3, chainId]
-  );
-};
-
-export const useContract = (address?: string) => {
-  const { web3, chainId } = useMainContext();
-  const wethAddress = useChainConfig()?.wToken?.address;
-
+export const useContract = (
+  address?: string,
+  web3?: Web3,
+  chainId?: number
+) => {
   return useMemo(() => {
     return getContract(address, web3, chainId);
-  }, [web3, wethAddress, chainId, address]);
+  }, [web3, chainId, address]);
+};
+
+export const useWethContract = (web3?: Web3, chainId?: number) => {
+  return useMemo(() => {
+    return getWethContract(web3, chainId);
+  }, [web3, chainId]);
 };

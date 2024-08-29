@@ -2,12 +2,14 @@ import styled from "styled-components";
 const StyledSpinner = styled.div<{
   $size?: number;
   $borderWidth?: number;
+  $borderColor?: string;
+  $bottomBorderColor?: string;
 }>`
     width: ${({ $size }) => $size || 38}px;
     height: ${({ $size }) => $size || 38}px;
-    border: ${({ $borderWidth }) => $borderWidth || 4}px solid
-        ${({ theme }) => theme.colors.textMain || "black"};
-    border-bottom-color: transparent;
+    border:  ${({ $borderWidth }) => $borderWidth || 3}px   solid ${({ $borderColor }) => $borderColor || "white"};
+    border-bottom-color: ${({ $bottomBorderColor }) =>
+      $bottomBorderColor || "rgba(255, 255, 255, 0.2)"};
     border-radius: 50%;
     display: inline-block;
     box-sizing: border-box;

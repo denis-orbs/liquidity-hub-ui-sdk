@@ -2,6 +2,9 @@ import {
   LH_CONTROL,
   Order,
   Orders,
+  Quote,
+  SwapStatus,
+  SwapStep,
 } from "../type";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -11,27 +14,18 @@ interface LHControlStore {
   setDebug: (value: boolean) => void;
   lhControl?: LH_CONTROL;
   setLHControl: (lhControl?: LH_CONTROL) => void;
-  liquidityHubEnabled: boolean;
-  updateLiquidityHubEnabled: () => void;
   orders: Orders;
   setOrders: (orders: Orders) => void;
-  password?: string;
-  setPassword: (password: string) => void;
   setForce: () => void;
 }
 export const useLiquidityHubPersistedStore = create(
   persist<LHControlStore>(
-    (set, get) => ({
+    (set) => ({
       debug: false,
       setDebug: (value) => set({ debug: value }),
-      password: undefined,
-      setPassword: (password) => set({ password }),
       lhControl: undefined,
       setLHControl: (lhControl) => set({ lhControl }),
-      liquidityHubEnabled: true,
       setForce: () => set({ lhControl: LH_CONTROL.FORCE }),
-      updateLiquidityHubEnabled: () =>
-        set({ liquidityHubEnabled: !get().liquidityHubEnabled }),
       orders: {},
       setOrders: (orders) => set({ orders }),
     }),
@@ -46,20 +40,41 @@ interface OrdersStore {
   addOrder: (address: string, chain: number, order: Order) => void;
 }
 
-export const useOrdersStore = create<OrdersStore>((set) => ({
-  orders: useLiquidityHubPersistedStore.getState().orders,
-  addOrder: (address, chain, order) => {
-    set((s) => {
-      const orders = s.orders;
-      if (!orders[address]) {
-        orders[address] = {};
-      }
-      if (!orders[address][chain]) {
-        orders[address][chain] = [];
-      }
-      orders[address][chain].unshift(order);
-      useLiquidityHubPersistedStore.getState().setOrders(orders);
-      return { orders };
-    });
-  },
+export const useOrdersStore = create(
+  persist<OrdersStore>(
+    (set) => ({
+      orders: useLiquidityHubPersistedStore.getState().orders,
+      addOrder: (address, chain, order) => {
+        set((s) => {
+          const orders = s.orders;
+          if (!orders[address]) {
+            orders[address] = {};
+          }
+          if (!orders[address][chain]) {
+            orders[address][chain] = [];
+          }
+          orders[address][chain].unshift(order);
+          useLiquidityHubPersistedStore.getState().setOrders(orders);
+          return { orders };
+        });
+      },
+    }),
+    {
+      name: "liquidity-hub-orders",
+    }
+  )
+);
+
+
+interface SwapStore {
+  swapStep?: SwapStep;
+  swapStatus?: SwapStatus;
+  acceptedQuote?: Quote;
+  isWrappedNativeToken?: boolean;
+  txHash?: string;
+  updateState: (args: Partial<SwapStore>) => void;
+}
+
+export const useSwapStore = create<SwapStore>((set) => ({
+  updateState: (args) => set({ ...args }),
 }));

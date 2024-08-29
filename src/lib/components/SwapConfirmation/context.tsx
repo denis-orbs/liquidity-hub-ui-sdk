@@ -8,11 +8,8 @@ interface Props extends SwapConfirmationArgs {
 const SwapConfirmationContext = createContext({} as SwapConfirmationArgs);
 
 export function SwapConfirmationProvider({ children, ...rest }: Props) {
-
   return (
-    <SwapConfirmationContext.Provider
-      value={rest}
-    >
+    <SwapConfirmationContext.Provider value={rest}>
       {children}
     </SwapConfirmationContext.Provider>
   );

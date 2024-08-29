@@ -1,64 +1,152 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMainContext } from "../../provider";
-import { QUERY_KEYS, QUOTE_REFETCH_THROTTLE } from "../../config/consts";
-import { useApiUrl } from "./useApiUrl";
-import BN from "bignumber.js";
-import _ from "lodash";
-import { useChainConfig } from "..";
-import { quote } from "../../swap/quote";
 import {
-  ActionStatus,
-  Token,
-  UseLiquidityHubState,
-  UseQueryData,
-} from "../../type";
+  QUERY_KEYS,
+  QUOTE_TIMEOUT,
+  QUOTE_REFETCH_INTERVAL,
+} from "../../config/consts";
+import _ from "lodash";
+import { Quote, Token } from "../../type";
+import {
+  counter,
+  getChainConfig,
+  Logger,
+  promiseWithTimeout,
+  safeBN,
+} from "../../util";
+import { isNativeAddress } from "@defi.org/web3-candies";
+import { zeroAddress } from "viem";
+import { swapAnalytics } from "../../analytics";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import BN from "bignumber.js";
 import { useWrapOrUnwrapOnly } from "../hooks";
 
-export const useQuote = ({
+export const fetchQuote = async ({
   fromToken,
   toToken,
   fromAmount,
-  dexMinAmountOut,
-  swapStatus,
-  showConfirmation,
+  minAmountOut,
+  account,
+  partner,
+  slippage,
+  signal,
+  chainId,
+  sessionId
+}: {
+  fromToken: Token;
+  toToken: Token;
+  fromAmount: string;
+  minAmountOut?: string;
+  account?: string;
+  partner: string;
+  slippage: number;
+  signal?: AbortSignal;
+  chainId: number;
+  sessionId?: string;
+}) => {
+  const chainConfig = getChainConfig(chainId);
+
+  if (!chainConfig) {
+    throw new Error("Chain config not found");
+  }
+  const { wToken, apiUrl } = chainConfig;
+
+  const analyticsArgs = {
+    fromToken,
+    toToken,
+    wTokenAddress: wToken.address,
+    fromAmount,
+    apiUrl,
+    dexMinAmountOut: minAmountOut,
+    account,
+    partner,
+    sessionId,
+    slippage,
+    chainId,
+  };
+
+  swapAnalytics.onQuoteRequest(analyticsArgs);
+  const count = counter();
+
+  try {
+    const response = await promiseWithTimeout(
+      fetch(`${apiUrl}/quote?chainId=${chainId}`, {
+        method: "POST",
+        body: JSON.stringify({
+          inToken: isNativeAddress(fromToken?.address || "")
+            ? wToken.address
+            : fromToken?.address,
+          outToken: isNativeAddress(toToken?.address || "")
+            ? zeroAddress
+            : toToken?.address,
+          inAmount: safeBN(fromAmount),
+          outAmount: _.isUndefined(minAmountOut) ? "-1" : minAmountOut,
+          user: account || zeroAddress,
+          slippage,
+          qs: encodeURIComponent(
+            window.location.hash || window.location.search
+          ),
+          partner: partner.toLowerCase(),
+          sessionId,
+        }),
+        signal,
+      }),
+      QUOTE_TIMEOUT
+    );
+    Logger("calling quote api");
+    const quote = await response.json();
+
+    if (!quote) {
+      throw new Error("No result");
+    }
+
+    if (quote.error) {
+      throw new Error(quote.error);
+    }
+    swapAnalytics.onQuoteSuccess(count(), quote, analyticsArgs);
+    return quote as Quote;
+  } catch (error: any) {
+    swapAnalytics.onQuoteFailed(error.message, count());
+    throw new Error(error.message);
+  }
+};
+
+export const useQuoteQuery = ({
+  chainId,
+  fromToken,
+  toToken,
+  fromAmount,
   disabled,
   slippage,
-  sessionId,
-  updateState,
+  minAmountOut: dexMinAmountOut,
+  refetchInterval = QUOTE_REFETCH_INTERVAL,
+  account,
+  partner,
 }: {
   fromToken?: Token;
   toToken?: Token;
   fromAmount?: string;
-  dexMinAmountOut?: string;
-  swapStatus?: ActionStatus;
-  showConfirmation?: boolean;
+  minAmountOut?: string;
   disabled?: boolean;
   slippage: number;
-  updateState: (value: Partial<UseLiquidityHubState>) => void;
-  sessionId?: string;
+  chainId?: number;
+  refetchInterval?: number;
+  account?: string;
+  partner: string;
 }) => {
-  const context = useMainContext();
-  const apiUrl = useApiUrl();
-  const chainId = context.chainId;
-  const wTokenAddress = useChainConfig()?.wToken?.address;
-  const pause = showConfirmation && context.quote?.pauseOnConfirmation;
-  const fetchLimit = context.quote?.fetchLimit!;
-  const {isUnwrapOnly, isWrapOnly} = useWrapOrUnwrapOnly(fromToken?.address, toToken?.address)
+  const queryClient = useQueryClient()
+  const { isUnwrapOnly, isWrapOnly } = useWrapOrUnwrapOnly(
+    fromToken?.address,
+    toToken?.address
+  );
 
   const enabled =
     !!chainId &&
-    !!wTokenAddress &&
-    !!context.partner &&
     !!fromToken &&
     !!toToken &&
     BN(fromAmount || "0").gt(0) &&
-    !!apiUrl &&
+    !!partner &&
     !disabled &&
-    swapStatus !== "loading" &&
-    !pause &&
     !isUnwrapOnly &&
     !isWrapOnly;
-
 
   const queryKey = [
     QUERY_KEYS.QUOTE,
@@ -66,66 +154,30 @@ export const useQuote = ({
     toToken?.address,
     fromAmount,
     slippage,
-    apiUrl,
+    partner,
     chainId,
   ];
-  const queryClient = useQueryClient();
 
   return useQuery({
     queryKey,
     queryFn: async ({ signal }) => {
-      const quoteResponse = await quote({
+      const sessionId = (queryClient.getQueryData(queryKey) as Quote | undefined)?.sessionId;
+      
+      const quote = await fetchQuote({
         fromToken: fromToken!,
         toToken: toToken!,
-        wTokenAddress: wTokenAddress!,
         fromAmount: fromAmount!,
-        apiUrl: apiUrl!,
-        dexMinAmountOut,
-        account: context.account,
-        partner: context.partner,
-        sessionId,
+        minAmountOut: dexMinAmountOut,
+        account: account,
+        partner,
         slippage,
         signal,
-        quoteInterval: context.quote?.refetchInterval,
         chainId: chainId!,
+        sessionId
       });
-
-      if (quoteResponse.sessionId) {
-        updateState({ sessionId: quoteResponse.sessionId });
-      }
-
-      const refetchCount = showConfirmation
-        ? 0
-        : ((queryClient.getQueryData(queryKey) as UseQueryData)?.refetchCount ||
-            0) + 1;
-
-      return {
-        quote: quoteResponse,
-        refetchCount,
-        isPassedLimit: refetchCount > fetchLimit,
-        resetCount: () =>
-          queryClient.setQueryData(queryKey, (data: UseQueryData) => {
-            if (!data) return data;
-            return {
-              ...data,
-              refetchCount: 0,
-            };
-          }),
-      };
+      return quote;
     },
-    refetchInterval: ({ state: { data } }) => {
-      if (data?.quote.disableRefetch) {
-        return false;
-      }
-      if (showConfirmation) {
-        return context.quote?.refetchInterval;
-      }
-
-      if (data?.refetchCount && data?.refetchCount > fetchLimit) {
-        return QUOTE_REFETCH_THROTTLE;
-      }
-      return context.quote?.refetchInterval;
-    },
+    refetchInterval,
     staleTime: Infinity,
     enabled,
     gcTime: 0,

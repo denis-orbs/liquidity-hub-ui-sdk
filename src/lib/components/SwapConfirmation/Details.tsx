@@ -12,27 +12,22 @@ const StyledSwapDetails = styled(FlexColumn)`
 `;
 
 export function SwapDetails() {
-  const {
-    fromTokenUsd,
-    toTokenUsd,
-    fromToken,
-    toToken,
-    ui,
-    outAmount
-  } = useSwapConfirmationContext();
+  const { fromUsd, toUsd, outAmount, inAmount, fromToken, toToken } =
+    useSwapConfirmationContext();
+
 
   return (
     <StyledSwapDetails className="lh-details">
       <TokenDisplay
         title="Swap from"
-        usd={fromTokenUsd}
+        usd={fromUsd}
         token={fromToken}
-        amount={ui.fromAmount}
+        amount={inAmount}
       />
       <Separator />
       <TokenDisplay
         title="Swap to"
-        usd={toTokenUsd}
+        usd={toUsd}
         token={toToken}
         amount={outAmount}
       />
@@ -65,9 +60,7 @@ const TokenDisplay = ({
       >
         <StyledLeft $alignItems="flex-start" className="lh-token-left">
           <TokenAmount className="lh-token-amount">{_amount}</TokenAmount>
-          <USD className="lh-token-usd">
-            {usd || "-"} 
-          </USD>
+          <USD className="lh-token-usd">{usd || "-"}</USD>
         </StyledLeft>
         <StyledLogoAndSymbol className="lh-token-right">
           <StyledLogo src={token.logoUrl} className="lh-token-logo" />
@@ -89,7 +82,6 @@ const StyledLogoAndSymbol = styled(FlexRow)``;
 
 const StyledSymbol = styled(Text)`
   font-size: 18px;
-  color: ${({ theme }) => theme.colors.textSecondary};
 `;
 
 const StyledLogo = styled(Logo)`
@@ -99,7 +91,6 @@ const StyledLogo = styled(Logo)`
 
 const USD = styled(Text)`
   font-size: 16px;
-  color: ${({ theme }) => theme.colors.textSmall};
 `;
 
 const TokenAmount = styled(Text)`
@@ -109,7 +100,6 @@ const TokenAmount = styled(Text)`
 
 const Title = styled(Text)`
   font-size: 16px;
-  color: ${({ theme }) => theme.colors.textSecondary};
 `;
 
 const StyledTokenDisplay = styled(FlexColumn)`

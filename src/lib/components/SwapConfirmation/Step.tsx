@@ -1,74 +1,105 @@
-import { useMemo } from "react";
 import styled from "styled-components";
 import { Check } from "react-feather";
-import { ActionStatus, Step } from "../../type";
+import { Step } from "../../type";
 import { FlexColumn, FlexRow } from "../../base-styles";
 import { Spinner } from "../Spinner";
 import _ from "lodash";
-import { useSwapConfirmationContext } from "./context";
+import { Text } from "../Text";
+import { useSignatureTimeout } from "../../hooks";
+import { SIGNATURE_TIMEOUT_MILLIS } from "../../config/consts";
 
 interface Props {
   step: Step;
-
+  component?: React.ReactNode;
 }
 
-export function StepComponent({ step}: Props) {
-  const {currentStep, swapStatus} = useSwapConfirmationContext();
-
-  const status = useMemo((): ActionStatus => {
-    if (_.isUndefined(currentStep)) return;
-    if (step.id < currentStep) {
-      return "success";
-    }
-    if (step.id > currentStep) {
-      return undefined;
-    }
-    return swapStatus;
-  }, [swapStatus, currentStep, step.id]);
-
-  const selected = step.id === currentStep;
+export function StepComponent({ step }: Props) {
   return (
     <StyledStep className="lh-step">
-      <Logo status={status} image={step.image} selected={selected} />
+      <Logo step={step} />
       <FlexColumn $gap={5}>
-        <StyledStepTitle $selected={selected} className="lh-step-title">
+        <StyledStepTitle
+          $selected={Boolean(step.active || step.completed)}
+          className="lh-step-title"
+        >
           {step.title}
         </StyledStepTitle>
-        {step.link && (
-          <StyledStepLink
-            className="lh-step-link"
-            href={step.link.href}
-            target="_blank"
-            $selected={selected}
-          >
-            {step.link.text}
-          </StyledStepLink>
-        )}
+        <StepLink step={step} />
       </FlexColumn>
-      {status === "success" && (
-        <StyledSuccess>
-          <Check size={20} />
-        </StyledSuccess>
-      )}
+      <StepStatus step={step} />
     </StyledStep>
   );
 }
 
-const Logo = ({
-  image,
-  selected,
-  status,
+const StepStatus = ({ step }: { step: Step }) => {
+  if (step.completed) {
+    return (
+      <StyledStatus>
+        <StyledSuccess>
+          <Check size={20} />
+        </StyledSuccess>
+      </StyledStatus>
+    );
+  }
+
+  if (!step.active) return null;
+
+  if (step.timeout) {
+    return (
+      <StyledStatus>
+        <SignatureDeadline timeout={step.timeout} />
+      </StyledStatus>
+    );
+  }
+
+  return null;
+};
+
+const SignatureDeadline = ({
+  timeout = SIGNATURE_TIMEOUT_MILLIS,
 }: {
-  image?: string;
-  selected: boolean;
-  status: ActionStatus;
+  timeout?: number;
 }) => {
+  const { minutes, seconds } = useSignatureTimeout(timeout);
+
   return (
-    <StyledStepLogo $selected={selected} className="lh-step-logo">
-      {status === "loading" ? (
+    <StyledDeadline className="lh-step-deadline">
+      {minutes}:{seconds}
+    </StyledDeadline>
+  );
+};
+
+const StyledDeadline = styled(Text)({
+  fontSize: 14,
+});
+
+const StepLink = ({ step }: { step: Step }) => {
+  if (!step.link) return null;
+
+  return (
+    <StyledStepLink
+      className="lh-step-link"
+      href={step.link.href}
+      target="_blank"
+      $selected={Boolean(step.active || step.completed)}
+    >
+      {step.link.text}
+    </StyledStepLink>
+  );
+};
+
+const StyledStatus = styled.div`
+  margin-left: auto;
+`;
+
+const Logo = ({ step }: { step?: Step }) => {
+  const selected = step?.active || step?.completed;
+  return (
+    <StyledStepLogo $selected={Boolean(selected)} className="lh-step-logo">
+      {step?.active ? (
         <StyledLoader size={28} className="lh-step-loader" />
       ) : (
-        <img src={image} />
+        <img src={step?.image} />
       )}
     </StyledStepLogo>
   );
@@ -106,14 +137,12 @@ const StyledStepLogo = styled.div<{ $selected: boolean }>`
   }
 `;
 
-const StyledStepTitle = styled.p<{ $selected: boolean }>`
+const StyledStepTitle = styled(Text)<{ $selected: boolean }>`
   opacity: ${({ $selected }) => ($selected ? 1 : 0.5)};
-  color: ${({ $selected, theme }) =>
-    $selected ? theme.colors.textMain : theme.colors.textSecondary};
-    a {
-      color: #da88de;
-      text-decoration: none;
-    }
+  a {
+    color: #da88de;
+    text-decoration: none;
+  }
 `;
 const StyledStepLink = styled("a")<{ $selected: boolean }>`
   color: #da88de;
@@ -123,8 +152,4 @@ const StyledStepLink = styled("a")<{ $selected: boolean }>`
 
 const StyledSuccess = styled.div`
   margin-left: auto;
-  color: ${({ theme }) => theme.colors.textMain};
-  * {
-    color: ${({ theme }) => theme.colors.textMain};
-  }
 `;

@@ -1,51 +1,13 @@
-import { ConnectButton, useConnectModal } from "@rainbow-me/rainbowkit";
-import { useCallback, useEffect, useState } from "react";
-import { useAccount } from "wagmi";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import styled from "styled-components";
-import { Widget } from "./lib/dex/Widget";
 import { RainbowProvider } from "./RainbowProvider";
 import _ from "lodash";
-import { Modal } from "./components/Modal";
-import { networks } from "./lib/config/networks";
-import Web3 from "web3";
+import { Widget } from "./Widget/Widget";
 
-export const useProvider = () => {
-  const { connector, address, isConnected } = useAccount();
-
-  const [provider, setProvider] = useState<any>(undefined);
-
-  const setProviderFromConnector = useCallback(async () => {
-    try {
-      const res = await connector?.getProvider();
-      setProvider(res);
-    } catch (error) {}
-  }, [setProvider, connector, isConnected]);
-
-  useEffect(() => {
-    setProviderFromConnector();
-  }, [address, setProviderFromConnector]);
-
-  return provider;
-};
 
 function Wrapped() {
-  const { address } = useAccount();
-  const provider = useProvider();
-  const connectedChainId =
-    provider?.chainId && Web3.utils.hexToNumber(provider.chainId);
-
-  const { openConnectModal } = useConnectModal();
   return (
-    <Widget
-      Modal={Modal}
-      connectWallet={openConnectModal}
-      provider={provider}
-      chainId={connectedChainId}
-      partner="playground"
-      account={address}
-      initialFromToken="USDT"
-      supportedChains={_.map(networks, (it) => it.id)}
-    />
+    <Widget initialFromToken="USDC" initialToToken="WBNB" slippage={0.5} />
   );
 }
 

@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { Spinner } from "./Spinner";
 export function Button({
   children,
-  className = "className",
+  className = "",
   onClick,
   isLoading,
   disabled,
@@ -30,10 +30,10 @@ const Container = styled.button<{ $bg?: string; $hoverBg?: string }>`
   font-size: 15px;
   font-weight: 600;
   min-height: 50px;
-  background: ${({ theme, $bg }) => $bg || theme.colors.primary};
-  color: ${(props) => props.theme.colors.textMain};
   border: none;
   cursor: pointer;
   border-radius: 10px;
   transition: all 0.3s;
+  background: rgb(252, 114, 255);
+  color: white;
 `;

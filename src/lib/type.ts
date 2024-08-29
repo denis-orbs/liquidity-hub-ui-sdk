@@ -3,47 +3,7 @@ import {
   TypedDataDomain,
   TypedDataField,
 } from "@ethersproject/abstract-signer";
-import { CSSObject } from "styled-components";
 import { ReactNode } from "react";
-import { useLiquidityHub } from ".";
-
-export interface TokenPanelProps {
-  inputValue?: string;
-  onInputChange?: (value: string) => void;
-  token?: Token;
-  label?: string;
-  isSrc?: boolean;
-  onTokenSelect: (token: Token) => void;
-  usd?: string;
-  usdLoading?: boolean;
-}
-
-export type TokenListItemProps = {
-  token: Token;
-  selected?: boolean;
-  balance?: string;
-  balanceLoading?: boolean;
-};
-
-export interface WidgetConfig {
-  styles?: CSSObject;
-  layout?: WidgetLayout;
-}
-
-export interface WidgetLayout {
-  tokenPanel?: {
-    percentButtons?: { label: string; value: number }[];
-    headerOutside?: boolean;
-    inputSide?: "left" | "right";
-    usdSide?: "left" | "right";
-  };
-}
-
-export interface MainContextArgs {
-  getTokens?: (chainId?: number) => Promise<Token[]>;
-  getUsdPrice?: (address: string, chainId: number) => Promise<number>;
-  connectWallet?: () => void;
-}
 
 export interface Token {
   name?: string;
@@ -51,29 +11,6 @@ export interface Token {
   decimals: number;
   symbol: string;
   logoUrl?: string;
-}
-
-
-
-export interface ProviderArgs {
-  supportedChains?: number[];
-  provider?: any;
-  account?: string;
-  chainId?: number;
-  partner: string;
-  apiUrl?: string;
-  disableAnalytics?: boolean;
-  theme?: "dark" | "light";
-  connectWallet?: () => void;
-  getTokens?: (chainId: number) => Promise<Token[] | undefined>;
-  swap?: {
-    maxFailures?: number;
-  };
-  quote?: {
-    refetchInterval?: number;
-    fetchLimit?: number;
-    pauseOnConfirmation?: boolean;
-  };
 }
 
 export interface QuoteArgs {
@@ -112,7 +49,7 @@ export interface UseSwapCallback {
   fromAmount?: string;
 }
 
-export interface OriginalQuote {
+export interface Quote {
   inToken: string;
   outToken: string;
   inAmount: string;
@@ -126,38 +63,8 @@ export interface OriginalQuote {
   serializedOrder: string;
   permitData: PermitData;
   minAmountOut: string;
-  amountOutUI: string;
   error?: string;
   gasAmountOut?: string;
-}
-
-export interface UseLiquidityHubState {
-  showConfirmation: boolean;
-  swapStatus: ActionStatus | undefined;
-  currentStep: STEPS | undefined;
-  initialQuote: QuoteResponse | undefined;
-  swapError: string | undefined;
-  failures: number;
-  txHash: string | undefined;
-  isWrapped: boolean;
-  isSigned: boolean;
-  sessionId?: string;
-  approveTxHash?: string;
-  wrapTxHash?: string;
-  unwrapTxHash?: string;
-  quoteCount: number;
-}
-
-export interface QuoteResponse extends OriginalQuote {
-  disableRefetch?: boolean;
-  originalQuote?: OriginalQuote;
-}
-
-export interface UseQueryData {
-  quote: QuoteResponse | undefined;
-  refetchCount?: number;
-  resetCount?: () => void;
-  isPassedLimit?: boolean;
 }
 
 export enum LH_CONTROL {
@@ -166,53 +73,30 @@ export enum LH_CONTROL {
   RESET = "3",
 }
 
-export enum STEPS {
-  WRAP,
-  APPROVE,
-  SEND_TX,
+export enum SwapStep {
+  WRAP = 1,
+  APPROVE = 2,
+  SIGN = 3,
+  SWAP = 4,
 }
 
-export type ActionStatus = "loading" | "success" | "failed" | undefined;
+export enum SwapStatus {
+  LOADING = 1,
+  SUCCESS = 2,
+  FAILED = 3,
+}
 
 export interface Step {
   title: ReactNode;
   link?: { href: string; text: string };
   image?: string;
   hidden?: boolean;
-  id: STEPS;
+  id: SwapStep;
   txHash?: string;
+  completed?: boolean;
+  active?: boolean;
+  timeout?: number;
 }
-
-export type UseLiquidityHubArgs = {
-  fromToken?: Token;
-  toToken?: Token;
-  fromAmount?: string;
-  minAmountOut?: string;
-  slippage?: number;
-  disabled?: boolean;
-  debounceFromAmountMillis?: number;
-  quoteDelayMillis?: number;
-  outAmount?: string;
-  getReceipt?: boolean;
-};
-
-
-export type TxDetailsFromApi  ={
-  "status": string,
-  "exactOutAmount": string,
-  "gasCharges": string,
-}
-
-export type SwapRoute = "dex" | "lh";
-
-export type AddOrderArgs = {
-  fromToken: Token;
-  toToken: Token;
-  fromAmount: string;
-  toAmount: string;
-  txHash: string;
-  explorerLink: string;
-};
 
 export type Order = {
   id: string;
@@ -253,7 +137,7 @@ export interface Network {
 }
 
 export type Abi = AbiItem[];
-export type Balances = { [key: string]: string };
+
 
 export declare type PermitData = {
   domain: TypedDataDomain;
@@ -261,10 +145,22 @@ export declare type PermitData = {
   values: any;
 };
 
-export type LiquidityHubPayload = ReturnType<typeof useLiquidityHub>;
-
-export interface SwapConfirmationArgs extends LiquidityHubPayload {
-  fromTokenUsd?: string;
-  toTokenUsd?: string;
+export interface SwapConfirmationArgs {
+  fromUsd?: string;
+  toUsd?: string;
+  inAmount?: string;
   outAmount?: string;
+  fromToken?: Token;
+  toToken?: Token;
+  swapStep?: SwapStep;
+  swapStatus?: SwapStatus;
+  error?: string;
+  txHash?: string;
+  hasAllowance?: boolean;
+  chainId?: number;
+  counters?: {
+    signature?: number;
+    swap?: number;
+  }
 }
+

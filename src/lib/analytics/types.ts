@@ -29,6 +29,9 @@ export interface InitDexTrade extends InitTrade {
 type analyticsActionState = "pending" | "success" | "failed" | "null" | "";
 
 export interface AnalyticsData {
+  moduleLoaded: boolean;
+  liquidityHubDisabled: boolean;
+
   _id: string;
   partner?: string;
   chainId?: number;
@@ -94,6 +97,9 @@ export interface AnalyticsData {
   quoteAmountOutUI?: string;
   quoteAmountOutUsd?: number;
 
+  quoteMinAmountOut?: string;
+  quoteMinAmountOutUI?: string;
+
   quoteSerializedOrder?: string;
   quoteMillis?: number;
   quoteError?: string;
@@ -104,4 +110,7 @@ export interface AnalyticsData {
   isOkxWallet?: boolean;
   isTrustWallet?: boolean;
   isMetaMask?: boolean;
+
+  exactOutAmount?: string;
+  gasCharges?: string;
 }

@@ -1,93 +1,114 @@
 import styled, { CSSObject } from "styled-components";
-import { SwapConfirmationArgs } from "../..";
-import { ExplorerLink } from "../ExplorerLink";
 import {
   SwapConfirmationProvider,
   useSwapConfirmationContext,
 } from "./context";
 import { SwapDetails } from "./Details";
-import { StepsComponent } from "./Steps";
-import { SwapFailed } from "./SwapFailed";
-import { SwapSuccess } from "./SwapSuccess";
-import { PoweredBy } from "./PoweredBy";
-import { FlexColumn } from "../../base-styles";
+import { SwapConfirmationSteps } from "./SwapConfirmationSteps";
+import { FailedContent } from "./Content/FailedContent";
+import { FlexColumn, FlexRow } from "../../base-styles";
 import { Fragment, ReactNode } from "react";
+import { SuccessContent } from "./Content/SuccessContent";
+import { SkeletonLoader } from "../../../Widget/components/SkeletonLoader";
+import { SwapConfirmationArgs, SwapStatus } from "../../type";
+import { PoweredByOrbs } from "../PoweredByOrbs";
+import { useSwapConfirmationSteps } from "./useSwapConfirmationSteps";
 
 interface Props extends SwapConfirmationArgs {
   className?: string;
   style?: CSSObject;
-  children: React.ReactNode;
+  children?: ReactNode;
 }
 
 const SwapConfirmation = ({
   className = "",
-  style = {},
   children,
+  style = {},
   ...args
 }: Props) => {
   return (
     <SwapConfirmationProvider {...args}>
       <Container className={`${className} lh-summary`} $style={style}>
-        {children}
+        <SwapConfirmationContent>{children}</SwapConfirmationContent>
       </Container>
     </SwapConfirmationProvider>
   );
 };
 
-const Main = ({ SubmitButton }: { SubmitButton: ReactNode }) => {
+const SwapConfirmationContent = ({ children }: { children: ReactNode }) => {
   const { swapStatus } = useSwapConfirmationContext();
 
   return (
     <Fragment>
-      {swapStatus === "success" ? (
-        <SwapSuccess />
-      ) : swapStatus === "failed" ? (
-        <SwapFailed />
+      {swapStatus === SwapStatus.SUCCESS ? (
+        <SuccessContent />
+      ) : swapStatus === SwapStatus.FAILED ? (
+        <FailedContent />
       ) : (
-        <FlexColumn>
-          <SwapDetails />
-          <StepsComponent />
-          {!swapStatus && SubmitButton}
-        </FlexColumn>
+        <SwapMain>{children}</SwapMain>
       )}
     </Fragment>
   );
 };
 
-const SubmitButton = ({ children }: { children: ReactNode }) => {
-  const {swapStatus} = useSwapConfirmationContext();
-
-  if (swapStatus) return null;
-
-  return <>{children}</>;
-};
-
-const ExplorerLinkComponent = ({
-  className = "",
-  styles = {},
-}: {
-  className?: string;
-  styles?: CSSObject;
-}) => {
-  const { txHash } = useSwapConfirmationContext();
-
+const Loader = () => {
   return (
-    <ExplorerLink
-      className={className}
-      styles={styles}
-      txHash={txHash}
-    />
+    <StyledLoader>
+      <CircleLoader />
+      <RectengularLoader />
+    </StyledLoader>
   );
 };
 
-SwapConfirmation.Success = SwapSuccess;
-SwapConfirmation.Error = SwapFailed;
-SwapConfirmation.Details = SwapDetails;
-SwapConfirmation.Steps = StepsComponent;
-SwapConfirmation.ExplorerLink = ExplorerLinkComponent;
-SwapConfirmation.PoweredBy = PoweredBy;
-SwapConfirmation.SubmitButton = SubmitButton;
-SwapConfirmation.Main = Main;
+const CircleLoader = styled(SkeletonLoader)({
+  width: 30,
+  height: 30,
+  borderRadius: "50%",
+});
+const RectengularLoader = styled(SkeletonLoader)({
+  flex: 1,
+  height: 20,
+  borderRadius: 5,
+  maxWidth: 200,
+});
+
+const StyledLoader = styled(FlexRow)({
+  justifyContent: "flex-start",
+});
+
+const SwapMain = ({ children }: { children: ReactNode }) => {
+  const { swapStatus } = useSwapConfirmationContext();
+  const steps = useSwapConfirmationSteps();
+  
+  if (!steps) {
+    return <Loader />;
+  }
+
+  if (!swapStatus) {
+    return (
+      <FlexColumn>
+        <SwapDetails />
+        {children}
+        <StyledPoweredByOrbs />
+      </FlexColumn>
+    );
+  }
+
+  // if(steps.length === 1) {
+  //   return <SingleStepContent />
+  // }
+
+  return (
+    <FlexColumn>
+      <SwapDetails />
+      <SwapConfirmationSteps />
+    </FlexColumn>
+  );
+};
+
+const StyledPoweredByOrbs = styled(PoweredByOrbs)({
+  marginTop: 20,
+});
 
 const Container = styled.div<{ $style: CSSObject }>`
   width: 100%;

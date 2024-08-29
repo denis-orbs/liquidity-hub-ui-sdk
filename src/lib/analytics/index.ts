@@ -1,10 +1,9 @@
 import BN from "bignumber.js";
-import Web3 from "web3";
-import { OriginalQuote } from "../type";
-import { amountUi, Logger, waitForTxReceipt } from "../util";
+import { Quote, Token } from "../type";
+import { amountUi, Logger } from "../util";
 
-import { AnalyticsData, InitDexTrade, InitTrade } from "./types";
-const ANALYTICS_VERSION = 0.6;
+import { AnalyticsData, InitTrade } from "./types";
+const ANALYTICS_VERSION = 0.7;
 const BI_ENDPOINT = `https://bi.orbs.network/putes/liquidity-hub-ui-${ANALYTICS_VERSION}`;
 const DEX_PRICE_BETTER_ERROR = "Dex trade is better than Clob trade";
 
@@ -15,6 +14,21 @@ const initialData: Partial<AnalyticsData> = {
   isForceClob: false,
   isDexTrade: false,
   version: ANALYTICS_VERSION,
+};
+
+type QuoteArgs = {
+  fromToken: Token;
+  toToken: Token;
+  wTokenAddress: string;
+  fromAmount: string;
+  apiUrl: string;
+  dexMinAmountOut?: string;
+  account?: string;
+  partner: string;
+  sessionId?: string;
+  slippage: number;
+  quoteInterval?: number;
+  chainId: number;
 };
 
 const onWallet = (provider: any): Partial<AnalyticsData | undefined> => {
@@ -106,7 +120,7 @@ const initSwap = (args: InitTrade): Partial<AnalyticsData> | undefined => {
 
 const sendBI = async (data: Partial<AnalyticsData>) => {
   try {
-    Logger(data)
+    Logger(data);
     await fetch(BI_ENDPOINT, {
       method: "POST",
       headers: {
@@ -125,6 +139,19 @@ export class Analytics {
   data = {} as Partial<AnalyticsData>;
   firstFailureSessionId = "";
   timeout: any = undefined;
+
+  constructor() {
+    let liquidityHubDisabled = false;
+
+    try {
+      liquidityHubDisabled =
+        JSON.parse(localStorage.redux_localstorage_simple_user)
+          .userLiquidityHubDisabled
+    } catch (error) {}
+
+    this.updateAndSend({ moduleLoaded: true, liquidityHubDisabled: !!liquidityHubDisabled });
+  }
+
   setPartner(partner: string) {
     this.data.partner = partner;
   }
@@ -134,12 +161,6 @@ export class Analytics {
   }
 
   public async updateAndSend(values = {} as Partial<AnalyticsData>) {
-    const chainId = values.chainId || this.data.chainId;
-    const partner = values.partner || this.data.partner;
-    if (!chainId || !partner) {
-      console.error("Missng chain or partner");
-      return;
-    }
     this.data = {
       ...this.data,
       ...values,
@@ -156,31 +177,76 @@ export class Analytics {
     this.updateAndSend(result);
   }
 
-  onQuoteRequest() {
+  onQuoteRequest(args: QuoteArgs) {
+    const dexMinAmountOutUi = amountUi(
+      args.toToken.decimals,
+      args.dexMinAmountOut
+    );
+
+    const getDexOutAmountWS = () => {
+      const slippageAmount = !args.slippage
+        ? 0
+        : BN(args.dexMinAmountOut || "0").times(args.slippage / 100);
+      return BN(args.dexMinAmountOut || "0")
+        .plus(slippageAmount)
+        .toString();
+    };
+
+    const dexMinAmountOutWS = getDexOutAmountWS();
+    const dexMinAmountOutWSUi = amountUi(
+      args.toToken.decimals,
+      dexMinAmountOutWS
+    );
+
     this.data = {
       ...this.data,
       quoteState: "pending",
       quoteIndex: !this.data.quoteIndex ? 1 : this.data.quoteIndex + 1,
+      srcTokenAddress: args.fromToken.address,
+      srcTokenSymbol: args.fromToken.symbol,
+      dstTokenAddress: args.toToken.address,
+      dstTokenSymbol: args.toToken.symbol,
+      chainId: args.chainId,
+      slippage: args.slippage,
+      walletAddress: args.account,
+      dexAmountOut: args.dexMinAmountOut,
+      dexAmountOutUi: dexMinAmountOutUi,
+      dexOutAmountWS: dexMinAmountOutWS,
+      dexOutAmountWSUi: dexMinAmountOutWSUi,
+      srcAmount: args.fromAmount,
+      srcAmountUI: amountUi(args.fromToken.decimals, args.fromAmount),
     };
   }
 
-  onQuoteSuccess(quoteMillis: number, quoteResponse: OriginalQuote) {
+  onQuoteSuccess(quoteMillis: number, quote: Quote, args: QuoteArgs) {
+    const clobDexPriceDiffPercent = !args.dexMinAmountOut
+      ? "0"
+      : new BN(quote.minAmountOut || "0")
+          .dividedBy(new BN(args.dexMinAmountOut))
+          .minus(1)
+          .multipliedBy(100)
+          .toFixed(2);
+
     this.data = {
       ...this.data,
       quoteState: "success",
       quoteMillis,
       quoteError: undefined,
       isNotClobTradeReason: undefined,
-      quoteAmountOut: quoteResponse?.outAmount,
-      quoteSerializedOrder: quoteResponse?.serializedOrder,
+      quoteAmountOut: quote?.outAmount,
+      quoteAmountOutUI: amountUi(
+        args.toToken.decimals,
+        new BN(quote.outAmount || "0")
+      ),
+      quoteSerializedOrder: quote?.serializedOrder,
+      quoteMinAmountOut: quote?.minAmountOut,
+      quoteMinAmountOutUI: amountUi(args.toToken.decimals, quote.minAmountOut),
+      clobDexPriceDiffPercent,
+      sessionId: quote.sessionId,
     };
   }
 
-  onQuoteFailed(
-    error: string,
-    quoteMillis: number,
-    quoteResponse?: OriginalQuote
-  ) {
+  onQuoteFailed(error: string, quoteMillis: number) {
     // we not treat DEX_PRICE_BETTER_ERROR as a failure
     if (error == DEX_PRICE_BETTER_ERROR) {
       this.data = {
@@ -188,8 +254,6 @@ export class Analytics {
         isNotClobTradeReason: DEX_PRICE_BETTER_ERROR,
         quoteState: "success",
         quoteMillis,
-        quoteAmountOut: quoteResponse?.outAmount,
-        quoteSerializedOrder: quoteResponse?.serializedOrder,
       };
     } else {
       this.data = {
@@ -198,8 +262,6 @@ export class Analytics {
         quoteState: "failed",
         isNotClobTradeReason: `quote-failed`,
         quoteMillis,
-        quoteAmountOut: quoteResponse?.outAmount,
-        quoteSerializedOrder: quoteResponse?.serializedOrder,
       };
     }
   }
@@ -287,7 +349,6 @@ export class Analytics {
       swapError: error,
       swapState: "failed",
       swapMillis: time,
-  
     });
   }
 
@@ -303,8 +364,12 @@ export class Analytics {
     }, 1_000);
   }
 
-  async onClobOnChainSwapSuccess() {
-    this.updateAndSend({ onChainClobSwapState: "success" });
+  async onClobOnChainSwapSuccess(exactOutAmount?: string, gasCharges?: string) {
+    this.updateAndSend({
+      onChainClobSwapState: "success",
+      exactOutAmount,
+      gasCharges,
+    });
   }
 
   onNotClobTrade(message: string) {
@@ -316,44 +381,5 @@ export class Analytics {
       this.firstFailureSessionId || this.data.sessionId || "";
   }
 }
-
-const _analytics = new Analytics();
-
-function onDexSwapRequest() {
-  _analytics.updateAndSend({ dexSwapState: "pending", isDexTrade: true });
-}
-
-async function onDexSwapSuccess(web3: Web3, dexSwapTxHash?: string) {
-  _analytics.updateAndSend({
-    dexSwapState: "success",
-    dexSwapTxHash,
-  });
-  if (!dexSwapTxHash) return;
-  const res = await waitForTxReceipt(web3, dexSwapTxHash);
-
-  _analytics.updateAndSend({
-    onChainDexSwapState: res?.mined ? "success" : "failed",
-  });
-}
-function onDexSwapFailed(dexSwapError: string) {
-  _analytics.updateAndSend({ dexSwapState: "failed", dexSwapError });
-}
-
-const initDexSwap = (args: InitDexTrade) => {
-  const result = initSwap(args);
-  _analytics.updateAndSend({
-    ...result,
-    partner: args.partner,
-    chainId: args.chainId,
-  });
-};
-
-// for dex
-export const analytics = {
-  onSwapRequest: onDexSwapRequest,
-  onSwapSuccess: onDexSwapSuccess,
-  onSwapFailed: onDexSwapFailed,
-  initSwap: initDexSwap,
-};
 
 export const swapAnalytics = new Analytics();

@@ -1,14 +1,17 @@
 {
   "name": "@orbs-network/liquidity-hub-ui-sdk",
-  "version": "0.1.237",
+  "version": "1.0.11",
   "main": "dist/main.umd.js",
   "module": "dist/main.es.js",
-  "types": "dist/index.d.ts",
+  "types": "dist/types/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "import": "./dist/main.es.js",
       "require": "./dist/main.umd.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/types/index.d.ts"
     }
   },
   "files": [
@@ -21,18 +24,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@defi.org/web3-candies": "^5.0.0",
     "@ethersproject/abstract-signer": "^5.7.0",
     "@ethersproject/hash": "^5.7.0",
-    "@tanstack/react-query": "^5.21.4",
+    "@tanstack/react-query": "^5.51.23",
     "bignumber.js": "^9.1.2",
-    "ethereum-multicall": "^2.23.0",
     "lodash": "^4.17.21",
     "react-feather": "^2.0.10",
     "react-number-format": "^5.3.1",
-    "react-virtualized-auto-sizer": "^1.0.24",
-    "react-window": "^1.8.10",
     "styled-components": "^6.1.8",
-    "web3": "1.x",
     "zustand": "^4.5.1"
   },
   "devDependencies": {
@@ -47,8 +47,11 @@
     "eslint": "^8.55.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "ethereum-multicall": "^2.26.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-virtualized-auto-sizer": "^1.0.24",
+    "react-window": "^1.8.10",
     "reactjs-popup": "^2.0.6",
     "typescript": "^5.2.2",
     "viem": "2.x",
@@ -57,10 +60,10 @@
     "vite-plugin-node-polyfills": "^0.21.0",
     "vite-plugin-svgr": "^4.2.0",
     "vite-tsconfig-paths": "^4.3.1",
-    "wagmi": "^2.9.10"
+    "wagmi": "^2.9.10",
+    "web3": "1.x"
   },
   "peerDependencies": {
-    "@tanstack/react-query": ">=5.21.4",
     "react": ">=18.2.0",
     "react-dom": ">=18.2.0"
   }

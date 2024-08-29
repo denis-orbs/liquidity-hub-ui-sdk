@@ -1,6 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import Popup from "reactjs-popup";
-import styled, { useTheme, keyframes } from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { X } from "react-feather";
 import { ReactNode } from "react";
 import "reactjs-popup/dist/index.css";
@@ -17,8 +17,6 @@ export function Modal({
   onClose: () => void;
   children: ReactNode;
 }) {
-  const theme = useTheme();
-
   return (
     <StyledPopup
       closeOnDocumentClick={false}
@@ -39,8 +37,6 @@ export function Modal({
         width: "100%",
         fontFamily: "inherit",
         transition: "all 0.3s ease-in-out",
-        background: theme.colors.modalBackground,
-        border: `1px solid ${theme.colors.border}`,
         maxHeight: "90%",
         maxWidth: 500
       }}
@@ -105,5 +101,4 @@ const CloseButton = styled.div`
   top: 20px;
   right: 20px;
   cursor: pointer;
-  color: ${(props) => props.theme.colors.textMain};
 `;
