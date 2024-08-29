@@ -1,5 +1,5 @@
 {
-  "name": "@orbs-network/liquidity-hub-ui-sdk-dev",
+  "name": "@orbs-network/liquidity-hub-ui-sdk",
   "version": "2.0.136",
   "main": "dist/main.umd.js",
   "module": "dist/main.es.js",
