@@ -34,7 +34,7 @@ export const useSwapSteps = (
 
     const sendTx: Step = {
       id: SwapStep.SIGN,
-      title: _swapStep ===  SwapStep.SWAP ? "Swap pending..." : "Sign and Confirm swap",
+      title: _swapStep ===  SwapStep.SWAP ? "Swap pending..." : "Confirm swap",
       image: SwapImg,
       active: _swapStep >= SwapStep.SIGN,
       timeout: _swapStep === SwapStep.SIGN ? counters?.signature : _swapStep === SwapStep.SWAP ? counters?.swap : undefined,
