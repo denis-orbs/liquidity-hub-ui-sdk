@@ -1,7 +1,6 @@
-import { maxUint256 } from "viem";
 import Web3 from "web3";
 import { swapAnalytics } from "../analytics";
-import { permit2Address } from "../config/consts";
+import { maxUint256, permit2Address } from "../config/consts";
 import { useEstimateGasPrice } from "../hooks/useEstimateGasPrice";
 import { counter, getContract, sendAndWaitForConfirmations } from "../util";
 
@@ -11,7 +10,9 @@ export const approve = async ({
   chainId,
   fromToken,
   gas,
-  onTxHash
+  onTxHash,
+  fromAmount,
+  approveExactAmount
 }: {
   account: string;
   web3: Web3;
@@ -19,6 +20,8 @@ export const approve = async ({
   fromToken: string;
   gas: ReturnType<typeof useEstimateGasPrice>;
   onTxHash: (txHash: string) => void;
+  fromAmount: string;
+  approveExactAmount?: boolean;
 }) => {
   const contract = getContract(fromToken, web3, chainId);
   if (!contract) {
@@ -26,10 +29,10 @@ export const approve = async ({
   }
 
   const count = counter();
-
+  const amountToApprove = approveExactAmount ? fromAmount : maxUint256;
   try {
     swapAnalytics.onApprovalRequest();
-    const tx = contract.methods.approve(permit2Address, maxUint256);
+    const tx = contract.methods.approve(permit2Address, amountToApprove);
 
     await sendAndWaitForConfirmations({
       web3,

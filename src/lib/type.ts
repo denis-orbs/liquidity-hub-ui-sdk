@@ -194,6 +194,7 @@ export type UseLiquidityHubArgs = {
   quoteDelayMillis?: number;
   outAmount?: string;
   getReceipt?: boolean;
+  approveExactAmount?: boolean;
 };
 
 

@@ -119,6 +119,7 @@ const ContextProvider = (props: ContextProps) => {
     fromAmount,
     debounceFromAmountMillis: 300,
     slippage: props.slippage || 0.5,
+    approveExactAmount: true,
   });
 
   return (

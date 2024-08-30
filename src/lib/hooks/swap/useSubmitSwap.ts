@@ -39,6 +39,7 @@ export const useSubmitSwap = ({
   sessionId,
   failures,
   getReceipt,
+  approveExactAmount
 }: {
   fromAmount?: string;
   fromToken?: Token;
@@ -48,6 +49,7 @@ export const useSubmitSwap = ({
   sessionId?: string;
   failures: number;
   getReceipt?: boolean;
+  approveExactAmount?: boolean;
 }) => {
   const { web3, provider, account, chainId } = useMainContext();
   const chainConfig = useChainConfig();
@@ -131,6 +133,8 @@ export const useSubmitSwap = ({
           onTxHash: (approveTxHash) => {
             updateState({ approveTxHash });
           },
+          fromAmount,
+          approveExactAmount
         });
       }
       updateState({ currentStep: STEPS.SEND_TX });
