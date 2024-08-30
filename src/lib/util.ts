@@ -1,122 +1,46 @@
-import BN, { BigNumber } from "bignumber.js";
-import Web3 from "web3";
-import { LH_CONTROL, Quote, SwapStatus } from "./type";
-import _ from "lodash";
-import { numericFormatter } from "react-number-format";
-import { useLiquidityHubPersistedStore } from "./store/main";
-import erc20abi from "./abi/ERC20Abi.json";
-import iwethabi from "./abi/IWETHAbi.json";
-import { isNativeAddress, networks, parsebn } from "@defi.org/web3-candies";
-
-export const amountBN = (decimals?: number, amount?: string) =>
-  parsebn(amount || "")
-    .times(new BN(10).pow(decimals || 0))
-    .decimalPlaces(0);
-
-export const amountUi = (decimals?: number, amount?: BN | string) => {
-  if (!amount) return "";
-  const percision = new BN(10).pow(decimals || 0);
-  return BN(amount).times(percision).idiv(percision).div(percision).toString();
-};
-
-
-export const amountUiV2 = (decimals?: number, amount?: string) => {
-  if (!amount) return "";
-  const percision = new BN(10).pow(decimals || 0);
-  return BN(amount).times(percision).idiv(percision).div(percision).toString();
-};
-
+import {  Quote } from "./type";
 
 export function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const getApiUrl = (chainId: number) => {
+export function formatCryptoAmount(amount?: string, decimals?: number) {
+  if (!amount || !decimals) return "0";
+  const adjustedAmount = Number(amount) / Math.pow(10, decimals);
+  return adjustedAmount.toFixed();
+}
+
+
+export const getApiUrl = (chainId: number) => {
   switch (chainId) {
-    case networks.poly.id:
+    case 137:
       return "https://polygon.hub.orbs.network";
-    case networks.bsc.id:
+    case 56:
       return "https://bsc.hub.orbs.network";
-    case networks.ftm.id:
+    case 250:
       return "https://ftm.hub.orbs.network";
-    case networks.base.id:
+    case 8453:
       return "https://base.hub.orbs.network";
-    case networks.linea.id:
+    case 59144:
       return "https://linea.hub.orbs.network";
-    case networks.blast.id:
+    case 81457:
       return "https://blast.hub.orbs.network";
-    case networks.zkevm.id:
+    case 1101:
       return "https://zkevm.hub.orbs.network";
-    
 
     default:
       return "https://hub.orbs.network";
   }
 };
 
-export const getChainConfig = (chainId?: number) => {
-  if (!chainId) return undefined;
-  const result = Object.values(networks).find((it) => it.id === chainId);
-  if (!result) return undefined;
-  const localStorageApiUrl = localStorage.getItem("apiUrl");
-  return {
-    ...result,
-    apiUrl: localStorageApiUrl || getApiUrl(chainId),
-  };
-};
-
-export const getTxReceipt = async (web3: Web3, txHash: string) => {
-  const res = await waitForTxDetails(web3, txHash);
-  if (!res?.mined) {
-    throw new Error(res?.revertMessage);
-  }
-
-  return {
-    receipt: res?.receipt,
-    txHash,
-  };
-};
-
-async function waitForTxDetails(web3: Web3, txHash: string) {
-  for (let i = 0; i < 30; ++i) {
-    // due to swap being fetch and not web3
-
-    await delay(3_000); // to avoid potential rate limiting from public rpc
-    try {
-      const { mined, revertMessage, receipt } = await getTransactionDetails(
-        web3,
-        txHash
-      );
-
-      if (mined) {
-        return {
-          mined,
-          revertMessage: undefined,
-          receipt,
-        };
-      }
-      if (revertMessage) {
-        return {
-          mined: false,
-          revertMessage,
-          receipt,
-        };
-      }
-    } catch (error: any) {
-      throw new Error(error.message);
-    }
-  }
-}
-
-type TxDetailsFromApi = any
+type TxDetailsFromApi = any;
 export const getTxDetailsFromApi = async (
   txHash: string,
   chainId: number,
   quote?: Quote
 ): Promise<TxDetailsFromApi | undefined> => {
-  const apiUrl = getChainConfig(chainId)?.apiUrl;
+  const apiUrl = getApiUrl(chainId);
   for (let i = 0; i < 10; ++i) {
-
     await delay(2_500);
     try {
       const response = await fetch(
@@ -135,7 +59,7 @@ export const getTxDetailsFromApi = async (
 
       const result = await response?.json();
 
-      if (result && result.status?.toLowerCase() === 'mined') {        
+      if (result && result.status?.toLowerCase() === "mined") {
         return result;
       }
     } catch (error: any) {
@@ -144,53 +68,6 @@ export const getTxDetailsFromApi = async (
   }
 };
 
-
-
-export async function getTransactionDetails(
-  web3: Web3,
-  txHash: string
-): Promise<{ mined: boolean; revertMessage?: string; receipt?: any }> {
-  let receipt;
-  try {
-    receipt = await web3.eth.getTransactionReceipt(txHash);
-    if (!receipt) {
-      return {
-        mined: false,
-      };
-    }
-
-    let revertMessage = "";
-
-    if (!receipt.status) {
-      // If the transaction was reverted, try to get the revert reason.
-      try {
-        const tx = await web3.eth.getTransaction(txHash);
-        const code = await web3.eth.call(tx as any, tx.blockNumber!);
-        revertMessage = web3.utils.toAscii(code).replace(/\0/g, ""); // Convert the result to a readable string
-      } catch (err) {
-        revertMessage = "Unable to retrieve revert reason";
-      }
-    }
-
-    return {
-      mined: receipt.status ? true : false,
-      revertMessage,
-      receipt,
-    };
-  } catch (error: any) {
-    throw new Error(`Failed to fetch transaction details: ${error.message}`);
-  }
-}
-
-export const deductSlippage = (amount?: string, slippage?: number) => {
-  if (!amount) return "";
-  if (!slippage) return amount;
-
-  return new BigNumber(amount)
-    .times(100 - slippage)
-    .div(100)
-    .toString();
-};
 
 export const counter = () => {
   const now = Date.now();
@@ -223,52 +100,16 @@ export const formatNumberDecimals = (
   return !count ? decimalScale : count + decimalScale;
 };
 
-export const formatNumber = (
-  value?: string | number,
-  decimalScale?: number
-) => {
-  return numericFormatter(value?.toString() || "", {
-    decimalScale: formatNumberDecimals(decimalScale, value),
-    allowLeadingZeros: true,
-    thousandSeparator: ",",
-    displayType: "text",
-  });
-};
+
 
 export const Logger = (value: string | object | any[] | number) => {
-  const debug = useLiquidityHubPersistedStore.getState().debug;
+  const debug = localStorage.getItem("debug")
 
   if (debug) {
     try {
       console.log("LH-> ", value);
     } catch (error) {}
   }
-};
-
-export const safeBN = (value?: string | number) => {
-  if (!value) return;
-  return BN(value).decimalPlaces(0).toFixed();
-};
-export const getContract = (
-  address?: string,
-  web3?: Web3,
-  chainId?: number
-) => {
-  if (!address || !web3 || !address.startsWith("0x") || !chainId)
-    return undefined;
-  const wethAddress = getChainConfig(chainId)?.wToken?.address;
-
-  return new web3.eth.Contract(
-    erc20abi as any,
-    isNativeAddress(address) ? wethAddress : address
-  );
-};
-
-export const getWethContract = (web3?: Web3, chainId?: number) => {
-  if (!web3 || !chainId) return undefined;
-  const wethAddress = getChainConfig(chainId)?.wToken?.address;
-
-  return new web3.eth.Contract(iwethabi as any, wethAddress);
 };
 
 export const isTxRejected = (message?: string) => {
@@ -283,44 +124,6 @@ export const isNativeBalanceError = (message?: string) => {
     message?.toLowerCase()?.includes("gas required exceeds allowance")
   );
 };
-
-export const getSwapModalTitle = (swapStatus: SwapStatus) => {
-  if (swapStatus === SwapStatus.FAILED) return;
-  if (swapStatus === SwapStatus.SUCCESS) return "Swap Successfull";
-  return "Review Swap";
-};
-
-export const isLHSwap = (lhAmountOut?: string, dexAmountOut?: string) => {
-  if (useLiquidityHubPersistedStore.getState().lhControl === LH_CONTROL.FORCE) {
-    return true;
-  }
-
-  return BN(lhAmountOut || 0).gt(dexAmountOut || 0);
-};
-
-export async function waitForReceipt({
-  web3,
-  txHash,
-  delay: dellayMillis = 3_000,
-  attempts = 20,
-}: {
-  web3: Web3;
-  txHash: string;
-  delay?: number;
-  attempts?: number;
-}) {
-  for (let i = 0; i < attempts; ++i) {
-    await delay(dellayMillis);
-    try {
-      const receipt = await web3.eth.getTransactionReceipt(txHash);
-      if (receipt) {
-        return receipt;
-      }
-    } catch (error: any) {
-      console.error("waitForReceipt error", error);
-    }
-  }
-}
 
 export class TimeoutError extends Error {
   constructor() {
@@ -362,3 +165,19 @@ export async function promiseWithTimeout<T>(
     throw error;
   }
 }
+export const zeroAddress = "0x0000000000000000000000000000000000000000";
+
+export const nativeTokenAddresses = [
+  zeroAddress,
+  "0x0000000000000000000000000000000000001010",
+  "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+  "0x000000000000000000000000000000000000dEaD",
+  "0x000000000000000000000000000000000000800A",
+];
+
+export function eqIgnoreCase(a: string, b: string) {
+  return a == b || a.toLowerCase() == b.toLowerCase();
+}
+
+export const isNativeAddress = (address: string) =>
+  !!nativeTokenAddresses.find((a) => eqIgnoreCase(a, address));

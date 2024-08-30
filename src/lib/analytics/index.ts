@@ -1,8 +1,7 @@
-import BN from "bignumber.js";
 import { Quote, Token } from "../type";
-import { amountUi, Logger } from "../util";
-
+import { formatCryptoAmount, Logger } from "../util";
 import { AnalyticsData, InitTrade } from "./types";
+
 const ANALYTICS_VERSION = 0.7;
 const BI_ENDPOINT = `https://bi.orbs.network/putes/liquidity-hub-ui-${ANALYTICS_VERSION}`;
 const DEX_PRICE_BETTER_ERROR = "Dex trade is better than Clob trade";
@@ -19,7 +18,7 @@ const initialData: Partial<AnalyticsData> = {
 type QuoteArgs = {
   fromToken: Token;
   toToken: Token;
-  wTokenAddress: string;
+  wTokenAddress?: string;
   fromAmount: string;
   apiUrl: string;
   dexMinAmountOut?: string;
@@ -58,6 +57,15 @@ const onWallet = (provider: any): Partial<AnalyticsData | undefined> => {
   }
 };
 
+const getDiff = (quoteAmountOut?: string, dexAmountOut?: string) => {
+  return !dexAmountOut
+    ? "0"
+    : (
+        (Number(quoteAmountOut || "0") / Number(dexAmountOut) - 1) *
+        100
+      ).toFixed();
+};
+
 const initSwap = (args: InitTrade): Partial<AnalyticsData> | undefined => {
   const srcToken = args.fromToken;
   const dstToken = args.toToken;
@@ -72,32 +80,21 @@ const initSwap = (args: InitTrade): Partial<AnalyticsData> | undefined => {
     ? parseFloat(args.toTokenUsdAmount)
     : 0;
 
-  const clobDexPriceDiffPercent = !args.dexAmountOut
-    ? "0"
-    : new BN(args.quoteAmountOut || "0")
-        .dividedBy(new BN(args.dexAmountOut))
-        .minus(1)
-        .multipliedBy(100)
-        .toFixed(2);
-
-  let quoteAmountOutUI = amountUi(
-    dstToken.decimals,
-    new BN(args.quoteAmountOut || "0")
+  let quoteAmountOutUI = formatCryptoAmount(
+    args.quoteAmountOut,
+    dstToken.decimals
   );
 
   const wallet = onWallet(args.provider) || {};
   return {
-    clobDexPriceDiffPercent,
+    clobDexPriceDiffPercent: getDiff(args.quoteAmountOut, args.dexAmountOut),
     dexOutAmountWS: args.dexOutAmountWS || "0",
-    dexOutAmountWSUi: amountUi(
-      dstToken.decimals,
-      new BN(args.dexOutAmountWS || "0")
+    dexOutAmountWSUi: formatCryptoAmount(
+      args.dexOutAmountWS || "0",
+      dstToken?.decimals
     ),
     dexAmountOut: args.dexAmountOut || "0",
-    dexAmountOutUi: amountUi(
-      dstToken.decimals,
-      new BN(args.dexAmountOut || "0")
-    ),
+    dexAmountOutUi: formatCryptoAmount(args.dexAmountOut, dstToken.decimals),
     srcTokenUsdValue,
     dstTokenUsdValue,
     srcTokenAddress: srcToken?.address,
@@ -105,7 +102,7 @@ const initSwap = (args: InitTrade): Partial<AnalyticsData> | undefined => {
     dstTokenAddress: dstToken?.address,
     dstTokenSymbol: dstToken?.symbol,
     srcAmountUI: args.srcAmount
-      ? amountUi(srcToken.decimals, new BN(args.srcAmount))
+      ? formatCryptoAmount(args.srcAmount, srcToken.decimals)
       : args.srcAmountUI,
     srcAmount: args.srcAmount,
     slippage: args.slippage,
@@ -144,12 +141,15 @@ export class Analytics {
     let liquidityHubDisabled = false;
 
     try {
-      liquidityHubDisabled =
-        JSON.parse(localStorage.redux_localstorage_simple_user)
-          .userLiquidityHubDisabled
+      liquidityHubDisabled = JSON.parse(
+        localStorage.redux_localstorage_simple_user
+      ).userLiquidityHubDisabled;
     } catch (error) {}
 
-    this.updateAndSend({ moduleLoaded: true, liquidityHubDisabled: !!liquidityHubDisabled });
+    this.updateAndSend({
+      moduleLoaded: true,
+      liquidityHubDisabled: !!liquidityHubDisabled,
+    });
   }
 
   setPartner(partner: string) {
@@ -178,24 +178,23 @@ export class Analytics {
   }
 
   onQuoteRequest(args: QuoteArgs) {
-    const dexMinAmountOutUi = amountUi(
-      args.toToken.decimals,
-      args.dexMinAmountOut
+    const dexMinAmountOutUi = formatCryptoAmount(
+      args.dexMinAmountOut,
+      args.toToken.decimals
     );
 
     const getDexOutAmountWS = () => {
+      const dexMinAmountOut = Number(args.dexMinAmountOut || "0");
       const slippageAmount = !args.slippage
         ? 0
-        : BN(args.dexMinAmountOut || "0").times(args.slippage / 100);
-      return BN(args.dexMinAmountOut || "0")
-        .plus(slippageAmount)
-        .toString();
+        : dexMinAmountOut * (args.slippage / 100);
+      return (dexMinAmountOut + slippageAmount).toString();
     };
 
     const dexMinAmountOutWS = getDexOutAmountWS();
-    const dexMinAmountOutWSUi = amountUi(
-      args.toToken.decimals,
-      dexMinAmountOutWS
+    const dexMinAmountOutWSUi = formatCryptoAmount(
+      dexMinAmountOutWS,
+      args.toToken.decimals
     );
 
     this.data = {
@@ -214,18 +213,15 @@ export class Analytics {
       dexOutAmountWS: dexMinAmountOutWS,
       dexOutAmountWSUi: dexMinAmountOutWSUi,
       srcAmount: args.fromAmount,
-      srcAmountUI: amountUi(args.fromToken.decimals, args.fromAmount),
+      srcAmountUI: formatCryptoAmount(args.fromAmount, args.fromToken.decimals),
     };
   }
 
   onQuoteSuccess(quoteMillis: number, quote: Quote, args: QuoteArgs) {
-    const clobDexPriceDiffPercent = !args.dexMinAmountOut
-      ? "0"
-      : new BN(quote.minAmountOut || "0")
-          .dividedBy(new BN(args.dexMinAmountOut))
-          .minus(1)
-          .multipliedBy(100)
-          .toFixed(2);
+    const clobDexPriceDiffPercent = getDiff(
+      quote.minAmountOut,
+      args.dexMinAmountOut
+    );
 
     this.data = {
       ...this.data,
@@ -234,13 +230,16 @@ export class Analytics {
       quoteError: undefined,
       isNotClobTradeReason: undefined,
       quoteAmountOut: quote?.outAmount,
-      quoteAmountOutUI: amountUi(
-        args.toToken.decimals,
-        new BN(quote.outAmount || "0")
+      quoteAmountOutUI: formatCryptoAmount(
+        quote.outAmount,
+        args.toToken.decimals
       ),
       quoteSerializedOrder: quote?.serializedOrder,
       quoteMinAmountOut: quote?.minAmountOut,
-      quoteMinAmountOutUI: amountUi(args.toToken.decimals, quote.minAmountOut),
+      quoteMinAmountOutUI: formatCryptoAmount(
+        quote.minAmountOut,
+        args.toToken.decimals
+      ),
       clobDexPriceDiffPercent,
       sessionId: quote.sessionId,
     };

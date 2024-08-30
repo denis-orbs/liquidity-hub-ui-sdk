@@ -1,12 +1,6 @@
-import { isNativeAddress, zeroAddress } from "@defi.org/web3-candies";
-import { swapAnalytics } from "../../analytics";
-import { Quote, Token } from "../../type";
-import {
-  counter,
-  delay,
-  getChainConfig,
-  getTxDetailsFromApi,
-} from "../../util";
+import { swapAnalytics } from "../analytics";
+import { Quote, Token } from "../type";
+import { counter, delay, getApiUrl, getTxDetailsFromApi } from "../util";
 
 interface Args {
   signature: string;
@@ -74,26 +68,13 @@ export const swapCallback = async (
   chainId: number,
   dexTx?: any
 ) => {
-  const chainConfig = getChainConfig(chainId);
-
-  const wTokenAddress = chainConfig?.wToken?.address;
-  const apiUrl = chainConfig?.apiUrl;
-
-  let inTokenAddress = isNativeAddress(fromToken.address || "")
-    ? wTokenAddress
-    : fromToken?.address;
-  const outTokenAddress = isNativeAddress(toToken.address || "")
-    ? zeroAddress
-    : toToken?.address;
-
-  if (!inTokenAddress || !outTokenAddress || !account || !chainId || !apiUrl) {
-    throw new Error("Invalid state");
-  }
+  const apiUrl = getApiUrl(chainId);
   const count = counter();
+
   swapX({
     signature,
-    inTokenAddress,
-    outTokenAddress,
+    inTokenAddress: fromToken.address,
+    outTokenAddress: toToken.address,
     fromAmount: quote.inAmount,
     quote,
     account,
@@ -106,11 +87,10 @@ export const swapCallback = async (
   try {
     const txHash = await waitForSwap({
       sessionId: quote.sessionId,
-      apiUrl: chainConfig.apiUrl,
+      apiUrl,
       user: account,
       chainId,
     });
-
 
     if (!txHash) {
       throw new Error("Swap failed");
@@ -121,10 +101,13 @@ export const swapCallback = async (
     try {
       txDataFromApi = await getTxDetailsFromApi(txHash, chainId, quote);
     } catch (error) {}
-    swapAnalytics.onClobOnChainSwapSuccess(txDataFromApi?.exactOutAmount, txDataFromApi?.gasCharges);
+    swapAnalytics.onClobOnChainSwapSuccess(
+      txDataFromApi?.exactOutAmount,
+      txDataFromApi?.gasCharges
+    );
     return {
       txHash,
-      ...(txDataFromApi || {})
+      ...(txDataFromApi || {}),
     };
   } catch (error) {
     swapAnalytics.onSwapFailed((error as any).message, count());

@@ -1,1 +1,0 @@
-export type Balances = { [key: string]: string };

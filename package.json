@@ -18,53 +18,18 @@
     "dist"
   ],
   "scripts": {
-    "dev": "vite --force",
-    "build": "rm -rf dist && tsc && vite build",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "dev": "vite",
+    "build": "tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@defi.org/web3-candies": "^5.0.0",
-    "@ethersproject/abstract-signer": "^5.7.0",
-    "@ethersproject/hash": "^5.7.0",
-    "@tanstack/react-query": "^5.51.23",
-    "bignumber.js": "^9.1.2",
-    "lodash": "^4.17.21",
-    "react-feather": "^2.0.10",
-    "react-number-format": "^5.3.1",
-    "styled-components": "^6.1.8",
-    "zustand": "^4.5.1"
+    "vite-plugin-dts": "^4.0.3",
+    "vite-plugin-svgr": "^4.2.0",
+    "vite-tsconfig-paths": "^5.0.1"
   },
   "devDependencies": {
-    "@rainbow-me/rainbowkit": "^2.1.2",
-    "@types/lodash": "^4.14.202",
-    "@types/react": "^18.2.43",
-    "@types/react-dom": "^18.2.17",
-    "@types/react-window": "^1.8.8",
-    "@typescript-eslint/eslint-plugin": "^6.14.0",
-    "@typescript-eslint/parser": "^6.14.0",
-    "@vitejs/plugin-react": "^4.2.1",
-    "eslint": "^8.55.0",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.4.5",
-    "ethereum-multicall": "^2.26.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-virtualized-auto-sizer": "^1.0.24",
-    "react-window": "^1.8.10",
-    "reactjs-popup": "^2.0.6",
-    "typescript": "^5.2.2",
-    "viem": "2.x",
-    "vite": "^5.0.8",
-    "vite-plugin-dts": "^3.7.2",
-    "vite-plugin-node-polyfills": "^0.21.0",
-    "vite-plugin-svgr": "^4.2.0",
-    "vite-tsconfig-paths": "^4.3.1",
-    "wagmi": "^2.9.10",
-    "web3": "1.x"
-  },
-  "peerDependencies": {
-    "react": ">=18.2.0",
-    "react-dom": ">=18.2.0"
+    "@types/node": "^22.5.1",
+    "typescript": "^5.5.3",
+    "vite": "^5.4.1"
   }
 }
