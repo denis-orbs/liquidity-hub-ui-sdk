@@ -7,6 +7,26 @@ export interface Token {
   logoUrl?: string;
 }
 
+export interface TypedDataField {
+  name: string;
+  type: string;
+}
+
+export interface TypedDataDomain {
+  name?: string;
+  version?: string;
+  chainId?: number | string;
+  verifyingContract?: string;
+  salt?: string;
+}
+
+export type PermitData = {
+  domain: TypedDataDomain;
+  types: Record<string, TypedDataField[]>;
+  values: any;
+};
+
+
 export interface QuoteArgs {
   inToken: string;
   outToken: string;
@@ -18,29 +38,6 @@ export interface QuoteArgs {
   signal?: AbortSignal;
   partner: string;
   apiUrl?: string;
-}
-export interface SendTxArgs {
-  user: string;
-  inToken: string;
-  outToken: string;
-  inAmount: string;
-  outAmount: string;
-  signature: string;
-  quoteResult: any;
-  chainId: number;
-}
-
-export interface ApproveArgs {
-  user: string;
-  inToken: string;
-  inAmount: string;
-  provider: any;
-}
-
-export interface UseSwapCallback {
-  fromToken?: Token;
-  toToken?: Token;
-  fromAmount?: string;
 }
 
 export interface Quote {
@@ -60,19 +57,3 @@ export interface Quote {
   error?: string;
   gasAmountOut?: string;
 }
-
-
-
-export type Order = {
-  id: string;
-  date: number;
-  fromToken: Token;
-  toToken: Token;
-  fromAmount: string;
-  toAmount: string;
-  txHash: string;
-  explorerLink: string;
-};
-
-export type Orders = { [address: string]: { [chain: string]: Order[] } };
-

@@ -77,29 +77,6 @@ export const counter = () => {
   };
 };
 
-export const formatNumberDecimals = (
-  decimalScale = 3,
-  value?: string | number
-) => {
-  const maxZero = 5;
-
-  if (!value) return 0;
-  const [, decimal] = value.toString().split(".");
-  if (!decimal) return 0;
-  const arr = decimal.split("");
-  let count = 0;
-
-  for (let i = 0; i < arr.length; i++) {
-    if (arr[i] === "0") {
-      count++;
-    } else {
-      break;
-    }
-  }
-  if (count > maxZero) return 0;
-  return !count ? decimalScale : count + decimalScale;
-};
-
 
 
 export const Logger = (value: string | object | any[] | number) => {

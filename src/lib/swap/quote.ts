@@ -14,6 +14,7 @@ export const fetchQuote = async ({
   signal,
   chainId,
   sessionId,
+  timeout = QUOTE_TIMEOUT
 }: {
   fromToken: Token;
   toToken: Token;
@@ -25,6 +26,7 @@ export const fetchQuote = async ({
   signal?: AbortSignal;
   chainId: number;
   sessionId?: string;
+  timeout?: number;
 }) => {
 
   const apiUrl = getApiUrl(chainId);
@@ -63,7 +65,7 @@ export const fetchQuote = async ({
         }),
         signal,
       }),
-      QUOTE_TIMEOUT
+      timeout
     );
     Logger("calling quote api");
     const quote = await response.json();
