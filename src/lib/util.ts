@@ -4,13 +4,6 @@ export function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function formatCryptoAmount(amount?: string, decimals?: number) {
-  if (!amount || !decimals) return "0";
-  const adjustedAmount = Number(amount) / Math.pow(10, decimals);
-  return adjustedAmount.toFixed();
-}
-
-
 export const getApiUrl = (chainId: number) => {
   switch (chainId) {
     case 137:
@@ -142,19 +135,3 @@ export async function promiseWithTimeout<T>(
     throw error;
   }
 }
-export const zeroAddress = "0x0000000000000000000000000000000000000000";
-
-export const nativeTokenAddresses = [
-  zeroAddress,
-  "0x0000000000000000000000000000000000001010",
-  "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-  "0x000000000000000000000000000000000000dEaD",
-  "0x000000000000000000000000000000000000800A",
-];
-
-export function eqIgnoreCase(a: string, b: string) {
-  return a == b || a.toLowerCase() == b.toLowerCase();
-}
-
-export const isNativeAddress = (address: string) =>
-  !!nativeTokenAddresses.find((a) => eqIgnoreCase(a, address));

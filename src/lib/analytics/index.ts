@@ -1,10 +1,9 @@
-import { Quote, Token } from "../type";
-import { formatCryptoAmount, Logger } from "../util";
-import { AnalyticsData, InitTrade } from "./types";
+import { Quote, QuoteArgs } from "../type";
+import { Logger } from "../util";
+import { AnalyticsData } from "./types";
 
 const ANALYTICS_VERSION = 0.7;
-const BI_ENDPOINT = `https://bi.orbs.network/putes/liquidity-hub-ui-${ANALYTICS_VERSION}`;
-const DEX_PRICE_BETTER_ERROR = "Dex trade is better than Clob trade";
+const BI_ENDPOINT = `https://bi.orbs.network/putes/liquidity-hub-${ANALYTICS_VERSION}`;
 
 const initialData: Partial<AnalyticsData> = {
   _id: crypto.randomUUID(),
@@ -15,46 +14,27 @@ const initialData: Partial<AnalyticsData> = {
   version: ANALYTICS_VERSION,
 };
 
-type QuoteArgs = {
-  fromToken: Token;
-  toToken: Token;
-  wTokenAddress?: string;
-  fromAmount: string;
-  apiUrl: string;
-  dexMinAmountOut?: string;
-  account?: string;
-  partner: string;
-  sessionId?: string;
-  slippage: number;
-  quoteInterval?: number;
-  chainId: number;
-};
-
-const onWallet = (provider: any): Partial<AnalyticsData | undefined> => {
+const onWallet = (provider: any) => {
   try {
-    const walletConnectName = (provider as any)?.session?.peer.metadata.name;
-
     if (provider.isRabby) {
-      return { walletConnectName, isRabby: true };
+      return "rabby";
     }
     if (provider.isWalletConnect) {
-      return { walletConnectName, isWalletConnect: true };
+      return "walletConnect";
     }
     if (provider.isCoinbaseWallet) {
-      return { walletConnectName, isCoinbaseWallet: true };
+      return "coinbaseWallet";
     }
     if (provider.isOkxWallet) {
-      return { walletConnectName, isOkxWallet: true };
+      return "okxWallet";
     }
     if (provider.isTrustWallet) {
-      return { walletConnectName, isTrustWallet: true };
+      return "trustWallet";
     }
     if (provider.isMetaMask) {
-      return { walletConnectName, isMetaMask: true };
+      return "metaMask";
     }
-  } catch (error) {
-    Logger(`Error on wallet`);
-  }
+  } catch (error) {}
 };
 
 const getDiff = (quoteAmountOut?: string, dexAmountOut?: string) => {
@@ -64,55 +44,6 @@ const getDiff = (quoteAmountOut?: string, dexAmountOut?: string) => {
         (Number(quoteAmountOut || "0") / Number(dexAmountOut) - 1) *
         100
       ).toFixed();
-};
-
-const initSwap = (args: InitTrade): Partial<AnalyticsData> | undefined => {
-  const srcToken = args.fromToken;
-  const dstToken = args.toToken;
-  if (!srcToken || !dstToken) {
-    return;
-  }
-
-  let srcTokenUsdValue = args.fromTokenUsdAmount
-    ? parseFloat(args.fromTokenUsdAmount)
-    : 0;
-  let dstTokenUsdValue = args.toTokenUsdAmount
-    ? parseFloat(args.toTokenUsdAmount)
-    : 0;
-
-  let quoteAmountOutUI = formatCryptoAmount(
-    args.quoteAmountOut,
-    dstToken.decimals
-  );
-
-  const wallet = onWallet(args.provider) || {};
-  return {
-    clobDexPriceDiffPercent: getDiff(args.quoteAmountOut, args.dexAmountOut),
-    dexOutAmountWS: args.dexOutAmountWS || "0",
-    dexOutAmountWSUi: formatCryptoAmount(
-      args.dexOutAmountWS || "0",
-      dstToken?.decimals
-    ),
-    dexAmountOut: args.dexAmountOut || "0",
-    dexAmountOutUi: formatCryptoAmount(args.dexAmountOut, dstToken.decimals),
-    srcTokenUsdValue,
-    dstTokenUsdValue,
-    srcTokenAddress: srcToken?.address,
-    srcTokenSymbol: srcToken?.symbol,
-    dstTokenAddress: dstToken?.address,
-    dstTokenSymbol: dstToken?.symbol,
-    srcAmountUI: args.srcAmount
-      ? formatCryptoAmount(args.srcAmount, srcToken.decimals)
-      : args.srcAmountUI,
-    srcAmount: args.srcAmount,
-    slippage: args.slippage,
-    walletAddress: args.walletAddress,
-    tradeType: args.tradeType,
-    quoteAmountOut: args.quoteAmountOut,
-    quoteAmountOutUI,
-    sessionId: args.sessionId,
-    ...wallet,
-  };
 };
 
 const sendBI = async (data: Partial<AnalyticsData>) => {
@@ -152,14 +83,6 @@ export class Analytics {
     });
   }
 
-  setPartner(partner: string) {
-    this.data.partner = partner;
-  }
-
-  setChainId(chainId: number) {
-    this.data.chainId = chainId;
-  }
-
   public async updateAndSend(values = {} as Partial<AnalyticsData>) {
     this.data = {
       ...this.data,
@@ -171,56 +94,35 @@ export class Analytics {
     }, 1_000);
   }
 
-  onInitSwap(args: InitTrade) {
-    if (!this.data.chainId) return;
-    const result = initSwap(args);
-    this.updateAndSend(result);
-  }
-
   onQuoteRequest(args: QuoteArgs) {
-    const dexMinAmountOutUi = formatCryptoAmount(
-      args.dexMinAmountOut,
-      args.toToken.decimals
-    );
-
     const getDexOutAmountWS = () => {
-      const dexMinAmountOut = Number(args.dexMinAmountOut || "0");
+      const dexMinAmountOut = Number(args.minAmountOut || "0");
       const slippageAmount = !args.slippage
         ? 0
         : dexMinAmountOut * (args.slippage / 100);
       return (dexMinAmountOut + slippageAmount).toString();
     };
 
-    const dexMinAmountOutWS = getDexOutAmountWS();
-    const dexMinAmountOutWSUi = formatCryptoAmount(
-      dexMinAmountOutWS,
-      args.toToken.decimals
-    );
-
     this.data = {
       ...this.data,
       quoteState: "pending",
       quoteIndex: !this.data.quoteIndex ? 1 : this.data.quoteIndex + 1,
-      srcTokenAddress: args.fromToken.address,
-      srcTokenSymbol: args.fromToken.symbol,
-      dstTokenAddress: args.toToken.address,
-      dstTokenSymbol: args.toToken.symbol,
+      srcTokenAddress: args.fromToken,
+      dstTokenAddress: args.toToken,
       chainId: args.chainId,
       slippage: args.slippage,
       walletAddress: args.account,
-      dexAmountOut: args.dexMinAmountOut,
-      dexAmountOutUi: dexMinAmountOutUi,
-      dexOutAmountWS: dexMinAmountOutWS,
-      dexOutAmountWSUi: dexMinAmountOutWSUi,
-      srcAmount: args.fromAmount,
-      srcAmountUI: formatCryptoAmount(args.fromAmount, args.fromToken.decimals),
+      dexAmountOut: args.minAmountOut,
+      dexOutAmountWS: getDexOutAmountWS(),
+      srcAmount: args.inAmount,
+      partner: args.partner,
     };
   }
 
-  onQuoteSuccess(quoteMillis: number, quote: Quote, args: QuoteArgs) {
+  onQuoteSuccess(quoteMillis: number, quote: Quote) {
     const clobDexPriceDiffPercent = getDiff(
       quote.minAmountOut,
-      args.dexMinAmountOut
+      this.data.dexAmountOut
     );
 
     this.data = {
@@ -230,44 +132,19 @@ export class Analytics {
       quoteError: undefined,
       isNotClobTradeReason: undefined,
       quoteAmountOut: quote?.outAmount,
-      quoteAmountOutUI: formatCryptoAmount(
-        quote.outAmount,
-        args.toToken.decimals
-      ),
       quoteSerializedOrder: quote?.serializedOrder,
       quoteMinAmountOut: quote?.minAmountOut,
-      quoteMinAmountOutUI: formatCryptoAmount(
-        quote.minAmountOut,
-        args.toToken.decimals
-      ),
       clobDexPriceDiffPercent,
       sessionId: quote.sessionId,
     };
   }
 
   onQuoteFailed(error: string, quoteMillis: number) {
-    // we not treat DEX_PRICE_BETTER_ERROR as a failure
-    if (error == DEX_PRICE_BETTER_ERROR) {
-      this.data = {
-        ...this.data,
-        isNotClobTradeReason: DEX_PRICE_BETTER_ERROR,
-        quoteState: "success",
-        quoteMillis,
-      };
-    } else {
-      this.data = {
-        ...this.data,
-        quoteError: error,
-        quoteState: "failed",
-        isNotClobTradeReason: `quote-failed`,
-        quoteMillis,
-      };
-    }
-  }
-
-  onApprovedBeforeTheTrade() {
     this.updateAndSend({
-      userWasApprovedBeforeTheTrade: true,
+      quoteError: error,
+      quoteState: "failed",
+      isNotClobTradeReason: `quote-failed`,
+      quoteMillis,
     });
   }
 
@@ -290,6 +167,9 @@ export class Analytics {
 
   onSignatureRequest() {
     this.updateAndSend({ signatureState: "pending" });
+  }
+  onWallet(provider: any) {
+    this.updateAndSend({ walletConnectName: onWallet(provider) });
   }
 
   onWrapRequest() {

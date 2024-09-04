@@ -1,5 +1,5 @@
 import { swapAnalytics } from "../analytics";
-import { Quote, Token } from "../type";
+import { Quote } from "../type";
 import { counter, delay, getApiUrl, getTxDetailsFromApi } from "../util";
 
 interface Args {
@@ -14,7 +14,7 @@ interface Args {
   dexTx?: any;
 }
 
-export const swapX = async (args: Args) => {
+const swapX = async (args: Args) => {
   const { account, chainId, apiUrl } = args;
 
   const count = counter();
@@ -53,15 +53,15 @@ export const swapX = async (args: Args) => {
   }
 };
 
-export type TxDetailsFromApi = {
+type TxDetailsFromApi = {
   status: string;
   exactOutAmount: string;
   gasCharges: string;
 };
 
-export const swapCallback = async (
-  fromToken: Token,
-  toToken: Token,
+export const swap = async (
+  fromToken: string,
+  toToken: string,
   quote: Quote,
   signature: string,
   account: string,
@@ -73,8 +73,8 @@ export const swapCallback = async (
 
   swapX({
     signature,
-    inTokenAddress: fromToken.address,
-    outTokenAddress: toToken.address,
+    inTokenAddress: fromToken,
+    outTokenAddress: toToken,
     fromAmount: quote.inAmount,
     quote,
     account,
@@ -101,6 +101,11 @@ export const swapCallback = async (
     try {
       txDataFromApi = await getTxDetailsFromApi(txHash, chainId, quote);
     } catch (error) {}
+
+    if(!txDataFromApi) {
+      throw new Error("Swap failed");
+    }
+
     swapAnalytics.onClobOnChainSwapSuccess(
       txDataFromApi?.exactOutAmount,
       txDataFromApi?.gasCharges

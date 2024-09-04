@@ -1,12 +1,3 @@
-
-export interface Token {
-  name?: string;
-  address: string;
-  decimals: number;
-  symbol: string;
-  logoUrl?: string;
-}
-
 export interface TypedDataField {
   name: string;
   type: string;
@@ -26,18 +17,18 @@ export type PermitData = {
   values: any;
 };
 
-
 export interface QuoteArgs {
-  inToken: string;
-  outToken: string;
+  fromToken: string;
+  toToken: string;
   inAmount: string;
+  minAmountOut?: string;
   account?: string;
-  slippage?: number;
-  chainId: number;
-  dexAmountOut?: string;
-  signal?: AbortSignal;
   partner: string;
-  apiUrl?: string;
+  slippage: number;
+  signal?: AbortSignal;
+  chainId: number;
+  sessionId?: string;
+  timeout?: number;
 }
 
 export interface Quote {

@@ -1,71 +1,35 @@
-import { Quote, Token } from "../type";
+import { Quote, QuoteArgs } from "../type";
 import { counter, getApiUrl, Logger, promiseWithTimeout } from "../util";
 import { swapAnalytics } from "../analytics";
-import { QUOTE_TIMEOUT } from "../config/consts";
+import { QUOTE_TIMEOUT } from "../consts";
 
-export const fetchQuote = async ({
-  fromToken,
-  toToken,
-  inAmount,
-  minAmountOut,
-  account,
-  partner,
-  slippage,
-  signal,
-  chainId,
-  sessionId,
-  timeout = QUOTE_TIMEOUT
-}: {
-  fromToken: Token;
-  toToken: Token;
-  inAmount: string;
-  minAmountOut?: string;
-  account?: string;
-  partner: string;
-  slippage: number;
-  signal?: AbortSignal;
-  chainId: number;
-  sessionId?: string;
-  timeout?: number;
-}) => {
-
-  const apiUrl = getApiUrl(chainId);
-  const analyticsArgs = {
-    fromToken,
-    toToken,
-    fromAmount: inAmount,
-    apiUrl,
-    dexMinAmountOut: minAmountOut,
-    account,
-    partner,
-    sessionId,
-    slippage,
-    chainId,
-  };
-
-  swapAnalytics.onQuoteRequest(analyticsArgs);
+export const fetchQuote = async (args: QuoteArgs) => {
+  const apiUrl = getApiUrl(args.chainId);
+  console.log({args});
+  
+  swapAnalytics.onQuoteRequest(args);
   const count = counter();
 
   try {
     const response = await promiseWithTimeout(
-      fetch(`${apiUrl}/quote?chainId=${chainId}`, {
+      fetch(`${apiUrl}/quote?chainId=${args.chainId}`, {
         method: "POST",
         body: JSON.stringify({
-          inToken: fromToken?.address,
-          outToken: toToken?.address,
-          inAmount,
-          outAmount: !minAmountOut ? "-1" : minAmountOut,
-          user: account,
-          slippage,
+          inToken: args.fromToken,
+          outToken: args.toToken,
+          inAmount: args.inAmount,
+          outAmount: !args.minAmountOut ? "-1" : args.minAmountOut,
+          user: args.account,
+          slippage: args.slippage,
           qs: encodeURIComponent(
             window.location.hash || window.location.search
           ),
-          partner: partner.toLowerCase(),
-          sessionId,
+          partner: args.partner.toLowerCase(),
+          sessionId: args.sessionId,
         }),
-        signal,
+        signal: args.signal,
       }),
-      timeout
+      args.timeout || QUOTE_TIMEOUT
     );
     Logger("calling quote api");
     const quote = await response.json();
@@ -77,7 +41,7 @@ export const fetchQuote = async ({
     if (quote.error) {
       throw new Error(quote.error);
     }
-    swapAnalytics.onQuoteSuccess(count(), quote, analyticsArgs);
+    swapAnalytics.onQuoteSuccess(count(), quote);
     return quote as Quote;
   } catch (error: any) {
     swapAnalytics.onQuoteFailed(error.message, count());
