@@ -1,6 +1,6 @@
 {
   "name": "@orbs-network/liquidity-hub-sdk-2",
-  "version": "2.0.0",
+  "version": "10.0.0",
   "main": "dist/main.umd.js",
   "module": "dist/main.es.js",
   "types": "dist/types/index.d.ts",
