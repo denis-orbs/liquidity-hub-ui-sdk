@@ -1,7 +1,29 @@
-import { counter, getApiUrl, Logger, promiseWithTimeout } from "./util";
+import { counter, getApiUrl } from "./util";
 import { swapAnalytics } from "./analytics";
 import { QUOTE_TIMEOUT } from "./consts";
 import { QuoteArgs } from "./types";
+
+export async function promiseWithTimeout<T>(
+  promise: Promise<T>,
+  timeout: number
+): Promise<T> {
+  let timer: any;
+
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      reject(new Error('quote timeout'));
+    }, timeout);
+  });
+
+  try {
+    const result = await Promise.race([promise, timeoutPromise]);
+    clearTimeout(timer);
+    return result;
+  } catch (error) {
+    clearTimeout(timer);
+    throw error;
+  }
+}
 
 
 export interface Quote {
@@ -53,7 +75,6 @@ export const fetchQuote = async (args: QuoteArgs) => {
       }),
       args.timeout || QUOTE_TIMEOUT
     );
-    Logger("calling quote api");
     const quote = await response.json();
 
     if (!quote) {

@@ -1,6 +1,5 @@
 import { Quote } from "./quote";
 import { QuoteArgs } from "./types";
-import { Logger } from "./util";
 
 type analyticsActionState = "pending" | "success" | "failed" | "null" | "";
 
@@ -67,8 +66,6 @@ export interface AnalyticsData {
   gasCharges?: string;
 }
 
-
-
 const ANALYTICS_VERSION = 0.7;
 const BI_ENDPOINT = `https://bi.orbs.network/putes/liquidity-hub-${ANALYTICS_VERSION}`;
 
@@ -115,7 +112,6 @@ const getDiff = (quoteAmountOut?: string, dexAmountOut?: string) => {
 
 const sendBI = async (data: Partial<AnalyticsData>) => {
   try {
-    Logger(data);
     await fetch(BI_ENDPOINT, {
       method: "POST",
       headers: {
@@ -124,9 +120,7 @@ const sendBI = async (data: Partial<AnalyticsData>) => {
       },
       body: JSON.stringify(data),
     });
-  } catch (error) {
-    Logger(`Analytics error: ${error}`);
-  }
+  } catch (error) {}
 };
 
 export class Analytics {

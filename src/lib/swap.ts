@@ -43,13 +43,13 @@ const swapX = async (args: Args) => {
       throw new Error(swap.error);
     }
     if (!swap.txHash) {
-      throw new Error("Missing txHash");
+      throw new Error("missing txHash");
     }
     return swap.txHash;
   } catch (error: any) {
     const msg = error.message.error || error.message;
     swapAnalytics.onSwapFailed(msg, count());
-    throw new Error("Something went wrong");
+    throw new Error(msg);
   }
 };
 
@@ -87,7 +87,7 @@ export const swap = async (
     });
 
     if (!txHash) {
-      throw new Error("Swap failed");
+      throw new Error("swap failed");
     }
     swapAnalytics.onSwapSuccess(txHash, count());
 

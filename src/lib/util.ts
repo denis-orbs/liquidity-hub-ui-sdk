@@ -24,8 +24,6 @@ export const getApiUrl = (chainId: number) => {
   }
 };
 
-
-
 export const counter = () => {
   const now = Date.now();
 
@@ -34,68 +32,3 @@ export const counter = () => {
   };
 };
 
-
-
-export const Logger = (value: string | object | any[] | number) => {
-  const debug = localStorage.getItem("debug")
-
-  if (debug) {
-    try {
-      console.log("LH-> ", value);
-    } catch (error) {}
-  }
-};
-
-export const isTxRejected = (message?: string) => {
-  return (
-    message?.toLowerCase()?.includes("rejected") ||
-    message?.toLowerCase()?.includes("denied")
-  );
-};
-export const isNativeBalanceError = (message?: string) => {
-  return (
-    message?.toLowerCase()?.includes("insufficient") ||
-    message?.toLowerCase()?.includes("gas required exceeds allowance")
-  );
-};
-
-export class TimeoutError extends Error {
-  constructor() {
-    super();
-    this.name = "TimeoutError";
-    this.message = "Timeout error";
-    Object.setPrototypeOf(this, TimeoutError.prototype);
-  }
-}
-
-export class RejectedError extends Error {
-  constructor() {
-    super();
-    this.name = "Rejected";
-    this.message = "Transaction rejected";
-
-    Object.setPrototypeOf(this, RejectedError.prototype);
-  }
-}
-
-export async function promiseWithTimeout<T>(
-  promise: Promise<T>,
-  timeout: number
-): Promise<T> {
-  let timer: any;
-
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => {
-      reject(new TimeoutError());
-    }, timeout);
-  });
-
-  try {
-    const result = await Promise.race([promise, timeoutPromise]);
-    clearTimeout(timer);
-    return result;
-  } catch (error) {
-    clearTimeout(timer);
-    throw error;
-  }
-}
