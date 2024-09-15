@@ -1,6 +1,3 @@
-export const QUOTE_TIMEOUT = 10_000
-export const WEBSITE = 'https://www.orbs.com/'
-export const LIQUIDITY_HUB_WEBSITE = 'https://www.orbs.com/liquidity-hub/'
 export const zeroAddress = "0x0000000000000000000000000000000000000000";
 export const maxUint256 = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
 export const permit2Address = "0x000000000022D473030F116dDEE9F6B43aC78BA3";

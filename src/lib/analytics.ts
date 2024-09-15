@@ -157,7 +157,7 @@ export class Analytics {
 
   onQuoteRequest(args: QuoteArgs) {
     const getDexOutAmountWS = () => {
-      const dexMinAmountOut = Number(args.minAmountOut || "0");
+      const dexMinAmountOut = Number(args.dexMinAmountOut || "0");
       const slippageAmount = !args.slippage
         ? 0
         : dexMinAmountOut * (args.slippage / 100);
@@ -173,7 +173,7 @@ export class Analytics {
       chainId: args.chainId,
       slippage: args.slippage,
       walletAddress: args.account,
-      dexAmountOut: args.minAmountOut,
+      dexAmountOut: args.dexMinAmountOut,
       dexOutAmountWS: getDexOutAmountWS(),
       srcAmount: args.inAmount,
       partner: args.partner,

@@ -1,7 +1,7 @@
 import { counter, getApiUrl } from "./util";
 import { swapAnalytics } from "./analytics";
-import { QUOTE_TIMEOUT } from "./consts";
 import { QuoteArgs } from "./types";
+const QUOTE_TIMEOUT = 10_000
 
 export async function promiseWithTimeout<T>(
   promise: Promise<T>,
@@ -65,7 +65,7 @@ export const fetchQuote = async (args: QuoteArgs) => {
           inToken: args.fromToken,
           outToken: args.toToken,
           inAmount: args.inAmount,
-          outAmount: !args.minAmountOut ? "-1" : args.minAmountOut,
+          outAmount: !args.dexMinAmountOut ? "-1" : args.dexMinAmountOut,
           user: args.account,
           slippage: args.slippage,
           qs: safeEncodeURIComponent(),

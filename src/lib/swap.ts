@@ -54,24 +54,20 @@ const swapX = async (args: Args) => {
 };
 
 export const swap = async (
-  fromToken: string,
-  toToken: string,
   quote: Quote,
   signature: string,
-  account: string,
   chainId: number,
   dexTx?: any
 ) => {
   const apiUrl = getApiUrl(chainId);
   const count = counter();
-
   swapX({
     signature,
-    inTokenAddress: fromToken,
-    outTokenAddress: toToken,
+    inTokenAddress: quote.inToken,
+    outTokenAddress: quote.outToken,
     fromAmount: quote.inAmount,
     quote,
-    account,
+    account: quote.user,
     chainId,
     apiUrl,
     dexTx,
@@ -82,7 +78,7 @@ export const swap = async (
     const txHash = await waitForSwap({
       sessionId: quote.sessionId,
       apiUrl,
-      user: account,
+      user: quote.user,
       chainId,
     });
 
