@@ -3,7 +3,7 @@
   "version": "10.0.0",
   "main": "dist/main.umd.js",
   "module": "dist/main.es.js",
-  "types": "dist/types/index.d.ts",
+  "types": "dist/index.d.ts",
   "publishConfig": {
     "access": "public"
   },
@@ -11,7 +11,7 @@
     ".": {
       "import": "./dist/main.es.js",
       "require": "./dist/main.umd.js",
-      "types": "./dist/types/index.d.ts"
+      "types": "./dist/index.d.ts"
     }
   },
   "files": [
@@ -22,9 +22,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
-  "dependencies": {
-    "@ethersproject/hash": "^5.7.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/node": "^22.5.1",
     "typescript": "^5.5.3",

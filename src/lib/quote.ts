@@ -1,12 +1,37 @@
-import { Quote, QuoteArgs } from "../type";
-import { counter, getApiUrl, Logger, promiseWithTimeout } from "../util";
-import { swapAnalytics } from "../analytics";
-import { QUOTE_TIMEOUT } from "../consts";
+import { counter, getApiUrl, Logger, promiseWithTimeout } from "./util";
+import { swapAnalytics } from "./analytics";
+import { QUOTE_TIMEOUT } from "./consts";
+import { QuoteArgs } from "./types";
+
+
+export interface Quote {
+  inToken: string;
+  outToken: string;
+  inAmount: string;
+  outAmount: string;
+  user: string;
+  slippage: number;
+  qs: string;
+  partner: string;
+  exchange: string;
+  sessionId: string;
+  serializedOrder: string;
+  permitData: any;
+  minAmountOut: string;
+  error?: string;
+  gasAmountOut?: string;
+}
+
+const safeEncodeURIComponent = () => {
+  try {
+    return encodeURIComponent(window.location.hash || window.location.search);
+  } catch (error) {
+    return "";
+  }
+}
 
 export const fetchQuote = async (args: QuoteArgs) => {
   const apiUrl = getApiUrl(args.chainId);
-  console.log({args});
-  
   swapAnalytics.onQuoteRequest(args);
   const count = counter();
 
@@ -21,11 +46,8 @@ export const fetchQuote = async (args: QuoteArgs) => {
           outAmount: !args.minAmountOut ? "-1" : args.minAmountOut,
           user: args.account,
           slippage: args.slippage,
-          qs: encodeURIComponent(
-            window.location.hash || window.location.search
-          ),
+          qs: safeEncodeURIComponent(),
           partner: args.partner.toLowerCase(),
-          sessionId: args.sessionId,
         }),
         signal: args.signal,
       }),

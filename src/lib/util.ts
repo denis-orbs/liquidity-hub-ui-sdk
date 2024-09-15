@@ -1,5 +1,3 @@
-import {  Quote } from "./type";
-
 export function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -26,40 +24,6 @@ export const getApiUrl = (chainId: number) => {
   }
 };
 
-type TxDetailsFromApi = any;
-export const getTxDetailsFromApi = async (
-  txHash: string,
-  chainId: number,
-  quote?: Quote
-): Promise<TxDetailsFromApi | undefined> => {
-  const apiUrl = getApiUrl(chainId);
-  for (let i = 0; i < 10; ++i) {
-    await delay(2_500);
-    try {
-      const response = await fetch(
-        `${apiUrl}/tx/${txHash}?chainId=${chainId}`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            outToken: quote?.outToken,
-            user: quote?.user,
-            qs: quote?.qs,
-            partner: quote?.partner,
-            sessionId: quote?.sessionId,
-          }),
-        }
-      );
-
-      const result = await response?.json();
-
-      if (result && result.status?.toLowerCase() === "mined") {
-        return result;
-      }
-    } catch (error: any) {
-      throw new Error(error.message);
-    }
-  }
-};
 
 
 export const counter = () => {

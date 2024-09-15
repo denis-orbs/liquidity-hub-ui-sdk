@@ -1,6 +1,6 @@
-import { swapAnalytics } from "../analytics";
-import { Quote } from "../type";
-import { counter, delay, getApiUrl, getTxDetailsFromApi } from "../util";
+import { swapAnalytics } from "./analytics";
+import { Quote } from "./quote";
+import { counter, getApiUrl, delay } from "./util";
 
 interface Args {
   signature: string;
@@ -53,12 +53,6 @@ const swapX = async (args: Args) => {
   }
 };
 
-type TxDetailsFromApi = {
-  status: string;
-  exactOutAmount: string;
-  gasCharges: string;
-};
-
 export const swap = async (
   fromToken: string,
   toToken: string,
@@ -97,27 +91,61 @@ export const swap = async (
     }
     swapAnalytics.onSwapSuccess(txHash, count());
 
-    let txDataFromApi: TxDetailsFromApi | undefined;
-    try {
-      txDataFromApi = await getTxDetailsFromApi(txHash, chainId, quote);
-    } catch (error) {}
-
-    if(!txDataFromApi) {
-      throw new Error("Swap failed");
-    }
+    const txData = await getTxDetailsFromApi(txHash, chainId, quote);
 
     swapAnalytics.onClobOnChainSwapSuccess(
-      txDataFromApi?.exactOutAmount,
-      txDataFromApi?.gasCharges
+      txData?.exactOutAmount,
+      txData?.gasCharges
     );
     return {
       txHash,
-      ...(txDataFromApi || {}),
+      ...txData,
     };
   } catch (error) {
     swapAnalytics.onSwapFailed((error as any).message, count());
     throw error;
   }
+};
+
+type TxDetailsFromApi = {
+  status: string;
+  exactOutAmount: string;
+  gasCharges: string;
+};
+
+export const getTxDetailsFromApi = async (
+  txHash: string,
+  chainId: number,
+  quote?: Quote
+): Promise<TxDetailsFromApi> => {
+  const apiUrl = getApiUrl(chainId);
+  for (let i = 0; i < 10; ++i) {
+    await delay(2_500);
+    try {
+      const response = await fetch(
+        `${apiUrl}/tx/${txHash}?chainId=${chainId}`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            outToken: quote?.outToken,
+            user: quote?.user,
+            qs: quote?.qs,
+            partner: quote?.partner,
+            sessionId: quote?.sessionId,
+          }),
+        }
+      );
+
+      const result = await response?.json();
+
+      if (result && result.status?.toLowerCase() === "mined") {
+        return result;
+      }
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  }
+  throw new Error("swap timeout");
 };
 
 async function waitForSwap({
@@ -151,7 +179,8 @@ async function waitForSwap({
         return result.txHash as string;
       }
     } catch (error: any) {
-      throw new Error(error.message);
+      return;
     }
   }
+  throw new Error("swap timeout");
 }
